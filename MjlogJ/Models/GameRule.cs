@@ -52,4 +52,3 @@ public class GameRule
     /// <summary>ロビー番号</summary>
     public int Lobby { get; set; }
 }
-

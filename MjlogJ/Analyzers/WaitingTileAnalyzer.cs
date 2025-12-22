@@ -329,4 +329,3 @@ public static class WaitingTileAnalyzer
         return new Tile(suit, number, isRedDora, originalId);
     }
 }
-

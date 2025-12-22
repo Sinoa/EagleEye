@@ -58,4 +58,3 @@ public class GameResult
     /// <summary>各プレイヤーの結果</summary>
     public List<PlayerResult> PlayerResults { get; set; } = [];
 }
-

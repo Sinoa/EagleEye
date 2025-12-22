@@ -102,4 +102,3 @@ public record Tile(TileSuit Suit, int Number, bool IsRedDora, int OriginalId)
         _ => -1
     };
 }
-

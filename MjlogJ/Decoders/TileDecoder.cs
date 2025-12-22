@@ -165,4 +165,3 @@ public static class TileDecoder
         return tileId == 16 || tileId == 52 || tileId == 88;
     }
 }
-

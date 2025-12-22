@@ -60,4 +60,3 @@ public class MeldInfo
     /// <summary>元の鳴きコード（デバッグ用）</summary>
     public int OriginalCode { get; set; }
 }
-

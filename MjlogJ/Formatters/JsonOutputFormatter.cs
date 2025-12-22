@@ -325,4 +325,3 @@ public class PlayerActionReadConverter : JsonConverter<PlayerAction>
         return melds;
     }
 }
-

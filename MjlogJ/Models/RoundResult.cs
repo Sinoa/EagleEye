@@ -145,4 +145,3 @@ public class RoundResult
     /// <summary>終局後の各プレイヤーの得点</summary>
     public int[] FinalScores { get; set; } = new int[4];
 }
-

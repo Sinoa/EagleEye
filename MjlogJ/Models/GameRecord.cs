@@ -58,4 +58,3 @@ public class GameRecord
     /// <summary>牌譜のリファレンス情報</summary>
     public string? Reference { get; set; }
 }
-

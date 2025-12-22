@@ -120,4 +120,3 @@ public class NewDoraAction : PlayerAction
     /// <summary>新ドラ表示牌</summary>
     public Tile? DoraTile { get; set; }
 }
-

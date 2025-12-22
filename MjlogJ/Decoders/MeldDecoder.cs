@@ -235,4 +235,3 @@ public static class MeldDecoder
         meld.Tiles = [TileDecoder.Decode(tileId)];
     }
 }
-

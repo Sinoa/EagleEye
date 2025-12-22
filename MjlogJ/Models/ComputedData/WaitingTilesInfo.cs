@@ -49,4 +49,3 @@ public class WaitingTilesInfo
     /// <summary>計算時点の副露</summary>
     public List<MeldInfo> MeldsAtCalculation { get; set; } = [];
 }
-

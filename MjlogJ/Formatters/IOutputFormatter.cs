@@ -63,4 +63,3 @@ public interface IOutputFormatter
     /// <returns>GameRecord</returns>
     GameRecord LoadFromStream(Stream input);
 }
-

@@ -391,4 +391,3 @@ public static class MjlogReader
 
     #endregion
 }
-

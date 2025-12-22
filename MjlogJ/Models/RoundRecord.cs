@@ -93,4 +93,3 @@ public class RoundComputedData
     /// <summary>テンパイ時の待ち牌情報（プレイヤーID -> 待ち牌情報）</summary>
     public Dictionary<int, WaitingTilesInfo> TenpaiWaitingTiles { get; set; } = [];
 }
-
