@@ -104,6 +104,27 @@ public class PlayerActionConverter : JsonConverter<PlayerAction>
                 }
 
                 writer.WriteBoolean("isTsumogiri", discard.IsTsumogiri);
+
+                // 打牌後の手牌
+                writer.WritePropertyName("handAfterDiscard");
+                writer.WriteStartArray();
+                foreach (var tile in discard.HandAfterDiscard)
+                {
+                    WriteTile(writer, tile, options);
+                }
+
+                writer.WriteEndArray();
+
+                // 打牌後の副露
+                writer.WritePropertyName("meldsAfterDiscard");
+                writer.WriteStartArray();
+                foreach (var meld in discard.MeldsAfterDiscard)
+                {
+                    JsonSerializer.Serialize(writer, meld, options);
+                }
+
+                writer.WriteEndArray();
+
                 break;
 
             case MeldAction meld:

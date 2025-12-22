@@ -80,6 +80,12 @@ public class DiscardAction : PlayerAction
 
     /// <summary>ツモ切りかどうか</summary>
     public bool IsTsumogiri { get; set; }
+
+    /// <summary>打牌後の手牌（この行動完了時点での手牌）</summary>
+    public List<Tile> HandAfterDiscard { get; set; } = [];
+
+    /// <summary>打牌後の副露（この行動完了時点での副露）</summary>
+    public List<MeldInfo> MeldsAfterDiscard { get; set; } = [];
 }
 
 /// <summary>

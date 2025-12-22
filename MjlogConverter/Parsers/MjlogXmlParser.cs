@@ -241,7 +241,9 @@ public class MjlogXmlParser
                                             PlayerId = playerId,
                                             Sequence = actionSequence++,
                                             Tile = tile,
-                                            IsTsumogiri = isTsumogiri
+                                            IsTsumogiri = isTsumogiri,
+                                            HandAfterDiscard = [..playerHands[playerId]],
+                                            MeldsAfterDiscard = [..playerMelds[playerId]]
                                         });
                                     }
                                 }
