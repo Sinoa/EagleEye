@@ -29,10 +29,10 @@ namespace MjlogConverter.Utils;
 public class ProgressReporter
 {
     private readonly bool _enabled;
-    private int _spinnerIndex;
+    private readonly Lock _lock = new();
     private readonly char[] _spinnerChars = ['|', '/', '-', '\\'];
-    private readonly object _lock = new();
     private int _lastLineLength;
+    private int _spinnerIndex;
 
     public ProgressReporter(bool enabled)
     {

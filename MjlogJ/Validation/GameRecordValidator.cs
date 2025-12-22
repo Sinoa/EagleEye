@@ -50,7 +50,7 @@ public class GameRecordValidator
     {
         // プレイヤー名のチェック
         var playerCount = record.Rule?.IsThreePlayer == true ? 3 : 4;
-        for (int i = 0; i < playerCount; i++)
+        for (var i = 0; i < playerCount; i++)
         {
             if (string.IsNullOrEmpty(record.PlayerNames[i]))
             {
@@ -72,7 +72,7 @@ public class GameRecordValidator
 
     private void ValidateRounds(GameRecord record, ValidationResult result)
     {
-        for (int roundIndex = 0; roundIndex < record.Rounds.Count; roundIndex++)
+        for (var roundIndex = 0; roundIndex < record.Rounds.Count; roundIndex++)
         {
             var round = record.Rounds[roundIndex];
             ValidateRound(round, roundIndex, record.Rule?.IsThreePlayer == true, result);
@@ -84,7 +84,7 @@ public class GameRecordValidator
         var playerCount = isThreePlayer ? 3 : 4;
 
         // 配牌の検証
-        for (int playerId = 0; playerId < playerCount; playerId++)
+        for (var playerId = 0; playerId < playerCount; playerId++)
         {
             var hand = round.InitialHands[playerId];
             var expectedCount = playerId == round.DealerId ? 14 : 13;
@@ -94,8 +94,8 @@ public class GameRecordValidator
                 result.AddError("INITIAL_HAND_COUNT",
                     $"プレイヤー{playerId}の配牌が{hand.Count}枚です（期待値: {expectedCount}枚）",
                     ValidationSeverity.Warning,
-                    roundIndex: roundIndex,
-                    playerId: playerId);
+                    roundIndex,
+                    playerId);
             }
         }
 
@@ -109,9 +109,9 @@ public class GameRecordValidator
         if (round.Result == null)
         {
             result.AddError("ROUND_RESULT_MISSING",
-                $"局の結果がありません",
+                "局の結果がありません",
                 ValidationSeverity.Warning,
-                roundIndex: roundIndex);
+                roundIndex);
         }
     }
 
@@ -141,14 +141,14 @@ public class GameRecordValidator
         }
 
         // 各牌が4枚以下かチェック
-        for (int typeId = 0; typeId < 34; typeId++)
+        for (var typeId = 0; typeId < 34; typeId++)
         {
             if (tileCounts[typeId] > 4)
             {
                 result.AddError("TILE_COUNT_EXCEEDED",
                     $"牌TypeId={typeId}が{tileCounts[typeId]}枚あります（最大4枚）",
                     ValidationSeverity.Error,
-                    roundIndex: roundIndex);
+                    roundIndex);
             }
         }
     }
@@ -166,7 +166,7 @@ public class GameRecordValidator
                 result.AddError("SEQUENCE_GAP",
                     $"シーケンス番号が連続していません（{lastAction.Sequence} -> {action.Sequence}）",
                     ValidationSeverity.Warning,
-                    roundIndex: roundIndex,
+                    roundIndex,
                     sequence: action.Sequence);
             }
 
@@ -180,9 +180,9 @@ public class GameRecordValidator
                         result.AddError("DISCARD_WITHOUT_DRAW",
                             $"プレイヤー{action.PlayerId}がツモ/鳴きなしで打牌しています",
                             ValidationSeverity.Warning,
-                            roundIndex: roundIndex,
-                            playerId: action.PlayerId,
-                            sequence: action.Sequence);
+                            roundIndex,
+                            action.PlayerId,
+                            action.Sequence);
                     }
                 }
             }
@@ -220,7 +220,7 @@ public class GameRecordValidator
         }
 
         // 各局の点数移動チェック
-        for (int i = 0; i < record.Rounds.Count; i++)
+        for (var i = 0; i < record.Rounds.Count; i++)
         {
             var round = record.Rounds[i];
             if (round.Result == null) continue;
@@ -237,7 +237,7 @@ public class GameRecordValidator
                         result.AddError("SCORE_CHANGE_MISMATCH",
                             $"点数移動の合計が0ではありません（{changeTotal}点）",
                             ValidationSeverity.Warning,
-                            roundIndex: i);
+                            i);
                     }
                 }
             }

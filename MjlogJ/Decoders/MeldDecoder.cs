@@ -97,13 +97,13 @@ public static class MeldDecoder
         var r = (code >> 3) & 0x3; // 鳴いた牌の位置
 
         var baseTypeId = t / 3;
-        var suitOffset = (baseTypeId / 7) * 9;
+        var suitOffset = baseTypeId / 7 * 9;
         var num = baseTypeId % 7;
 
         var tiles = new List<Tile>();
         Tile? calledTile = null;
 
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
         {
             // 各牌のインデックスを取得（bit 3-4, 5-6, 7-8）
             var tileIdx = (code >> (3 + i * 2)) & 0x3;
@@ -144,8 +144,8 @@ public static class MeldDecoder
         var tiles = new List<Tile>();
         Tile? calledTile = null;
 
-        int pos = 0;
-        for (int i = 0; i < 4; i++)
+        var pos = 0;
+        for (var i = 0; i < 4; i++)
         {
             if (i == r) continue; // 使用しない牌はスキップ
 
@@ -180,7 +180,7 @@ public static class MeldDecoder
         var tiles = new List<Tile>();
         Tile? addedTile = null;
 
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             var tile = TileDecoder.Decode(baseId + i);
             tiles.Add(tile);
@@ -212,7 +212,7 @@ public static class MeldDecoder
         var calledIdx = tileId % 4;
 
         var tiles = new List<Tile>();
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             tiles.Add(TileDecoder.Decode(baseId + i));
         }

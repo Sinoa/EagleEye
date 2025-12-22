@@ -89,12 +89,16 @@ public class ValidationResult
     public bool HasWarnings => Errors.Any(e => e.Severity == ValidationSeverity.Warning);
 
     /// <summary>エラーのみを取得</summary>
-    public IEnumerable<ValidationError> GetErrors() =>
-        Errors.Where(e => e.Severity == ValidationSeverity.Error);
+    public IEnumerable<ValidationError> GetErrors()
+    {
+        return Errors.Where(e => e.Severity == ValidationSeverity.Error);
+    }
 
     /// <summary>警告のみを取得</summary>
-    public IEnumerable<ValidationError> GetWarnings() =>
-        Errors.Where(e => e.Severity == ValidationSeverity.Warning);
+    public IEnumerable<ValidationError> GetWarnings()
+    {
+        return Errors.Where(e => e.Severity == ValidationSeverity.Warning);
+    }
 
     /// <summary>エラーを追加</summary>
     public void AddError(string code, string message, ValidationSeverity severity = ValidationSeverity.Error,

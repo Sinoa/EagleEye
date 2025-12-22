@@ -118,7 +118,7 @@ public static class WaitingTileAnalyzer
     private static List<int> FindWaitingTiles(int[] handCounts, int meldCount)
     {
         var waitingTiles = new List<int>();
-        var effectiveHandSize = handCounts.Sum() + (meldCount * 3);
+        var effectiveHandSize = handCounts.Sum() + meldCount * 3;
 
         // 通常形：手牌が13枚（+ 副露3枚×n）
         if (effectiveHandSize != 13)
@@ -127,7 +127,7 @@ public static class WaitingTileAnalyzer
         }
 
         // 各牌を追加してみて和了形になるか判定
-        for (int typeId = 0; typeId < 34; typeId++)
+        for (var typeId = 0; typeId < 34; typeId++)
         {
             if (handCounts[typeId] >= 4) continue; // 4枚使用済み
 
@@ -200,7 +200,7 @@ public static class WaitingTileAnalyzer
         }
 
         // 么九牌以外がないことを確認
-        for (int i = 0; i < 34; i++)
+        for (var i = 0; i < 34; i++)
         {
             if (!terminals.Contains(i) && handCounts[i] > 0) return false;
         }
@@ -217,7 +217,7 @@ public static class WaitingTileAnalyzer
         var requiredMentsu = 4 - meldCount;
 
         // 雀頭を選ぶ
-        for (int headId = 0; headId < 34; headId++)
+        for (var headId = 0; headId < 34; headId++)
         {
             if (counts[headId] < 2) continue;
 
@@ -246,7 +246,7 @@ public static class WaitingTileAnalyzer
         }
 
         // 最初の牌から処理
-        for (int i = 0; i < 34; i++)
+        for (var i = 0; i < 34; i++)
         {
             if (counts[i] == 0) continue;
 
@@ -264,7 +264,7 @@ public static class WaitingTileAnalyzer
             }
 
             // 順子を試す（数牌のみ、7以下）
-            if (i < 27 && (i % 9) <= 6)
+            if (i < 27 && i % 9 <= 6)
             {
                 if (counts[i] >= 1 && counts[i + 1] >= 1 && counts[i + 2] >= 1)
                 {

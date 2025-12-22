@@ -76,7 +76,7 @@ public record Tile(TileSuit Suit, int Number, bool IsRedDora, int OriginalId)
         TileSuit.Man => $"{Number}m{(IsRedDora ? "r" : "")}",
         TileSuit.Pin => $"{Number}p{(IsRedDora ? "r" : "")}",
         TileSuit.Sou => $"{Number}s{(IsRedDora ? "r" : "")}",
-        TileSuit.Honor => ((HonorType)Number) switch
+        TileSuit.Honor => (HonorType)Number switch
         {
             HonorType.East => "東",
             HonorType.South => "南",

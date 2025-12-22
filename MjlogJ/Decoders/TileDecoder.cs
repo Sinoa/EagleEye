@@ -34,7 +34,6 @@ namespace MjlogJ.Decoders;
 /// - 36-71: 筒子 (1p-9p × 4枚)
 /// - 72-107: 索子 (1s-9s × 4枚)
 /// - 108-135: 字牌 (東南西北白發中 × 4枚)
-/// 
 /// 赤ドラ: 各スートの5の牌のうち、0番目（ID: 16, 52, 88）が赤ドラ
 /// </remarks>
 public static class TileDecoder
@@ -53,13 +52,13 @@ public static class TileDecoder
 
         TileSuit suit;
         int number;
-        bool isRedDora = false;
+        var isRedDora = false;
 
         if (tileId < 36)
         {
             // 萬子
             suit = TileSuit.Man;
-            number = (tileId / 4) + 1;
+            number = tileId / 4 + 1;
             // 5m の 0 番目 (ID: 16) が赤ドラ
             isRedDora = tileId == 16;
         }
@@ -67,7 +66,7 @@ public static class TileDecoder
         {
             // 筒子
             suit = TileSuit.Pin;
-            number = ((tileId - 36) / 4) + 1;
+            number = (tileId - 36) / 4 + 1;
             // 5p の 0 番目 (ID: 52) が赤ドラ
             isRedDora = tileId == 52;
         }
@@ -75,7 +74,7 @@ public static class TileDecoder
         {
             // 索子
             suit = TileSuit.Sou;
-            number = ((tileId - 72) / 4) + 1;
+            number = (tileId - 72) / 4 + 1;
             // 5s の 0 番目 (ID: 88) が赤ドラ
             isRedDora = tileId == 88;
         }
@@ -83,7 +82,7 @@ public static class TileDecoder
         {
             // 字牌
             suit = TileSuit.Honor;
-            number = ((tileId - 108) / 4) + 1;
+            number = (tileId - 108) / 4 + 1;
         }
 
         return new Tile(suit, number, isRedDora, tileId);
@@ -122,7 +121,7 @@ public static class TileDecoder
             throw new ArgumentOutOfRangeException(nameof(index), $"Invalid index: {index}");
         }
 
-        return (typeId * 4) + index;
+        return typeId * 4 + index;
     }
 
     /// <summary>

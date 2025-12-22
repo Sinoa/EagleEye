@@ -64,7 +64,7 @@ public static class ApplicationMain
     {
         var options = new CommandLineOptions();
 
-        for (int i = 0; i < args.Length; i++)
+        for (var i = 0; i < args.Length; i++)
         {
             switch (args[i].ToLowerInvariant())
             {
@@ -148,10 +148,10 @@ public static class ApplicationMain
         // 出力ディレクトリを決定
         var outputDir = DetermineOutputDirectory(options);
 
-        int processedCount = 0;
-        int errorCount = 0;
+        var processedCount = 0;
+        var errorCount = 0;
 
-        for (int i = 0; i < inputFiles.Count; i++)
+        for (var i = 0; i < inputFiles.Count; i++)
         {
             var inputFile = inputFiles[i];
             var fileName = Path.GetFileName(inputFile);

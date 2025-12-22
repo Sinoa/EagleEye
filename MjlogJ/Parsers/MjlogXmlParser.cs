@@ -89,14 +89,14 @@ public class MjlogXmlParser
     private void ParseGameElement(XElement gameElement, GameRecord record)
     {
         RoundRecord? currentRound = null;
-        int actionSequence = 0;
+        var actionSequence = 0;
         var playerHands = new List<Tile>[4];
         var playerMelds = new List<MeldInfo>[4];
         var playerReached = new bool[4];
         var allDiscards = new List<Tile>(); // 見えている牌（捨て牌）
         int[] currentScores = [250000, 250000, 250000, 250000];
 
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             playerHands[i] = [];
             playerMelds[i] = [];
@@ -134,7 +134,7 @@ public class MjlogXmlParser
                         actionSequence = 0;
 
                         // プレイヤー手牌を初期化
-                        for (int i = 0; i < 4; i++)
+                        for (var i = 0; i < 4; i++)
                         {
                             playerHands[i] = [.. currentRound.InitialHands[i]];
                             playerMelds[i] = [];
@@ -292,7 +292,7 @@ public class MjlogXmlParser
 
     private void ParseUserNames(XElement element, GameRecord record)
     {
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             var nameAttr = element.Attribute($"n{i}");
             if (nameAttr != null)
@@ -300,7 +300,7 @@ public class MjlogXmlParser
                 record.PlayerNames[i] = Uri.UnescapeDataString(nameAttr.Value);
             }
 
-            var danAttr = element.Attribute($"dan");
+            var danAttr = element.Attribute("dan");
             if (danAttr != null)
             {
                 var dans = danAttr.Value.Split(',');
@@ -310,7 +310,7 @@ public class MjlogXmlParser
                 }
             }
 
-            var rateAttr = element.Attribute($"rate");
+            var rateAttr = element.Attribute("rate");
             if (rateAttr != null)
             {
                 var rates = rateAttr.Value.Split(',');
@@ -356,7 +356,7 @@ public class MjlogXmlParser
         if (tenAttr != null)
         {
             var tens = tenAttr.Split(',');
-            for (int i = 0; i < Math.Min(4, tens.Length); i++)
+            for (var i = 0; i < Math.Min(4, tens.Length); i++)
             {
                 round.StartScores[i] = int.Parse(tens[i]) * 100;
                 currentScores[i] = round.StartScores[i];
@@ -364,7 +364,7 @@ public class MjlogXmlParser
         }
 
         // 配牌
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             var haiAttr = element.Attribute($"hai{i}")?.Value;
             if (haiAttr != null)
@@ -547,7 +547,7 @@ public class MjlogXmlParser
         if (yakuAttr != null)
         {
             var yakus = yakuAttr.Split(',');
-            for (int i = 0; i + 1 < yakus.Length; i += 2)
+            for (var i = 0; i + 1 < yakus.Length; i += 2)
             {
                 var yakuId = int.Parse(yakus[i]);
                 var han = int.Parse(yakus[i + 1]);
@@ -588,7 +588,7 @@ public class MjlogXmlParser
         if (scAttr != null)
         {
             var scs = scAttr.Split(',');
-            for (int i = 0; i + 1 < scs.Length; i += 2)
+            for (var i = 0; i + 1 < scs.Length; i += 2)
             {
                 var baseScore = int.Parse(scs[i]) * 100;
                 var change = int.Parse(scs[i + 1]) * 100;
@@ -621,7 +621,7 @@ public class MjlogXmlParser
         };
 
         // テンパイ者: hai0="牌,牌,..." (存在すればテンパイ)
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             var haiAttr = element.Attribute($"hai{i}")?.Value;
             if (haiAttr != null && !string.IsNullOrEmpty(haiAttr))
@@ -637,7 +637,7 @@ public class MjlogXmlParser
         if (scAttr != null)
         {
             var scs = scAttr.Split(',');
-            for (int i = 0; i + 1 < scs.Length; i += 2)
+            for (var i = 0; i + 1 < scs.Length; i += 2)
             {
                 var baseScore = int.Parse(scs[i]) * 100;
                 var change = int.Parse(scs[i + 1]) * 100;
@@ -667,7 +667,7 @@ public class MjlogXmlParser
             .OrderByDescending(x => x.score)
             .ToList();
 
-        for (int rank = 0; rank < indexed.Count; rank++)
+        for (var rank = 0; rank < indexed.Count; rank++)
         {
             var (score, playerId) = indexed[rank];
             record.Result.PlayerResults.Add(new PlayerResult

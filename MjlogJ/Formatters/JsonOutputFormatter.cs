@@ -33,10 +33,8 @@ namespace MjlogJ.Formatters;
 /// </summary>
 public class JsonOutputFormatter : IOutputFormatter
 {
-    private readonly JsonSerializerOptions _serializeOptions;
     private readonly JsonSerializerOptions _deserializeOptions;
-
-    public string FileExtension => ".json";
+    private readonly JsonSerializerOptions _serializeOptions;
 
     public JsonOutputFormatter()
     {
@@ -64,6 +62,8 @@ public class JsonOutputFormatter : IOutputFormatter
             }
         };
     }
+
+    public string FileExtension => ".json";
 
     public void Format(GameRecord record, Stream output)
     {

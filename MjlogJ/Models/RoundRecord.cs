@@ -37,7 +37,7 @@ public class RoundRecord
     public int RoundNumber { get; set; }
 
     /// <summary>局の表示名（例: "東1局"）</summary>
-    public string RoundName => $"{RoundWindName}{(RoundNumber % 4) + 1}局";
+    public string RoundName => $"{RoundWindName}{RoundNumber % 4 + 1}局";
 
     private string RoundWindName => (RoundNumber / 4) switch
     {

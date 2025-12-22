@@ -38,6 +38,19 @@ public static class MjlogReader
     private static readonly MjlogXmlParser DefaultParser = new();
     private static readonly GameRecordValidator DefaultValidator = new();
 
+    #region ヘルパーメソッド
+
+    /// <summary>
+    /// ファイルがGZip圧縮かどうかを判定
+    /// </summary>
+    private static bool IsGzipFile(string path)
+    {
+        var extension = Path.GetExtension(path).ToLowerInvariant();
+        return extension == ".mjlog" || extension == ".gz";
+    }
+
+    #endregion
+
     #region 同期API - 単一ファイル
 
     /// <summary>
@@ -374,19 +387,6 @@ public static class MjlogReader
 
         var files = Directory.GetFiles(directoryPath, options.SearchPattern, searchOption);
         return LoadManyParallelAsync(files, options, cancellationToken);
-    }
-
-    #endregion
-
-    #region ヘルパーメソッド
-
-    /// <summary>
-    /// ファイルがGZip圧縮かどうかを判定
-    /// </summary>
-    private static bool IsGzipFile(string path)
-    {
-        var extension = Path.GetExtension(path).ToLowerInvariant();
-        return extension == ".mjlog" || extension == ".gz";
     }
 
     #endregion
