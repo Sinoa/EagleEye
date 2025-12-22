@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="EagleEye/EagleEye.csproj" />
+  <Project Path="MjlogConverter/MjlogConverter.csproj" />
+  <Project Path="TileEmbedder/TileEmbedder.csproj" />
+</Solution>
