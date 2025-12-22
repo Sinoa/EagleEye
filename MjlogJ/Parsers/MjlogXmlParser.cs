@@ -2,7 +2,7 @@
 // 
 // Copyright (c) 2025 Sinoa
 // 
-// This software is provided ‘as-is’, without any express or implied
+// This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 // 
@@ -22,11 +22,11 @@
 // distribution.
 
 using System.Xml.Linq;
-using MjlogConverter.Analyzers;
-using MjlogConverter.Decoders;
-using MjlogConverter.Models;
+using MjlogJ.Analyzers;
+using MjlogJ.Decoders;
+using MjlogJ.Models;
 
-namespace MjlogConverter.Parsers;
+namespace MjlogJ.Parsers;
 
 /// <summary>
 /// 天鳳の牌譜XMLを解析するパーサー
@@ -682,3 +682,4 @@ public class MjlogXmlParser
         }
     }
 }
+

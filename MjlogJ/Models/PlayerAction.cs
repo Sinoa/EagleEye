@@ -2,7 +2,7 @@
 // 
 // Copyright (c) 2025 Sinoa
 // 
-// This software is provided ‘as-is’, without any express or implied
+// This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 // 
@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace MjlogConverter.Models;
+namespace MjlogJ.Models;
 
 /// <summary>
 /// プレイヤー行動の種類
@@ -120,3 +120,4 @@ public class NewDoraAction : PlayerAction
     /// <summary>新ドラ表示牌</summary>
     public Tile? DoraTile { get; set; }
 }
+

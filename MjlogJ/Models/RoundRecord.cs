@@ -2,7 +2,7 @@
 // 
 // Copyright (c) 2025 Sinoa
 // 
-// This software is provided ‘as-is’, without any express or implied
+// This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 // 
@@ -21,9 +21,9 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using MjlogConverter.Models.ComputedData;
+using MjlogJ.Models.ComputedData;
 
-namespace MjlogConverter.Models;
+namespace MjlogJ.Models;
 
 /// <summary>
 /// 局の記録
@@ -93,3 +93,4 @@ public class RoundComputedData
     /// <summary>テンパイ時の待ち牌情報（プレイヤーID -> 待ち牌情報）</summary>
     public Dictionary<int, WaitingTilesInfo> TenpaiWaitingTiles { get; set; } = [];
 }
+

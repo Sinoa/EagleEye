@@ -2,7 +2,7 @@
 // 
 // Copyright (c) 2025 Sinoa
 // 
-// This software is provided ‘as-is’, without any express or implied
+// This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 // 
@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace MjlogConverter.Models.ComputedData;
+namespace MjlogJ.Models.ComputedData;
 
 /// <summary>
 /// 待ち牌情報（計算による追加情報）
@@ -49,3 +49,4 @@ public class WaitingTilesInfo
     /// <summary>計算時点の副露</summary>
     public List<MeldInfo> MeldsAtCalculation { get; set; } = [];
 }
+

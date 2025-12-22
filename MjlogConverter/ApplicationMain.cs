@@ -21,9 +21,9 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using MjlogConverter.Formatters;
-using MjlogConverter.Parsers;
 using MjlogConverter.Utils;
+using MjlogJ;
+using MjlogJ.Formatters;
 
 namespace MjlogConverter;
 
@@ -133,7 +133,6 @@ public static class ApplicationMain
 
     private static int ProcessFiles(CommandLineOptions options)
     {
-        var parser = new MjlogXmlParser();
         IOutputFormatter formatter = new JsonOutputFormatter();
         var progress = new ProgressReporter(options.ShowProgress);
 
@@ -161,11 +160,8 @@ public static class ApplicationMain
 
             try
             {
-                // XMLを読み込み
-                var xmlContent = File.ReadAllText(inputFile);
-
-                // パース
-                var record = parser.Parse(xmlContent);
+                // MjlogReader APIを使用してパース
+                var record = MjlogReader.Load(inputFile);
 
                 // 出力ファイルパスを決定
                 var outputFile = DetermineOutputFilePath(inputFile, options.InputPath!, outputDir, formatter.FileExtension);

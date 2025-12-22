@@ -2,7 +2,7 @@
 // 
 // Copyright (c) 2025 Sinoa
 // 
-// This software is provided ‘as-is’, without any express or implied
+// This software is provided 'as-is', without any express or implied
 // warranty. In no event will the authors be held liable for any damages
 // arising from the use of this software.
 // 
@@ -21,9 +21,9 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using MjlogConverter.Models;
+using MjlogJ.Models;
 
-namespace MjlogConverter.Decoders;
+namespace MjlogJ.Decoders;
 
 /// <summary>
 /// 天鳳形式の鳴きコードをデコードするクラス
@@ -235,3 +235,4 @@ public static class MeldDecoder
         meld.Tiles = [TileDecoder.Decode(tileId)];
     }
 }
+
