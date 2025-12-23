@@ -1,3 +1,7 @@
+<div align="center">
+![logo](/docs/logo.png)
+</div>
+
 # EagleEye
 
 麻雀「何切る」問題を解くAI推論エンジン **EagleEye** を中核とした、学習パイプライン・ユーティリティを統合した総合プロジェクトです。
