@@ -1,6 +1,6 @@
-<div align="center">
-    <img src="./docs/logo.png" width="25%"/>
-</div>
+| ロゴ | マスコット |
+| :---: | :---: |
+| ![](./docs/logo.png) | ![](./docs/chara.png) |
 
 # EagleEye
 
