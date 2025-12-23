@@ -1,11 +1,12 @@
 <Solution>
     <Folder Name="/Cli/">
         <Project Path="MjlogConverter/MjlogConverter.csproj" />
-        <Project Path="TileEmbedder/TileEmbedder.csproj" />
+        <Project Path="TileEmbedderViewer/TileEmbedderViewer.csproj" />
     </Folder>
     <Folder Name="/Lib/">
         <Project Path="MjlogJ/MjlogJ.csproj" />
         <Project Path="MLModelUtility/MLModelUtility.csproj" />
+        <Project Path="TileEmbedder/TileEmbedder.csproj" />
     </Folder>
     <Project Path="EagleEye/EagleEye.csproj" />
 </Solution>
