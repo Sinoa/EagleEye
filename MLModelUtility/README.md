@@ -4,14 +4,16 @@ AIモデルの入出力を抽象化し、複数のフォーマットに対応す
 
 ## 概要
 
-このライブラリは、機械学習モデルのテンソルデータと計算グラフを読み書きするための統一的なインターフェースを提供します。現在は Safetensors フォーマットをサポートしており、将来的に ONNX フォーマットにも対応予定です。
+このライブラリは、機械学習モデルのテンソルデータと計算グラフを読み書きするための統一的なインターフェースを提供します。Safetensors と ONNX フォーマットをサポートしています。
 
 ## 対応フォーマット
 
 | フォーマット | テンソル読込 | テンソル書込 | グラフ読込 | グラフ書込 | 状態 |
 |------------|:----------:|:----------:|:--------:|:--------:|:----:|
 | Safetensors | ✅ | ✅ | - | - | 完全実装 |
-| ONNX | 🚧 | - | 🚧 | 🚧 | 未実装 |
+| ONNX | ✅ | - | ✅ | ✅ | 完全実装 |
+
+> **Note**: ONNX フォーマットではテンソルのみの書き込みはサポートされません。グラフと一緒に `WriteGraphWithTensors` を使用してください。
 
 ## インストール
 
@@ -115,6 +117,91 @@ using var tensors = handler.ReadTensors(inputStream);
 // ストリームに書き込み
 using var outputStream = File.Create("output.safetensors");
 handler.WriteTensors(tensors, outputStream);
+```
+
+### ONNX ファイルの読み込み
+
+```csharp
+using MLModelUtility.Formats.Onnx;
+using MLModelUtility.Models;
+using MLModelUtility.Models.Graph;
+
+var handler = new OnnxFormatHandler();
+
+// グラフとテンソルを同時に読み込む
+var (graph, tensors) = handler.ReadGraphWithTensors(File.OpenRead("model.onnx"));
+
+Console.WriteLine($"Graph: {graph.Name}");
+Console.WriteLine($"IR Version: {graph.IrVersion}");
+Console.WriteLine($"Nodes: {graph.Nodes.Count}");
+Console.WriteLine($"Tensors: {tensors.Count}");
+
+// ノードを列挙
+foreach (var node in graph.Nodes)
+{
+    Console.WriteLine($"  {node.OperatorType}: {node.Name}");
+}
+
+// 入出力情報
+foreach (var input in graph.Inputs)
+{
+    Console.WriteLine($"Input: {input.Name} {input.ShapeToString()}");
+}
+
+// テンソルデータにアクセス
+foreach (var tensor in tensors)
+{
+    Console.WriteLine($"Weight: {tensor.Info.Name} - {tensor.Info.DataType} {tensor.Info.ShapeToString()}");
+}
+
+tensors.Dispose();
+```
+
+### ONNX ファイルの書き込み
+
+```csharp
+using MLModelUtility.Formats.Onnx;
+using MLModelUtility.Models;
+using MLModelUtility.Models.Graph;
+
+// 計算グラフを作成
+var graph = new ComputeGraph
+{
+    Name = "simple_model",
+    IrVersion = 8,
+    ProducerName = "MLModelUtility",
+    ProducerVersion = "1.0.0"
+};
+
+// Opsetバージョンを設定
+graph.OpsetVersions[""] = 17;
+
+// 入力を定義
+graph.Inputs.Add(new TensorInfo("input", [1, 3, 224, 224], TensorDataType.Float32));
+
+// 出力を定義
+graph.Outputs.Add(new TensorInfo("output", [1, 1000], TensorDataType.Float32));
+
+// ノードを追加
+var node = new GraphNode
+{
+    Name = "conv1",
+    OperatorType = "Conv",
+    Inputs = ["input", "conv1.weight", "conv1.bias"],
+    Outputs = ["conv1_output"]
+};
+node.Attributes["kernel_shape"] = new long[] { 3, 3 };
+node.Attributes["strides"] = new long[] { 1, 1 };
+graph.Nodes.Add(node);
+
+// テンソルデータ（重み）を作成
+var weight = TensorData.FromFloat32("conv1.weight", [64, 3, 3, 3], new float[64 * 3 * 3 * 3]);
+var bias = TensorData.FromFloat32("conv1.bias", [64], new float[64]);
+using var tensors = new TensorCollection([weight, bias]);
+
+// ファイルに書き込み
+var handler = new OnnxFormatHandler();
+handler.WriteGraphWithTensors(graph, tensors, File.Create("output.onnx"));
 ```
 
 ## テンソルデータの作成

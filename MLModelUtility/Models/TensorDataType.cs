@@ -153,4 +153,57 @@ public static class TensorDataTypeExtensions
             _ => throw new ArgumentException($"Unknown data type: {dataType}", nameof(dataType))
         };
     }
+
+    /// <summary>
+    /// ONNXのDataType値からTensorDataTypeに変換
+    /// </summary>
+    /// <param name="onnxDataType">ONNXのDataType値</param>
+    /// <returns>対応するTensorDataType</returns>
+    public static TensorDataType FromOnnxDataType(int onnxDataType)
+    {
+        // ONNX TensorProto.DataType の値に基づく変換
+        return onnxDataType switch
+        {
+            1 => TensorDataType.Float32, // FLOAT
+            2 => TensorDataType.UInt8, // UINT8
+            3 => TensorDataType.Int8, // INT8
+            4 => TensorDataType.UInt16, // UINT16
+            5 => TensorDataType.Int16, // INT16
+            6 => TensorDataType.Int32, // INT32
+            7 => TensorDataType.Int64, // INT64
+            9 => TensorDataType.Bool, // BOOL
+            10 => TensorDataType.Float16, // FLOAT16
+            11 => TensorDataType.Float64, // DOUBLE
+            12 => TensorDataType.UInt32, // UINT32
+            13 => TensorDataType.UInt64, // UINT64
+            16 => TensorDataType.BFloat16, // BFLOAT16
+            _ => TensorDataType.Unknown
+        };
+    }
+
+    /// <summary>
+    /// TensorDataTypeをONNXのDataType値に変換
+    /// </summary>
+    /// <param name="dataType">データ型</param>
+    /// <returns>ONNXのDataType値</returns>
+    public static int ToOnnxDataType(this TensorDataType dataType)
+    {
+        return dataType switch
+        {
+            TensorDataType.Float32 => 1, // FLOAT
+            TensorDataType.UInt8 => 2, // UINT8
+            TensorDataType.Int8 => 3, // INT8
+            TensorDataType.UInt16 => 4, // UINT16
+            TensorDataType.Int16 => 5, // INT16
+            TensorDataType.Int32 => 6, // INT32
+            TensorDataType.Int64 => 7, // INT64
+            TensorDataType.Bool => 9, // BOOL
+            TensorDataType.Float16 => 10, // FLOAT16
+            TensorDataType.Float64 => 11, // DOUBLE
+            TensorDataType.UInt32 => 12, // UINT32
+            TensorDataType.UInt64 => 13, // UINT64
+            TensorDataType.BFloat16 => 16, // BFLOAT16
+            _ => 0 // UNDEFINED
+        };
+    }
 }
