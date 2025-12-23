@@ -1,5 +1,5 @@
 <div align="center">
-![logo](/docs/logo.png)
+    <img src="./docs/logo.png" width="25%"/>
 </div>
 
 # EagleEye
