@@ -1,6 +1,7 @@
 <Solution>
-    <Project Path="EagleEye/EagleEye.csproj"/>
-    <Project Path="MjlogConverter/MjlogConverter.csproj"/>
-    <Project Path="MjlogJ/MjlogJ.csproj"/>
-    <Project Path="TileEmbedder/TileEmbedder.csproj"/>
+    <Project Path="EagleEye/EagleEye.csproj" />
+    <Project Path="MjlogConverter/MjlogConverter.csproj" />
+    <Project Path="MjlogJ/MjlogJ.csproj" />
+    <Project Path="MLModelUtility/MLModelUtility.csproj" />
+    <Project Path="TileEmbedder/TileEmbedder.csproj" />
 </Solution>
