@@ -4,7 +4,7 @@ AIモデルの入出力を抽象化し、複数のフォーマットに対応す
 
 ## 概要
 
-このライブラリは、機械学習モデルのテンソルデータと計算グラフを読み書きするための統一的なインターフェースを提供します。Safetensors と ONNX フォーマットをサポートしています。
+このライブラリは、機械学習モデルのテンソルデータと計算グラフを読み書きするための統一的なインターフェースを提供します。Safetensors、ONNX、Unity Sentis フォーマットをサポートしています。
 
 ## 対応フォーマット
 
@@ -12,8 +12,11 @@ AIモデルの入出力を抽象化し、複数のフォーマットに対応す
 |------------|:----------:|:----------:|:--------:|:--------:|:----:|
 | Safetensors | ✅ | ✅ | - | - | 完全実装 |
 | ONNX | ✅ | - | ✅ | ✅ | 完全実装 |
+| Sentis | - | ✅ | - | ✅ | 完全実装 |
 
 > **Note**: ONNX フォーマットではテンソルのみの書き込みはサポートされません。グラフと一緒に `WriteGraphWithTensors` を使用してください。
+
+> **Note**: Sentis フォーマットは Unity の推論エンジン用であり、出力（書き込み）のみをサポートしています。読み込みはサポートされません。
 
 ## インストール
 
@@ -204,6 +207,53 @@ var handler = new OnnxFormatHandler();
 handler.WriteGraphWithTensors(graph, tensors, File.Create("output.onnx"));
 ```
 
+### Unity Sentis ファイルの書き込み
+
+```csharp
+using MLModelUtility.Formats.Sentis;
+using MLModelUtility.Models;
+using MLModelUtility.Models.Graph;
+
+// 計算グラフを作成
+var graph = new ComputeGraph
+{
+    Name = "unity_model",
+    IrVersion = 1,
+    ProducerName = "MLModelUtility",
+    ProducerVersion = "1.0.0"
+};
+
+// 入力を定義
+graph.Inputs.Add(new TensorInfo("input", [1, 3, 224, 224], TensorDataType.Float32));
+
+// 出力を定義
+graph.Outputs.Add(new TensorInfo("output", [1, 1000], TensorDataType.Float32));
+
+// ノードを追加
+var node = new GraphNode
+{
+    Name = "dense1",
+    OperatorType = "MatMul",
+    Inputs = ["input", "dense1.weight"],
+    Outputs = ["dense1_output"]
+};
+graph.Nodes.Add(node);
+
+// テンソルデータ（重み）を作成
+var weight = TensorData.FromFloat32("dense1.weight", [1000, 3 * 224 * 224], new float[1000 * 3 * 224 * 224]);
+using var tensors = new TensorCollection([weight]);
+
+// Sentis形式でファイルに書き込み
+var handler = new SentisFormatHandler();
+handler.WriteGraphWithTensors(graph, tensors, File.Create("model.sentis"));
+
+// 非同期書き込み
+await handler.WriteGraphWithTensorsAsync(graph, tensors, File.Create("model.sentis"));
+```
+
+> **Note**: Sentis フォーマットは Unity の Inference Engine (Sentis) で直接ロードできる形式です。
+> 対応するデータ型は Float32, Int32, UInt8 (Byte), Int16 (Short) に限定されます。
+
 ## テンソルデータの作成
 
 ### 各データ型のファクトリメソッド
@@ -325,9 +375,12 @@ MLModelUtility/
     ├── Safetensors/
     │   ├── SafetensorsHeader.cs
     │   └── SafetensorsFormatHandler.cs
-    └── Onnx/
-        ├── Generated/              # protobuf生成コード（将来）
-        └── OnnxFormatHandler.cs
+    ├── Onnx/
+    │   ├── Generated/              # protobuf生成コード
+    │   └── OnnxFormatHandler.cs
+    └── Sentis/
+        ├── Generated/              # FlatBuffers生成コード
+        └── SentisFormatHandler.cs
 ```
 
 ### クラス図

@@ -206,4 +206,43 @@ public static class TensorDataTypeExtensions
             _ => 0 // UNDEFINED
         };
     }
+
+    /// <summary>
+    /// Sentis ScalarType値からTensorDataTypeに変換
+    /// </summary>
+    /// <param name="scalarType">SentisのScalarType値</param>
+    /// <returns>対応するTensorDataType</returns>
+    public static TensorDataType FromSentisScalarType(int scalarType)
+    {
+        // SentisFlatBuffer.ScalarType の値に基づく変換
+        return scalarType switch
+        {
+            0 => TensorDataType.Float32, // FLOAT
+            1 => TensorDataType.Int32, // INT
+            2 => TensorDataType.UInt8, // BYTE
+            3 => TensorDataType.Int16, // SHORT
+            _ => TensorDataType.Unknown
+        };
+    }
+
+    /// <summary>
+    /// TensorDataTypeをSentis ScalarType値に変換
+    /// </summary>
+    /// <param name="dataType">データ型</param>
+    /// <returns>SentisのScalarType値</returns>
+    public static int ToSentisScalarType(this TensorDataType dataType)
+    {
+        return dataType switch
+        {
+            TensorDataType.Float32 => 0, // FLOAT
+            TensorDataType.Float64 => 0, // FLOAT (Sentisはfloat64未対応のためfloat32として扱う)
+            TensorDataType.Int32 => 1, // INT
+            TensorDataType.Int64 => 1, // INT (Sentisはint64未対応のためint32として扱う)
+            TensorDataType.UInt8 => 2, // BYTE
+            TensorDataType.Int8 => 2, // BYTE (符号付きもBYTEとして扱う)
+            TensorDataType.Int16 => 3, // SHORT
+            TensorDataType.UInt16 => 3, // SHORT (符号なしもSHORTとして扱う)
+            _ => 0 // デフォルトはFLOAT
+        };
+    }
 }
