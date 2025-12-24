@@ -41,15 +41,15 @@ public class MjlogCooccurrenceExtractor
         {
             TileSuit.Man => tile.IsRedDora && tile.Number == 5
                 ? TileTokenId.RedMan5
-                : (TileTokenId)(tile.Number - 1),
+                : (TileTokenId)(tile.Number), // 1萬=1, 2萬=2, ... 9萬=9
 
             TileSuit.Pin => tile.IsRedDora && tile.Number == 5
                 ? TileTokenId.RedPin5
-                : (TileTokenId)(10 + tile.Number - 1),
+                : (TileTokenId)(10 + tile.Number), // 1筒=11, 2筒=12, ... 9筒=19
 
             TileSuit.Sou => tile.IsRedDora && tile.Number == 5
                 ? TileTokenId.RedSou5
-                : (TileTokenId)(20 + tile.Number - 1),
+                : (TileTokenId)(20 + tile.Number), // 1索=21, 2索=22, ... 9索=29
 
             TileSuit.Honor => (HonorType)tile.Number switch
             {

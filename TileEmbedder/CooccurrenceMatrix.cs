@@ -92,13 +92,13 @@ public class CooccurrenceMatrix
     /// </summary>
     public void BuildBaseMatrix()
     {
-        // 萬子同士の共起
+        // 萬子同士の共起（1萬〜9萬: ID 1-9）
         AddSuitCooccurrence(TileTokenId.Man1, 9, TileTokenId.AttrMan, TileTokenId.AttrNumber);
 
-        // 筒子同士の共起
+        // 筒子同士の共起（1筒〜9筒: ID 11-19）
         AddSuitCooccurrence(TileTokenId.Pin1, 9, TileTokenId.AttrPin, TileTokenId.AttrNumber);
 
-        // 索子同士の共起
+        // 索子同士の共起（1索〜9索: ID 21-29）
         AddSuitCooccurrence(TileTokenId.Sou1, 9, TileTokenId.AttrSou, TileTokenId.AttrNumber);
 
         // 風牌同士の共起（東南西北）
@@ -107,7 +107,7 @@ public class CooccurrenceMatrix
         // 三元牌同士の共起（白發中）
         AddGroupCooccurrence(TileTokenId.White, 3, TileTokenId.AttrDragon, TileTokenId.AttrHonor);
 
-        // 赤牌の属性共起
+        // 赤牌の属性共起（赤5萬、赤5筒、赤5索は各スートのID 0, 10, 20）
         AddCooccurrence(TileTokenId.RedMan5, TileTokenId.AttrMan);
         AddCooccurrence(TileTokenId.RedMan5, TileTokenId.AttrNumber);
         AddCooccurrence(TileTokenId.RedMan5, TileTokenId.AttrRed);
@@ -125,10 +125,52 @@ public class CooccurrenceMatrix
         AddCooccurrence(TileTokenId.RedPin5, TileTokenId.Pin5);
         AddCooccurrence(TileTokenId.RedSou5, TileTokenId.Sou5);
 
+        // 赤5と同スートの通常牌との共起
+        AddRedTileSuitCooccurrence(TileTokenId.RedMan5, TileTokenId.Man1, 9);
+        AddRedTileSuitCooccurrence(TileTokenId.RedPin5, TileTokenId.Pin1, 9);
+        AddRedTileSuitCooccurrence(TileTokenId.RedSou5, TileTokenId.Sou1, 9);
+
         // 順子近接共起を追加
         AddSequenceCooccurrence(TileTokenId.Man1, 9);
         AddSequenceCooccurrence(TileTokenId.Pin1, 9);
         AddSequenceCooccurrence(TileTokenId.Sou1, 9);
+
+        // 赤5の順子近接共起（3,4,5,6,7と共起 - 345,456,567の順子に対応）
+        AddRedTileSequenceCooccurrence(TileTokenId.RedMan5, TileTokenId.Man3);
+        AddRedTileSequenceCooccurrence(TileTokenId.RedPin5, TileTokenId.Pin3);
+        AddRedTileSequenceCooccurrence(TileTokenId.RedSou5, TileTokenId.Sou3);
+    }
+
+    /// <summary>
+    /// 赤牌と同スートの通常牌との共起を追加
+    /// </summary>
+    private void AddRedTileSuitCooccurrence(TileTokenId redTile, TileTokenId suitStart, int count)
+    {
+        int redId = (int)redTile;
+        int startId = (int)suitStart;
+
+        // 5萬との共起は既に追加されているのでスキップ（5は startId + 4）
+        for (int i = 0; i < count; i++)
+        {
+            if (startId + i != (int)suitStart + 4) // 通常5以外と共起
+            {
+                AddCooccurrence(redId, startId + i);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 赤5の順子近接共起を追加（3,4,5,6,7と追加共起 - 345,456,567の順子に対応）
+    /// </summary>
+    private void AddRedTileSequenceCooccurrence(TileTokenId redTile, TileTokenId tile3)
+    {
+        // 赤5は3,4,5,6,7と順子近接で更に共起
+        // (tile3は3の位置、tile3+1は4、tile3+2は5、tile3+3は6、tile3+4は7の位置)
+        AddCooccurrence(redTile, tile3); // 3と共起
+        AddCooccurrence(redTile, (TileTokenId)((int)tile3 + 1)); // 4と共起
+        // 5との共起は既にAddRedTileSuitCooccurrenceで追加済み
+        AddCooccurrence(redTile, (TileTokenId)((int)tile3 + 3)); // 6と共起
+        AddCooccurrence(redTile, (TileTokenId)((int)tile3 + 4)); // 7と共起
     }
 
     /// <summary>
@@ -138,7 +180,7 @@ public class CooccurrenceMatrix
     {
         int startId = (int)start;
 
-        // 同種牌同士の共起
+        // 同種牌同士の共起（1〜9の通常牌）
         for (int i = 0; i < count; i++)
         {
             for (int j = i + 1; j < count; j++)
