@@ -21,6 +21,10 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
+using System.Text.Json;
+using MLModelUtility.Formats.Safetensors;
+using MLModelUtility.Models;
+
 namespace TileEmbedder;
 
 /// <summary>
@@ -45,6 +49,12 @@ public class SkipGramTrainingOptions
 
     /// <summary>エポック毎のコールバック</summary>
     public Action<int, float>? OnEpochComplete { get; set; }
+
+    /// <summary>チェックポイント保存パス（nullの場合は保存しない）</summary>
+    public string? CheckpointPath { get; set; }
+
+    /// <summary>チェックポイント保存間隔（エポック数）</summary>
+    public int? CheckpointInterval { get; set; }
 }
 
 /// <summary>
@@ -83,6 +93,209 @@ public class SkipGramTrainer
         _outputWeights = new float[vocabSize, embeddingDim];
 
         InitializeWeights();
+    }
+
+    /// <summary>
+    /// Safetensors形式から学習済み埋め込みベクトルをロードしてトレーナーを作成
+    /// </summary>
+    /// <param name="filePath">Safetensorsファイルのパス</param>
+    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <param name="tensorName">テンソル名（デフォルト: "tile_embeddings"）</param>
+    /// <returns>埋め込みがロードされたトレーナー</returns>
+    public static SkipGramTrainer LoadFromSafetensors(
+        string filePath,
+        int? randomSeed = null,
+        string tensorName = "tile_embeddings")
+    {
+        var handler = new SafetensorsFormatHandler();
+        using var collection = handler.ReadTensorsFromFile(filePath);
+
+        // メタデータから情報を取得
+        var metadata = collection.Metadata;
+        if (metadata == null || !metadata.TryGetValue("vocab_size", out var vocabSizeStr) || !metadata.TryGetValue("embedding_dim", out var embeddingDimStr))
+        {
+            throw new InvalidDataException("Safetensors file missing required metadata (vocab_size, embedding_dim)");
+        }
+
+        int vocabSize = int.Parse(vocabSizeStr);
+        int embeddingDim = int.Parse(embeddingDimStr);
+
+        // テンソルデータを取得
+        if (!collection.TryGetTensor(tensorName, out var tensor) || tensor == null)
+        {
+            throw new InvalidDataException($"Tensor '{tensorName}' not found in Safetensors file");
+        }
+
+        if (tensor.Info.DataType != TensorDataType.Float32)
+        {
+            throw new InvalidDataException($"Expected Float32 tensor, got {tensor.Info.DataType}");
+        }
+
+        // トレーナーを作成（初期化をスキップして後で重みを設定）
+        var trainer = new SkipGramTrainer(vocabSize, embeddingDim, randomSeed);
+
+        // 埋め込みベクトルを読み込み（入力層重みとして設定）
+        var flatData = tensor.GetDataAs<float>();
+        int index = 0;
+        for (int i = 0; i < vocabSize; i++)
+        {
+            for (int d = 0; d < embeddingDim; d++)
+            {
+                trainer._inputWeights[i, d] = flatData[index++];
+            }
+        }
+
+        // 出力層重みは0初期化（追加学習を想定）
+        for (int i = 0; i < vocabSize; i++)
+        {
+            for (int d = 0; d < embeddingDim; d++)
+            {
+                trainer._outputWeights[i, d] = 0f;
+            }
+        }
+
+        return trainer;
+    }
+
+    /// <summary>
+    /// JSON形式から学習済み埋め込みベクトルをロードしてトレーナーを作成
+    /// </summary>
+    /// <param name="filePath">JSONファイルのパス</param>
+    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <returns>埋め込みがロードされたトレーナー</returns>
+    public static SkipGramTrainer LoadFromJson(string filePath, int? randomSeed = null)
+    {
+        var json = File.ReadAllText(filePath);
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        // メタデータを取得
+        int vocabSize = root.GetProperty("vocab_size").GetInt32();
+        int embeddingDim = root.GetProperty("embedding_dim").GetInt32();
+
+        // トレーナーを作成
+        var trainer = new SkipGramTrainer(vocabSize, embeddingDim, randomSeed);
+
+        // 埋め込みベクトルを読み込み
+        var embeddings = root.GetProperty("embeddings");
+        foreach (var kvp in embeddings.EnumerateObject())
+        {
+            var tokenName = kvp.Name;
+            var vector = kvp.Value;
+
+            // TileTokenIdに変換
+            if (Enum.TryParse<TileTokenId>(tokenName, out var tokenId))
+            {
+                int tokenIndex = (int)tokenId;
+                int d = 0;
+                foreach (var value in vector.EnumerateArray())
+                {
+                    if (d < embeddingDim)
+                    {
+                        trainer._inputWeights[tokenIndex, d] = value.GetSingle();
+                        d++;
+                    }
+                }
+            }
+        }
+
+        // 出力層重みは0初期化
+        for (int i = 0; i < vocabSize; i++)
+        {
+            for (int d = 0; d < embeddingDim; d++)
+            {
+                trainer._outputWeights[i, d] = 0f;
+            }
+        }
+
+        return trainer;
+    }
+
+    /// <summary>
+    /// 学習済みモデルの重みを保存（バイナリ形式）
+    /// </summary>
+    /// <param name="filePath">保存先ファイルパス</param>
+    /// <remarks>
+    /// 入力層重みと出力層重みの両方を保存するため、学習の完全な再開が可能。
+    /// Safetensors形式は推論用の埋め込みベクトルのみを保存する。
+    /// </remarks>
+    public void SaveWeights(string filePath)
+    {
+        using var writer = new BinaryWriter(File.Create(filePath));
+
+        // ヘッダー
+        writer.Write(0x57475053); // マジックナンバー "SPGW" (Skip-Gram Weights)
+        writer.Write(1); // バージョン
+        writer.Write(_vocabSize);
+        writer.Write(_embeddingDim);
+
+        // 入力層重みを保存
+        for (int i = 0; i < _vocabSize; i++)
+        {
+            for (int j = 0; j < _embeddingDim; j++)
+            {
+                writer.Write(_inputWeights[i, j]);
+            }
+        }
+
+        // 出力層重みを保存
+        for (int i = 0; i < _vocabSize; i++)
+        {
+            for (int j = 0; j < _embeddingDim; j++)
+            {
+                writer.Write(_outputWeights[i, j]);
+            }
+        }
+    }
+
+    /// <summary>
+    /// バイナリ形式の重みファイルからトレーナーをロード
+    /// </summary>
+    /// <param name="filePath">重みファイルのパス</param>
+    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <returns>重みがロードされたトレーナー</returns>
+    /// <remarks>
+    /// SaveWeightsで保存した完全な学習状態（入力層・出力層両方）を復元。
+    /// 学習の完全な再開が可能。
+    /// </remarks>
+    public static SkipGramTrainer LoadFromWeights(string filePath, int? randomSeed = null)
+    {
+        using var reader = new BinaryReader(File.OpenRead(filePath));
+
+        // ヘッダー読み込み
+        int magic = reader.ReadInt32();
+        if (magic != 0x57475053) // "SPGW"
+            throw new InvalidDataException("Invalid weights file format");
+
+        int version = reader.ReadInt32();
+        if (version != 1)
+            throw new InvalidDataException($"Unsupported weights file version: {version}");
+
+        int vocabSize = reader.ReadInt32();
+        int embeddingDim = reader.ReadInt32();
+
+        // トレーナーを作成
+        var trainer = new SkipGramTrainer(vocabSize, embeddingDim, randomSeed);
+
+        // 入力層重みを読み込み
+        for (int i = 0; i < vocabSize; i++)
+        {
+            for (int j = 0; j < embeddingDim; j++)
+            {
+                trainer._inputWeights[i, j] = reader.ReadSingle();
+            }
+        }
+
+        // 出力層重みを読み込み
+        for (int i = 0; i < vocabSize; i++)
+        {
+            for (int j = 0; j < embeddingDim; j++)
+            {
+                trainer._outputWeights[i, j] = reader.ReadSingle();
+            }
+        }
+
+        return trainer;
     }
 
     /// <summary>
@@ -184,6 +397,13 @@ public class SkipGramTrainer
 
             float avgLoss = totalLoss / (pairCount * (1 + negativeSamples));
             options.OnEpochComplete?.Invoke(epoch + 1, avgLoss);
+
+            // チェックポイント保存
+            if (options.CheckpointPath != null && options.CheckpointInterval.HasValue && (epoch + 1) % options.CheckpointInterval.Value == 0)
+            {
+                string checkpointFile = $"{options.CheckpointPath}.epoch{epoch + 1}.bin";
+                SaveWeights(checkpointFile);
+            }
         }
     }
 

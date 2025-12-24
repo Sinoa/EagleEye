@@ -64,6 +64,92 @@ trainer.Train(matrix);
 EmbeddingExporter.ExportToSafetensors(trainer, "tile_embeddings.safetensors");
 ```
 
+## 学習済みモデルのロードと再開
+
+### Safetensors形式からロード（推論・追加学習用）
+
+既に学習済みの埋め込みベクトルをロードして、推論や追加学習に使用できます：
+
+```csharp
+// 学習済み埋め込みベクトルをロード
+var trainer = SkipGramTrainer.LoadFromSafetensors("tile_embeddings.safetensors");
+
+// ロードしたモデルで類似度を計算
+float similarity = trainer.CosineSimilarity(TileTokenId.Man1, TileTokenId.Man2);
+Console.WriteLine($"1萬と2萬の類似度: {similarity:F4}");
+
+// 新しいデータで追加学習（ファインチューニング）
+var matrix = new CooccurrenceMatrix();
+matrix.BuildBaseMatrix();
+// ... 新しいデータを追加 ...
+
+trainer.Train(matrix, new SkipGramTrainingOptions
+{
+    Epochs = 50,
+    LearningRate = 0.01f  // 小さい学習率で微調整
+});
+```
+
+### JSON形式からロード
+
+```csharp
+var trainer = SkipGramTrainer.LoadFromJson("tile_embeddings.json");
+```
+
+### 完全な学習状態の保存と再開
+
+入力層・出力層の両方の重みを保存することで、学習を完全に再開できます：
+
+```csharp
+// 学習中の重みを保存（入力層・出力層両方）
+trainer.SaveWeights("training_state.bin");
+
+// 完全な状態から再開
+var resumedTrainer = SkipGramTrainer.LoadFromWeights("training_state.bin");
+resumedTrainer.Train(matrix, new SkipGramTrainingOptions { Epochs = 100 });
+```
+
+### チェックポイント機能
+
+長時間の学習で定期的に重みを自動保存：
+
+```csharp
+var trainer = new SkipGramTrainer();
+trainer.Train(matrix, new SkipGramTrainingOptions
+{
+    Epochs = 1000,
+    CheckpointPath = "checkpoints/model",
+    CheckpointInterval = 100,  // 100エポックごとに保存
+    OnEpochComplete = (epoch, loss) =>
+    {
+        Console.WriteLine($"Epoch {epoch}: Loss = {loss:F6}");
+    }
+});
+// → checkpoints/model.epoch100.bin
+//   checkpoints/model.epoch200.bin
+//   ... が生成される
+```
+
+学習の中断後、最後のチェックポイントから再開：
+
+```csharp
+var trainer = SkipGramTrainer.LoadFromWeights("checkpoints/model.epoch500.bin");
+trainer.Train(matrix, new SkipGramTrainingOptions 
+{ 
+    Epochs = 500,  // 残り500エポック
+    CheckpointPath = "checkpoints/model",
+    CheckpointInterval = 100
+});
+```
+
+### 形式の使い分け
+
+| 形式 | 用途 | 入力層重み | 出力層重み | メソッド |
+|------|------|-----------|-----------|---------|
+| **Safetensors** | 推論・配布・ファインチューニング | ✓ | ✗ | `LoadFromSafetensors()` |
+| **JSON** | デバッグ・可読性確認 | ✓ | ✗ | `LoadFromJson()` |
+| **バイナリ (.bin)** | 学習の完全な再開 | ✓ | ✓ | `LoadFromWeights()` / `SaveWeights()` |
+
 ## トークン定義
 
 ### 実牌トークン（0-36）
