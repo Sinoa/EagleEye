@@ -21,6 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
+using System.Text.Json;
 using TileEmbedder;
 
 namespace TileEmbedderCli;
@@ -30,6 +31,67 @@ namespace TileEmbedderCli;
 /// </summary>
 internal class EmbeddingVisualizer
 {
+    /// <summary>
+    /// JSONファイルから埋め込みベクトルを読み込んでCSV出力
+    /// </summary>
+    public void OutputFromJsonFile(string jsonPath, string method, bool includeAttributes)
+    {
+        if (!File.Exists(jsonPath))
+        {
+            throw new FileNotFoundException($"JSONファイルが見つかりません: {jsonPath}");
+        }
+
+        var json = File.ReadAllText(jsonPath);
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+
+        if (!data.TryGetProperty("embeddings", out var embeddingsObj))
+        {
+            throw new InvalidDataException("JSONファイルに'embeddings'プロパティが見つかりません");
+        }
+
+        var embeddings = new List<float[]>();
+        var labels = new List<string>();
+
+        foreach (var prop in embeddingsObj.EnumerateObject())
+        {
+            var tokenName = prop.Name;
+            
+            // 属性トークンを除外するオプション
+            if (!includeAttributes && tokenName.StartsWith("Attr"))
+            {
+                continue;
+            }
+
+            var vector = new List<float>();
+            foreach (var element in prop.Value.EnumerateArray())
+            {
+                vector.Add(element.GetSingle());
+            }
+
+            embeddings.Add(vector.ToArray());
+            labels.Add(tokenName);
+        }
+
+        // 次元削減とCSV出力
+        float[] x, y;
+        var methodLower = method.ToLowerInvariant();
+        
+        if (methodLower == "pca")
+        {
+            (x, y) = PerformPCA(embeddings);
+        }
+        else if (methodLower == "umap")
+        {
+            (x, y) = PerformUMAP(embeddings);
+        }
+        else
+        {
+            throw new ArgumentException($"不明な可視化手法: {method}。'pca'または'umap'を指定してください。");
+        }
+
+        OutputCSV(labels, x, y, methodLower.ToUpperInvariant());
+    }
+
     /// <summary>
     /// PCAで2次元削減してCSV出力
     /// </summary>
@@ -82,7 +144,7 @@ internal class EmbeddingVisualizer
     /// </summary>
     private void OutputCSV(List<string> labels, float[] x, float[] y, string method)
     {
-        Console.WriteLine($"Token,X,Y,Type,Method");
+        Console.WriteLine("Token,X,Y,Type,Method");
 
         for (int i = 0; i < labels.Count; i++)
         {

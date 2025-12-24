@@ -1,4 +1,4 @@
-﻿// zlib License
+﻿﻿// zlib License
 // 
 // Copyright (c) 2025 Sinoa
 // 
@@ -41,6 +41,12 @@ public static class ApplicationMain
             {
                 ShowHelp();
                 return 0;
+            }
+
+            // ファイルから読み込んで可視化するモード
+            if (!string.IsNullOrEmpty(options.LoadEmbeddingPath))
+            {
+                return ProcessVisualizationFromFile(options);
             }
 
             // 引数のバリデーション
@@ -190,18 +196,17 @@ public static class ApplicationMain
                     options.IncludeAttributes = true;
                     break;
 
+                case "-l":
+                case "--load":
+                    if (i + 1 < args.Length)
+                    {
+                        options.LoadEmbeddingPath = args[++i];
+                    }
+                    break;
+
                 case "-h":
                 case "--help":
                     options.ShowHelp = true;
-                    break;
-
-                default:
-                    // 引数なしで指定された場合は入力パスとみなす
-                    if (!args[i].StartsWith("-") && string.IsNullOrEmpty(options.InputPath))
-                    {
-                        options.InputPath = args[i];
-                    }
-
                     break;
             }
         }
@@ -216,10 +221,12 @@ public static class ApplicationMain
 
                           使用方法:
                             TileEmbedderCli [-i <入力パス>] [-o <出力パス>] [オプション]
+                            TileEmbedderCli -l <埋め込みファイル> [可視化オプション]
 
                           基本オプション:
                             -i, --input <パス>        牌譜ディレクトリのパス（省略時: ルールベースのみ生成）
                             -o, --output <パス>       出力ファイルのベース名（省略時: tile_embeddings）
+                            -l, --load <パス>         既存の埋め込みファイルを読み込んで可視化
                             --seed <数値>             乱数シード（再現性のため）
                             -r, --recursive           サブディレクトリも含めて牌譜を検索
                             -p, --progress            進捗表示を有効にする
@@ -234,7 +241,7 @@ public static class ApplicationMain
 
                           可視化オプション:
                             -v, --visualize           2次元可視化データをCSV形式で標準出力
-                            --visualize-method <手法> 次元削減手法 (pca|umap, デフォルト: umap)
+                            --visualize-method <手法> 次元削減手法 (pca|umap, デフォルト: pca)
                             --include-attributes      属性トークンも含めて可視化
 
                           例:
@@ -250,11 +257,14 @@ public static class ApplicationMain
                             # カスタムパラメータで学習
                             TileEmbedderCli -i ./mjlogs/ --embedding-dim 8 --epochs 200 --seed 42 -p
 
-                            # UMAPで可視化してCSV出力（スプレッドシートで可視化可能）
+                            # PCAで可視化してCSV出力（スプレッドシートで可視化可能）
                             TileEmbedderCli -p --visualize > embeddings.csv
 
-                            # PCAで可視化
-                            TileEmbedderCli -p --visualize --visualize-method pca > embeddings.csv
+                            # UMAPで可視化
+                            TileEmbedderCli -p --visualize --visualize-method umap > embeddings.csv
+
+                            # 既存のJSONファイルから読み込んで可視化
+                            TileEmbedderCli -l tile_embeddings.json > viz.csv
                           """);
     }
 
@@ -388,18 +398,18 @@ public static class ApplicationMain
             var visualizer = new EmbeddingVisualizer();
             var method = options.VisualizeMethod.ToLowerInvariant();
 
-            if (method == "pca")
+            if (method == "pca" || method == "default")
             {
                 visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
             }
-            else if (method == "umap" || method == "default")
+            else if (method == "umap")
             {
                 visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
             }
             else
             {
-                Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。UMAPを使用します。");
-                visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
+                Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
+                visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
             }
 
             return 0;
@@ -465,6 +475,40 @@ public static class ApplicationMain
             return 1;
         }
     }
+
+    private static int ProcessVisualizationFromFile(CommandLineOptions options)
+    {
+        try
+        {
+            var loadPath = options.LoadEmbeddingPath!;
+            
+            if (!File.Exists(loadPath))
+            {
+                Console.Error.WriteLine($"エラー: ファイルが見つかりません: {loadPath}");
+                return 1;
+            }
+
+            // 現在はJSON形式のみサポート
+            if (!loadPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine($"エラー: 現在はJSON形式 (.json) のみサポートしています");
+                return 1;
+            }
+
+            var visualizer = new EmbeddingVisualizer();
+            var method = string.IsNullOrEmpty(options.VisualizeMethod) || options.VisualizeMethod == "default" 
+                ? "pca"  // デフォルトをPCAに変更
+                : options.VisualizeMethod;
+            
+            visualizer.OutputFromJsonFile(loadPath, method, options.IncludeAttributes);
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"エラー: 埋め込みベクトルの読み込みまたは可視化中にエラーが発生しました: {ex.Message}");
+            return 1;
+        }
+    }
 }
 
 /// <summary>
@@ -474,6 +518,7 @@ internal class CommandLineOptions
 {
     public string? InputPath { get; set; }
     public string? OutputPath { get; set; }
+    public string? LoadEmbeddingPath { get; set; }
     public int? RandomSeed { get; set; }
     public bool Recursive { get; set; }
     public bool ShowProgress { get; set; }
