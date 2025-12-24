@@ -86,8 +86,13 @@ public class SkipGramTrainer
     }
 
     /// <summary>
-    /// 重みを初期化（小さなランダム値）
+    /// 重みを初期化
     /// </summary>
+    /// <remarks>
+    /// Word2Vec/Skip-gramの標準的な初期化手法を使用。
+    /// 入力層: U(-0.25/dim, 0.25/dim) の一様分布
+    /// 出力層: 0初期化（負例サンプリングで学習初期の確率を0.5に保つため）
+    /// </remarks>
     private void InitializeWeights()
     {
         float scale = 0.5f / _embeddingDim;
