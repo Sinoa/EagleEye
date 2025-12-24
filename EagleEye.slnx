@@ -1,7 +1,7 @@
 <Solution>
     <Folder Name="/Cli/">
         <Project Path="MjlogConverter/MjlogConverter.csproj" />
-        <Project Path="TileEmbedderViewer/TileEmbedderViewer.csproj" />
+        <Project Path="TileEmbedderCli/TileEmbedderCli.csproj" />
     </Folder>
     <Folder Name="/Lib/">
         <Project Path="MjlogJ/MjlogJ.csproj" />
