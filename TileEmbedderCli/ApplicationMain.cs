@@ -226,7 +226,7 @@ public static class ApplicationMain
                           基本オプション:
                             -i, --input <パス>        牌譜ディレクトリのパス（省略時: ルールベースのみ生成）
                             -o, --output <パス>       出力ファイルのベース名（省略時: tile_embeddings）
-                            -l, --load <パス>         既存の埋め込みファイルを読み込んで可視化
+                            -l, --load <パス>         既存の埋め込みファイルを読み込んで可視化 (.json/.safetensors)
                             --seed <数値>             乱数シード（再現性のため）
                             -r, --recursive           サブディレクトリも含めて牌譜を検索
                             -p, --progress            進捗表示を有効にする
@@ -265,6 +265,12 @@ public static class ApplicationMain
 
                             # 既存のJSONファイルから読み込んで可視化
                             TileEmbedderCli -l tile_embeddings.json > viz.csv
+
+                            # 既存のSafetensorsファイルから読み込んで可視化
+                            TileEmbedderCli -l tile_embeddings.safetensors > viz.csv
+
+                            # Safetensorsファイルを属性トークン込みでUMAP可視化
+                            TileEmbedderCli -l tile_embeddings.safetensors --visualize-method umap --include-attributes > viz.csv
                           """);
     }
 
@@ -488,19 +494,43 @@ public static class ApplicationMain
                 return 1;
             }
 
-            // 現在はJSON形式のみサポート
-            if (!loadPath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.Error.WriteLine($"エラー: 現在はJSON形式 (.json) のみサポートしています");
-                return 1;
-            }
-
             var visualizer = new EmbeddingVisualizer();
             var method = string.IsNullOrEmpty(options.VisualizeMethod) || options.VisualizeMethod == "default" 
                 ? "pca"  // デフォルトをPCAに変更
                 : options.VisualizeMethod;
             
-            visualizer.OutputFromJsonFile(loadPath, method, options.IncludeAttributes);
+            // ファイル形式の判定と処理
+            var extension = Path.GetExtension(loadPath).ToLowerInvariant();
+            
+            if (extension == ".json")
+            {
+                visualizer.OutputFromJsonFile(loadPath, method, options.IncludeAttributes);
+            }
+            else if (extension == ".safetensors")
+            {
+                // Safetensors形式からロード
+                var trainer = SkipGramTrainer.LoadFromSafetensors(loadPath);
+                
+                if (method == "pca")
+                {
+                    visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+                }
+                else if (method == "umap")
+                {
+                    visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
+                }
+                else
+                {
+                    Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
+                    visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+                }
+            }
+            else
+            {
+                Console.Error.WriteLine($"エラー: サポートされていないファイル形式です。.json または .safetensors を指定してください。");
+                return 1;
+            }
+            
             return 0;
         }
         catch (Exception ex)
