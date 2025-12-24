@@ -10,6 +10,8 @@
 
 **EagleEye** は、麻雀における「何切る」問題（手牌から最適な打牌を選択する問題）を解決するためのAI推論エンジンおよびそのアーキテクチャ名です。本プロジェクトでは、AIモデルの学習・推論・配布に必要なすべてのツールチェーンを統合し、汎用的なライブラリとして一般提供することを目指しています。
 
+本リポジトリには、EagleEyeエンジン本体に加えて、天鳳牌譜の読み込み・変換、麻雀牌の埋め込みベクトル生成、AIモデルの入出力など、麻雀AIの学習・開発に必要な複数のライブラリとツールが含まれています。
+
 ### 誰のためのプロジェクト？
 
 - 🎮 **ゲーム開発者** - Unity Sentis 対応により、麻雀ゲームへのAI組み込みが容易に
@@ -20,6 +22,7 @@
 
 - 🧠 **何切る特化AI** - 麻雀の「何切る」問題に特化した推論エンジン「EagleEye」を開発
 - 🀄 **天鳳牌譜対応** - 天鳳の牌譜ファイル（mjlog/XML）を読み込み、学習データとして活用
+- 🎯 **牌エンベディング** - Skip-gramアーキテクチャによる麻雀牌の埋め込みベクトル生成
 - 🤖 **複数フォーマット対応** - ONNX、Safetensors、Unity Sentis など主要なAIモデルフォーマットに対応
 - 🎮 **ゲーム組み込み対応** - Unity Sentis 出力により、ゲームエンジンへの組み込みを想定した設計
 - 📦 **モジュラー設計** - 各機能を独立したライブラリ/ツールとして提供し、必要な部分のみ利用可能
@@ -39,11 +42,21 @@
 
 | プロジェクト | 種別 | 説明 | 状態 |
 |-------------|------|------|:----:|
-| [EagleEye](./EagleEye/) | ライブラリ | 何切るAI推論エンジン | 🚧 開発中 |
-| [MjlogJ](./MjlogJ/README.md) | ライブラリ | 天鳳牌譜パーサー | ✅ 実装済 |
-| [MjlogConverter](./MjlogConverter/README.md) | CLIツール | 牌譜→JSON変換ツール | ✅ 実装済 |
-| [MLModelUtility](./MLModelUtility/README.md) | ライブラリ | AIモデル入出力ユーティリティ | ✅ 実装済 |
-| [TileEmbedder](./TileEmbedder/) | CLIツール | 牌エンベディング生成ツール | 🚧 開発中 |
+| [EagleEye](./EagleEye/) | ライブラリ | 何切るAI推論エンジン本体 | 🚧 開発中 |
+| [MjlogJ](./MjlogJ/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ✅ 実装済 |
+| [MjlogConverter](./MjlogConverter/README.md) | CLIツール | 牌譜→JSON一括変換ツール | ✅ 実装済 |
+| [MLModelUtility](./MLModelUtility/README.md) | ライブラリ | AIモデル入出力（Safetensors/ONNX/Sentis） | ✅ 実装済 |
+| [TileEmbedder](./TileEmbedder/README.md) | ライブラリ | 牌エンベディング生成（Skip-gram） | ✅ 実装済 |
+| [TileEmbedderCli](./TileEmbedderCli/README.md) | CLIツール | 牌エンベディング生成ツール（PCA/UMAP可視化対応） | ✅ 実装済 |
+
+### 各プロジェクトの役割
+
+- **EagleEye**: 麻雀の「何切る」問題を解く推論エンジン本体（開発中）
+- **MjlogJ**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換
+- **MjlogConverter**: MjlogJを使用して牌譜ファイルをJSON形式に一括変換するCLIツール
+- **MLModelUtility**: Safetensors、ONNX、Unity Sentis形式のAIモデルを読み書きするユーティリティライブラリ
+- **TileEmbedder**: Skip-gramアーキテクチャで麻雀牌の埋め込みベクトルを生成するライブラリ
+- **TileEmbedderCli**: TileEmbedderを使用してコマンドラインから牌エンベディングを生成し、可視化するツール
 
 ---
 
@@ -86,6 +99,16 @@ string json = formatter.FormatToString(record);
 MjlogConverter -i logs/ -o converted/ -p
 ```
 
+### 牌エンベディング生成（TileEmbedderCli）
+
+```bash
+# ルールベースの共起関係から牌エンベディングを生成
+TileEmbedderCli -p
+
+# 牌譜データを使った追加学習
+TileEmbedderCli -i ./mjlogs/ -o embeddings -p
+```
+
 ### AIモデルの読み込み（MLModelUtility）
 
 ```csharp
@@ -119,6 +142,15 @@ foreach (var tensor in tensors)
 | mjlog (GZip) | ✅ | 天鳳標準形式 |
 | mjlog (XML) | ✅ | 非圧縮形式 |
 
+### 牌エンベディングフォーマット（TileEmbedder）
+
+| フォーマット | 読込 | 書込 | 備考 |
+|------------|:----:|:----:|------|
+| Safetensors | ✅ | ✅ | 推論・配布用（推奨） |
+| JSON | ✅ | ✅ | デバッグ・可読性確認用 |
+| バイナリ (.bin) | ✅ | ✅ | 学習の完全な再開用 |
+| CSV | - | ✅ | 2次元可視化用（PCA/UMAP） |
+
 ---
 
 ## ロードマップ
@@ -126,7 +158,6 @@ foreach (var tensor in tensors)
 ### v1.0 初期リリースに向けて
 
 - [ ] EagleEye 推論エンジンコア実装
-- [ ] TileEmbedder 実装完了
 - [ ] 訓練用データセット生成パイプライン
 - [ ] 基本的な訓練済みモデルの公開
 
