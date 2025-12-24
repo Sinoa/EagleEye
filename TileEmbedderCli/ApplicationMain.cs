@@ -173,6 +173,23 @@ public static class ApplicationMain
 
                     break;
 
+                case "-v":
+                case "--visualize":
+                    options.Visualize = true;
+                    break;
+
+                case "--visualize-method":
+                    if (i + 1 < args.Length)
+                    {
+                        options.VisualizeMethod = args[++i];
+                    }
+
+                    break;
+
+                case "--include-attributes":
+                    options.IncludeAttributes = true;
+                    break;
+
                 case "-h":
                 case "--help":
                     options.ShowHelp = true;
@@ -215,6 +232,11 @@ public static class ApplicationMain
                             --negative-samples <数値> ネガティブサンプル数（デフォルト: 10）
                             --learning-rate <数値>    学習率（デフォルト: 0.025）
 
+                          可視化オプション:
+                            -v, --visualize           2次元可視化データをCSV形式で標準出力
+                            --visualize-method <手法> 次元削減手法 (pca|umap, デフォルト: umap)
+                            --include-attributes      属性トークンも含めて可視化
+
                           例:
                             # ルールベースのみで生成
                             TileEmbedderCli -p
@@ -227,27 +249,33 @@ public static class ApplicationMain
 
                             # カスタムパラメータで学習
                             TileEmbedderCli -i ./mjlogs/ --embedding-dim 8 --epochs 200 --seed 42 -p
+
+                            # UMAPで可視化してCSV出力（スプレッドシートで可視化可能）
+                            TileEmbedderCli -p --visualize > embeddings.csv
+
+                            # PCAで可視化
+                            TileEmbedderCli -p --visualize --visualize-method pca > embeddings.csv
                           """);
     }
 
     private static async Task<int> ProcessEmbedding(CommandLineOptions options)
     {
         // フェーズ1: 共起行列の構築
-        if (options.ShowProgress)
+        if (options.ShowProgress && !options.Visualize)
         {
             Console.WriteLine("=== 共起行列の構築 ===");
         }
 
         var matrix = new CooccurrenceMatrix();
 
-        if (options.ShowProgress)
+        if (options.ShowProgress && !options.Visualize)
         {
             Console.WriteLine("ルールベース共起行列を構築中...");
         }
 
         matrix.BuildBaseMatrix();
 
-        if (options.ShowProgress)
+        if (options.ShowProgress && !options.Visualize)
         {
             Console.WriteLine("ルールベース共起行列の構築完了");
         }
@@ -264,7 +292,7 @@ public static class ApplicationMain
                 return 1;
             }
 
-            if (options.ShowProgress)
+            if (options.ShowProgress && !options.Visualize)
             {
                 Console.WriteLine($"牌譜ディレクトリから共起データを抽出中: {options.InputPath}");
                 if (options.Recursive)
@@ -286,7 +314,7 @@ public static class ApplicationMain
                     MjlogCooccurrenceExtractor.ExtractFromGameRecord(record, matrix);
                     processedCount++;
 
-                    if (options.ShowProgress && processedCount % 100 == 0)
+                    if (options.ShowProgress && !options.Visualize && processedCount % 100 == 0)
                     {
                         Console.WriteLine($"処理済み牌譜数: {processedCount}");
                     }
@@ -294,14 +322,14 @@ public static class ApplicationMain
                 catch (Exception ex)
                 {
                     errorCount++;
-                    if (options.ShowProgress)
+                    if (options.ShowProgress && !options.Visualize)
                     {
                         Console.Error.WriteLine($"警告: 牌譜の処理中にエラーが発生しました: {ex.Message}");
                     }
                 }
             }
 
-            if (options.ShowProgress)
+            if (options.ShowProgress && !options.Visualize)
             {
                 Console.WriteLine($"牌譜からの共起データ抽出完了: {processedCount}件処理");
                 if (errorCount > 0)
@@ -312,14 +340,14 @@ public static class ApplicationMain
         }
         else
         {
-            if (options.ShowProgress)
+            if (options.ShowProgress && !options.Visualize)
             {
                 Console.WriteLine("入力パスが指定されていないため、ルールベースのみで生成します");
             }
         }
 
         // フェーズ2: 学習
-        if (options.ShowProgress)
+        if (options.ShowProgress && !options.Visualize)
         {
             Console.WriteLine();
             Console.WriteLine("=== Skip-gram学習 ===");
@@ -342,19 +370,42 @@ public static class ApplicationMain
             Epochs = options.Epochs,
             NegativeSamples = options.NegativeSamples,
             LearningRate = options.LearningRate,
-            OnEpochComplete = options.ShowProgress
+            OnEpochComplete = (options.ShowProgress && !options.Visualize)
                 ? (epoch, loss) => Console.WriteLine($"Epoch {epoch}/{options.Epochs}: Loss = {loss:F6}")
                 : null
         };
 
         trainer.Train(matrix, trainingOptions);
 
-        if (options.ShowProgress)
+        if (options.ShowProgress && !options.Visualize)
         {
             Console.WriteLine("学習完了");
         }
 
-        // フェーズ3: エクスポート
+        // 可視化モードの場合はファイル出力をスキップ
+        if (options.Visualize)
+        {
+            var visualizer = new EmbeddingVisualizer();
+            var method = options.VisualizeMethod.ToLowerInvariant();
+
+            if (method == "pca")
+            {
+                visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+            }
+            else if (method == "umap" || method == "default")
+            {
+                visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
+            }
+            else
+            {
+                Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。UMAPを使用します。");
+                visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
+            }
+
+            return 0;
+        }
+
+        // フェーズ3: エクスポート（可視化モードでない場合のみ）
         if (options.ShowProgress)
         {
             Console.WriteLine();
@@ -432,4 +483,7 @@ internal class CommandLineOptions
     public int NegativeSamples { get; set; } = TrainingConstants.DefaultNegativeSamples;
     public float LearningRate { get; set; } = TrainingConstants.DefaultLearningRate;
     public bool ShowHelp { get; set; }
+    public bool Visualize { get; set; }
+    public string VisualizeMethod { get; set; } = "default";
+    public bool IncludeAttributes { get; set; }
 }
