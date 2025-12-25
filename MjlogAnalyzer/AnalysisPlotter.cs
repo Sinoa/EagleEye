@@ -22,7 +22,6 @@
 // distribution.
 
 using MjlogA.Analyzers;
-using MjlogA.Models;
 using ScottPlot;
 
 namespace MjlogAnalyzer;
@@ -32,6 +31,43 @@ namespace MjlogAnalyzer;
 /// </summary>
 public static class AnalysisPlotter
 {
+    /// <summary>
+    /// 日本語表示用フォント名
+    /// </summary>
+    private static readonly string JapaneseFontName = GetJapaneseFontName();
+
+    /// <summary>
+    /// 日本語フォント名を取得（環境に応じて適切なフォントを選択）
+    /// </summary>
+    private static string GetJapaneseFontName()
+    {
+        // Windows: Yu Gothic UI, Meiryo UI など
+        if (OperatingSystem.IsWindows())
+        {
+            return "Yu Gothic UI";
+        }
+
+        // macOS: Hiragino Sans など
+        if (OperatingSystem.IsMacOS())
+        {
+            return "Hiragino Sans";
+        }
+
+        // Linux等: Noto Sans CJK JP など
+        return "Noto Sans CJK JP";
+    }
+
+    /// <summary>
+    /// プロットに日本語フォントを適用
+    /// </summary>
+    private static void ApplyJapaneseFont(Plot plot)
+    {
+        plot.Axes.Title.Label.FontName = JapaneseFontName;
+        plot.Axes.Bottom.Label.FontName = JapaneseFontName;
+        plot.Axes.Left.Label.FontName = JapaneseFontName;
+        plot.Axes.Bottom.TickLabelStyle.FontName = JapaneseFontName;
+        plot.Axes.Left.TickLabelStyle.FontName = JapaneseFontName;
+    }
     /// <summary>
     /// 分析結果から各種グラフを生成して保存
     /// </summary>
@@ -89,6 +125,7 @@ public static class AnalysisPlotter
     {
         var stats = result.ScoreDistribution;
         var plot = new Plot();
+        ApplyJapaneseFont(plot);
 
         // 箱ひげ図風の統計情報表示
         double[] positions = [1, 2, 3, 4, 5, 6];
@@ -113,6 +150,7 @@ public static class AnalysisPlotter
     {
         var stats = result.RoundCountDistribution;
         var plot = new Plot();
+        ApplyJapaneseFont(plot);
 
         double[] positions = [1, 2, 3, 4, 5, 6];
         double[] values = [stats.Min, stats.Q1, stats.Median, stats.Q3, stats.Max, stats.Average];
@@ -136,6 +174,7 @@ public static class AnalysisPlotter
     {
         var stats = result.TurnDistribution;
         var plot = new Plot();
+        ApplyJapaneseFont(plot);
 
         double[] positions = [1, 2, 3, 4, 5, 6];
         double[] values = [stats.Min, stats.Q1, stats.Median, stats.Q3, stats.Max, stats.Average];
@@ -161,6 +200,7 @@ public static class AnalysisPlotter
         if (topYakus.Count == 0) return null;
 
         var plot = new Plot();
+        ApplyJapaneseFont(plot);
 
         double[] positions = Enumerable.Range(0, topYakus.Count).Select(i => (double)i).ToArray();
         double[] counts = topYakus.Select(y => (double)y.Count).ToArray();
@@ -189,6 +229,7 @@ public static class AnalysisPlotter
         if (doras.Count == 0) return null;
 
         var plot = new Plot();
+        ApplyJapaneseFont(plot);
 
         double[] positions = Enumerable.Range(0, doras.Count).Select(i => (double)i).ToArray();
         double[] counts = doras.Select(d => (double)d.Count).ToArray();
@@ -221,6 +262,7 @@ public static class AnalysisPlotter
         if (points.Count == 0) return null;
 
         var plot = new Plot();
+        ApplyJapaneseFont(plot);
 
         double[] xValues = points.Select(p => double.Parse(p.Name)).ToArray();
         double[] yValues = points.Select(p => (double)p.Count).ToArray();
