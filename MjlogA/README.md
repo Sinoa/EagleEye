@@ -62,7 +62,37 @@ var analysisResult = analyzer.GetResult();
 CsvFormatter.Write(analysisResult, Console.Out);
 ```
 
-### 個別の分析器を使用
+### 特定の分析器のみを使用
+
+```csharp
+using MjlogA.Analyzers;
+
+// 点数と役の分析のみ有効化
+var analyzer = new MjlogAnalyzer(AnalyzerTypes.Score | AnalyzerTypes.Yaku);
+
+// 牌譜を読み込んで分析
+foreach (var game in games)
+{
+    analyzer.Analyze(game);
+}
+
+// 結果を取得（有効な分析器の結果のみ含まれる）
+var analysisResult = analyzer.GetResult();
+```
+
+### 利用可能な分析器
+
+| AnalyzerTypes | 説明 |
+|---------------|------|
+| `Score` | 和了時の点数分布 |
+| `RoundCount` | 局数分布 |
+| `TurnCount` | 巡目分布 |
+| `Yaku` | 役の出現頻度 |
+| `Dora` | ドラ牌の出現頻度 |
+| `PointDistribution` | 持ち点分布 |
+| `All` | すべての分析器（デフォルト） |
+
+### 個別の分析器クラスを直接使用
 
 ```csharp
 using MjlogA.Analyzers;

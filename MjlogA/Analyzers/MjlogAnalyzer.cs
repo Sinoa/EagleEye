@@ -31,14 +31,66 @@ namespace MjlogA.Analyzers;
 /// </summary>
 public class MjlogAnalyzer
 {
-    private readonly ScoreAnalyzer _scoreAnalyzer = new();
-    private readonly RoundCountAnalyzer _roundCountAnalyzer = new();
-    private readonly TurnCountAnalyzer _turnCountAnalyzer = new();
-    private readonly YakuAnalyzer _yakuAnalyzer = new();
-    private readonly DoraAnalyzer _doraAnalyzer = new();
-    private readonly PointDistributionAnalyzer _pointDistributionAnalyzer = new();
+    private readonly AnalyzerTypes _enabledAnalyzers;
+    private readonly ScoreAnalyzer? _scoreAnalyzer;
+    private readonly RoundCountAnalyzer? _roundCountAnalyzer;
+    private readonly TurnCountAnalyzer? _turnCountAnalyzer;
+    private readonly YakuAnalyzer? _yakuAnalyzer;
+    private readonly DoraAnalyzer? _doraAnalyzer;
+    private readonly PointDistributionAnalyzer? _pointDistributionAnalyzer;
     private int _gameCount;
     private int _roundCount;
+
+    /// <summary>
+    /// すべての分析器を有効にしてインスタンスを生成
+    /// </summary>
+    public MjlogAnalyzer() : this(AnalyzerTypes.All)
+    {
+    }
+
+    /// <summary>
+    /// 指定した分析器のみを有効にしてインスタンスを生成
+    /// </summary>
+    /// <param name="enabledAnalyzers">有効にする分析器</param>
+    public MjlogAnalyzer(AnalyzerTypes enabledAnalyzers)
+    {
+        _enabledAnalyzers = enabledAnalyzers;
+
+        if (enabledAnalyzers.HasFlag(AnalyzerTypes.Score))
+        {
+            _scoreAnalyzer = new ScoreAnalyzer();
+        }
+
+        if (enabledAnalyzers.HasFlag(AnalyzerTypes.RoundCount))
+        {
+            _roundCountAnalyzer = new RoundCountAnalyzer();
+        }
+
+        if (enabledAnalyzers.HasFlag(AnalyzerTypes.TurnCount))
+        {
+            _turnCountAnalyzer = new TurnCountAnalyzer();
+        }
+
+        if (enabledAnalyzers.HasFlag(AnalyzerTypes.Yaku))
+        {
+            _yakuAnalyzer = new YakuAnalyzer();
+        }
+
+        if (enabledAnalyzers.HasFlag(AnalyzerTypes.Dora))
+        {
+            _doraAnalyzer = new DoraAnalyzer();
+        }
+
+        if (enabledAnalyzers.HasFlag(AnalyzerTypes.PointDistribution))
+        {
+            _pointDistributionAnalyzer = new PointDistributionAnalyzer();
+        }
+    }
+
+    /// <summary>
+    /// 有効な分析器の種類を取得
+    /// </summary>
+    public AnalyzerTypes EnabledAnalyzers => _enabledAnalyzers;
 
     /// <summary>
     /// 試合データを分析に追加
@@ -49,12 +101,12 @@ public class MjlogAnalyzer
         _gameCount++;
         _roundCount += game.Rounds.Count;
 
-        _scoreAnalyzer.Analyze(game);
-        _roundCountAnalyzer.Analyze(game);
-        _turnCountAnalyzer.Analyze(game);
-        _yakuAnalyzer.Analyze(game);
-        _doraAnalyzer.Analyze(game);
-        _pointDistributionAnalyzer.Analyze(game);
+        _scoreAnalyzer?.Analyze(game);
+        _roundCountAnalyzer?.Analyze(game);
+        _turnCountAnalyzer?.Analyze(game);
+        _yakuAnalyzer?.Analyze(game);
+        _doraAnalyzer?.Analyze(game);
+        _pointDistributionAnalyzer?.Analyze(game);
     }
 
     /// <summary>
@@ -65,16 +117,23 @@ public class MjlogAnalyzer
     {
         return new AnalysisResult
         {
+            EnabledAnalyzers = _enabledAnalyzers,
             GameCount = _gameCount,
             RoundCount = _roundCount,
-            AgariCount = _yakuAnalyzer.AgariCount,
-            ScoreDistribution = DistributionStatistics.Calculate(_scoreAnalyzer.Scores),
-            RoundCountDistribution = DistributionStatistics.Calculate(_roundCountAnalyzer.RoundCounts),
-            TurnDistribution = DistributionStatistics.Calculate(_turnCountAnalyzer.TurnCounts),
-            YakuFrequencies = _yakuAnalyzer.GetResults(),
-            DoraIndicatorFrequencies = _doraAnalyzer.GetIndicatorResults(),
-            ActualDoraFrequencies = _doraAnalyzer.GetActualDoraResults(),
-            PointDistributionFrequencies = _pointDistributionAnalyzer.GetResults()
+            AgariCount = _yakuAnalyzer?.AgariCount ?? 0,
+            ScoreDistribution = _scoreAnalyzer != null
+                ? DistributionStatistics.Calculate(_scoreAnalyzer.Scores)
+                : DistributionStatistics.Empty,
+            RoundCountDistribution = _roundCountAnalyzer != null
+                ? DistributionStatistics.Calculate(_roundCountAnalyzer.RoundCounts)
+                : DistributionStatistics.Empty,
+            TurnDistribution = _turnCountAnalyzer != null
+                ? DistributionStatistics.Calculate(_turnCountAnalyzer.TurnCounts)
+                : DistributionStatistics.Empty,
+            YakuFrequencies = _yakuAnalyzer?.GetResults() ?? [],
+            DoraIndicatorFrequencies = _doraAnalyzer?.GetIndicatorResults() ?? [],
+            ActualDoraFrequencies = _doraAnalyzer?.GetActualDoraResults() ?? [],
+            PointDistributionFrequencies = _pointDistributionAnalyzer?.GetResults() ?? []
         };
     }
 }

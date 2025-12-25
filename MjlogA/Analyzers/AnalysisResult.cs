@@ -30,6 +30,9 @@ namespace MjlogA.Analyzers;
 /// </summary>
 public class AnalysisResult
 {
+    /// <summary>有効な分析器の種類</summary>
+    public AnalyzerTypes EnabledAnalyzers { get; set; } = AnalyzerTypes.All;
+
     /// <summary>処理した試合数</summary>
     public int GameCount { get; set; }
 

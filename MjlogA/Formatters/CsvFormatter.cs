@@ -38,28 +38,47 @@ public static class CsvFormatter
     /// <param name="writer">出力先</param>
     public static void Write(AnalysisResult result, TextWriter writer)
     {
+        var enabled = result.EnabledAnalyzers;
+
         WriteSummary(result, writer);
-        writer.WriteLine();
 
-        WriteScoreDistribution(result.ScoreDistribution, writer);
-        writer.WriteLine();
+        if (enabled.HasFlag(AnalyzerTypes.Score))
+        {
+            writer.WriteLine();
+            WriteScoreDistribution(result.ScoreDistribution, writer);
+        }
 
-        WriteRoundCountDistribution(result.RoundCountDistribution, writer);
-        writer.WriteLine();
+        if (enabled.HasFlag(AnalyzerTypes.RoundCount))
+        {
+            writer.WriteLine();
+            WriteRoundCountDistribution(result.RoundCountDistribution, writer);
+        }
 
-        WriteTurnDistribution(result.TurnDistribution, writer);
-        writer.WriteLine();
+        if (enabled.HasFlag(AnalyzerTypes.TurnCount))
+        {
+            writer.WriteLine();
+            WriteTurnDistribution(result.TurnDistribution, writer);
+        }
 
-        WriteYakuFrequencies(result.YakuFrequencies, writer);
-        writer.WriteLine();
+        if (enabled.HasFlag(AnalyzerTypes.Yaku))
+        {
+            writer.WriteLine();
+            WriteYakuFrequencies(result.YakuFrequencies, writer);
+        }
 
-        WriteDoraIndicatorFrequencies(result.DoraIndicatorFrequencies, writer);
-        writer.WriteLine();
+        if (enabled.HasFlag(AnalyzerTypes.Dora))
+        {
+            writer.WriteLine();
+            WriteDoraIndicatorFrequencies(result.DoraIndicatorFrequencies, writer);
+            writer.WriteLine();
+            WriteActualDoraFrequencies(result.ActualDoraFrequencies, writer);
+        }
 
-        WriteActualDoraFrequencies(result.ActualDoraFrequencies, writer);
-        writer.WriteLine();
-
-        WritePointDistributionFrequencies(result.PointDistributionFrequencies, writer);
+        if (enabled.HasFlag(AnalyzerTypes.PointDistribution))
+        {
+            writer.WriteLine();
+            WritePointDistributionFrequencies(result.PointDistributionFrequencies, writer);
+        }
     }
 
     private static void WriteSummary(AnalysisResult result, TextWriter writer)

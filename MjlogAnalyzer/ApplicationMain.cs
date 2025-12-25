@@ -1,4 +1,4 @@
-﻿// zlib License
+﻿﻿// zlib License
 // 
 // Copyright (c) 2025 Sinoa
 // 
@@ -69,7 +69,7 @@ public static class ApplicationMain
 
     private static async Task<int> RunAnalysis(CommandLineOptions options)
     {
-        var analyzer = new MjlogA.Analyzers.MjlogAnalyzer();
+        var analyzer = new MjlogA.Analyzers.MjlogAnalyzer(options.EnabledAnalyzers);
         var stopwatch = Stopwatch.StartNew();
 
         // ファイル一覧を取得

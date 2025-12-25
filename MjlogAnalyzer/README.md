@@ -16,6 +16,12 @@ MjlogAnalyzer -d ./mjlogs -r -p -o result.csv
 
 # 位置引数でディレクトリを指定
 MjlogAnalyzer ./mjlogs -r -p > result.csv
+
+# 特定の分析器のみ使用
+MjlogAnalyzer -d ./mjlogs -a score -a yaku
+
+# 点数と持ち点分布のみ分析
+MjlogAnalyzer -d ./mjlogs -a score -a point -o result.csv
 ```
 
 ## オプション
@@ -26,8 +32,21 @@ MjlogAnalyzer ./mjlogs -r -p > result.csv
 | `-o, --output <パス>` | 出力ファイルパス（省略時は標準出力） |
 | `-p, --progress` | 進捗表示を有効化（標準エラー出力） |
 | `-r, --recursive` | サブディレクトリも対象に含める |
+| `-a, --analyzer <種類>` | 使用する分析器を指定（複数指定可） |
 | `--no-continue-on-error` | エラー発生時に処理を中断 |
 | `-h, --help` | ヘルプを表示 |
+
+## 分析器の種類
+
+| 種類 | 説明 |
+|------|------|
+| `score` | 和了時の点数分布 |
+| `round` | 局数分布 |
+| `turn` | 巡目分布 |
+| `yaku` | 役の出現頻度 |
+| `dora` | ドラ牌の出現頻度 |
+| `point` | 持ち点分布 |
+| `all` | すべての分析器（デフォルト） |
 
 ## 分析項目
 

@@ -21,6 +21,8 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
+using MjlogA.Analyzers;
+
 namespace MjlogAnalyzer;
 
 /// <summary>
@@ -46,6 +48,9 @@ public class CommandLineOptions
     /// <summary>エラー時も処理を続行</summary>
     public bool ContinueOnError { get; set; } = true;
 
+    /// <summary>有効な分析器（デフォルトはすべて）</summary>
+    public AnalyzerTypes EnabledAnalyzers { get; set; } = AnalyzerTypes.All;
+
     /// <summary>
     /// コマンドライン引数をパース
     /// </summary>
@@ -54,6 +59,7 @@ public class CommandLineOptions
     public static CommandLineOptions Parse(string[] args)
     {
         var options = new CommandLineOptions();
+        var hasAnalyzerOption = false;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -93,6 +99,26 @@ public class CommandLineOptions
                     options.ContinueOnError = false;
                     break;
 
+                case "-a":
+                case "--analyzer":
+                    if (i + 1 < args.Length)
+                    {
+                        var analyzerArg = args[++i];
+                        var analyzerType = ParseAnalyzerType(analyzerArg);
+                        if (analyzerType != AnalyzerTypes.None)
+                        {
+                            if (!hasAnalyzerOption)
+                            {
+                                options.EnabledAnalyzers = AnalyzerTypes.None;
+                                hasAnalyzerOption = true;
+                            }
+
+                            options.EnabledAnalyzers |= analyzerType;
+                        }
+                    }
+
+                    break;
+
                 case "-h":
                 case "--help":
                     options.ShowHelp = true;
@@ -113,6 +139,24 @@ public class CommandLineOptions
     }
 
     /// <summary>
+    /// 分析器名をパース
+    /// </summary>
+    private static AnalyzerTypes ParseAnalyzerType(string name)
+    {
+        return name.ToLowerInvariant() switch
+        {
+            "score" => AnalyzerTypes.Score,
+            "round" or "roundcount" => AnalyzerTypes.RoundCount,
+            "turn" or "turncount" => AnalyzerTypes.TurnCount,
+            "yaku" => AnalyzerTypes.Yaku,
+            "dora" => AnalyzerTypes.Dora,
+            "point" or "pointdistribution" => AnalyzerTypes.PointDistribution,
+            "all" => AnalyzerTypes.All,
+            _ => AnalyzerTypes.None
+        };
+    }
+
+    /// <summary>
     /// ヘルプメッセージを表示
     /// </summary>
     public static void ShowHelpMessage(TextWriter writer)
@@ -128,8 +172,18 @@ public class CommandLineOptions
         writer.WriteLine("  -o, --output <パス>      出力ファイルパス（省略時は標準出力）");
         writer.WriteLine("  -p, --progress           進捗表示を有効化（標準エラー出力）");
         writer.WriteLine("  -r, --recursive          サブディレクトリも対象に含める");
+        writer.WriteLine("  -a, --analyzer <種類>    使用する分析器を指定（複数指定可）");
         writer.WriteLine("  --no-continue-on-error   エラー発生時に処理を中断");
         writer.WriteLine("  -h, --help               このヘルプを表示");
+        writer.WriteLine();
+        writer.WriteLine("分析器の種類:");
+        writer.WriteLine("  score      和了時の点数分布");
+        writer.WriteLine("  round      局数分布");
+        writer.WriteLine("  turn       巡目分布");
+        writer.WriteLine("  yaku       役の出現頻度");
+        writer.WriteLine("  dora       ドラ牌の出現頻度");
+        writer.WriteLine("  point      持ち点分布");
+        writer.WriteLine("  all        すべての分析器（デフォルト）");
         writer.WriteLine();
         writer.WriteLine("出力:");
         writer.WriteLine("  CSV形式で以下の分析結果を出力します:");
@@ -139,9 +193,11 @@ public class CommandLineOptions
         writer.WriteLine("  - 各役の出現頻度（出現回数/出現率）");
         writer.WriteLine("  - ドラ表示牌の出現頻度");
         writer.WriteLine("  - 実際のドラ牌の出現頻度");
+        writer.WriteLine("  - 局終了時の持ち点分布");
         writer.WriteLine();
         writer.WriteLine("例:");
         writer.WriteLine("  MjlogAnalyzer -d ./mjlogs -o result.csv -p");
         writer.WriteLine("  MjlogAnalyzer ./mjlogs -r -p > result.csv");
+        writer.WriteLine("  MjlogAnalyzer -d ./mjlogs -a score -a yaku  # 点数と役のみ分析");
     }
 }
