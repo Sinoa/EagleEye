@@ -8,6 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ScottPlot" Version="5.0.*" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\MjlogA\MjlogA.csproj" />
         <ProjectReference Include="..\MjlogJ\MjlogJ.csproj" />
     </ItemGroup>

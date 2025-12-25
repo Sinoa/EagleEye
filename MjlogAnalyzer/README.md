@@ -22,6 +22,15 @@ MjlogAnalyzer -d ./mjlogs -a score -a yaku
 
 # 点数と持ち点分布のみ分析
 MjlogAnalyzer -d ./mjlogs -a score -a point -o result.csv
+
+# グラフを出力
+MjlogAnalyzer -d ./mjlogs --plot ./plots -p
+
+# CSVとグラフの両方を出力
+MjlogAnalyzer -d ./mjlogs -o result.csv --plot ./plots -p
+
+# グラフのサイズを指定
+MjlogAnalyzer -d ./mjlogs --plot ./plots --plot-width 1200 --plot-height 800
 ```
 
 ## オプション
@@ -33,6 +42,9 @@ MjlogAnalyzer -d ./mjlogs -a score -a point -o result.csv
 | `-p, --progress` | 進捗表示を有効化（標準エラー出力） |
 | `-r, --recursive` | サブディレクトリも対象に含める |
 | `-a, --analyzer <種類>` | 使用する分析器を指定（複数指定可） |
+| `--plot <ディレクトリ>` | グラフ画像の出力先ディレクトリ |
+| `--plot-width <幅>` | グラフの幅（デフォルト: 800） |
+| `--plot-height <高さ>` | グラフの高さ（デフォルト: 600） |
 | `--no-continue-on-error` | エラー発生時に処理を中断 |
 | `-h, --help` | ヘルプを表示 |
 
@@ -117,4 +129,20 @@ CSV形式で以下のセクションを出力します：
 
 - MjlogA - 牌譜データ分析ライブラリ
 - MjlogJ - 牌譜読み込みライブラリ
+- ScottPlot - グラフ描画ライブラリ
+
+## グラフ出力
+
+`--plot`オプションを指定すると、分析結果をグラフ画像として出力します。
+
+### 生成されるグラフファイル
+
+| ファイル名 | 内容 |
+|-----------|------|
+| `score_distribution.png` | 和了時の点数分布統計（箱ひげ図風） |
+| `round_count_distribution.png` | 局数分布統計 |
+| `turn_distribution.png` | 巡目分布統計 |
+| `yaku_frequency.png` | 役の出現頻度（上位20、横棒グラフ） |
+| `dora_frequency.png` | ドラ牌の出現頻度（棒グラフ） |
+| `point_distribution.png` | 持ち点分布（折れ線グラフ） |
 

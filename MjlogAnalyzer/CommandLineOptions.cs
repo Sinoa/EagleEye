@@ -51,6 +51,15 @@ public class CommandLineOptions
     /// <summary>有効な分析器（デフォルトはすべて）</summary>
     public AnalyzerTypes EnabledAnalyzers { get; set; } = AnalyzerTypes.All;
 
+    /// <summary>グラフ出力ディレクトリ（nullの場合はグラフ出力なし）</summary>
+    public string? PlotOutputDirectory { get; set; }
+
+    /// <summary>グラフの幅（ピクセル）</summary>
+    public int PlotWidth { get; set; } = 800;
+
+    /// <summary>グラフの高さ（ピクセル）</summary>
+    public int PlotHeight { get; set; } = 600;
+
     /// <summary>
     /// コマンドライン引数をパース
     /// </summary>
@@ -119,6 +128,31 @@ public class CommandLineOptions
 
                     break;
 
+                case "--plot":
+                case "--plot-dir":
+                    if (i + 1 < args.Length)
+                    {
+                        options.PlotOutputDirectory = args[++i];
+                    }
+
+                    break;
+
+                case "--plot-width":
+                    if (i + 1 < args.Length && int.TryParse(args[++i], out var plotWidth))
+                    {
+                        options.PlotWidth = plotWidth;
+                    }
+
+                    break;
+
+                case "--plot-height":
+                    if (i + 1 < args.Length && int.TryParse(args[++i], out var plotHeight))
+                    {
+                        options.PlotHeight = plotHeight;
+                    }
+
+                    break;
+
                 case "-h":
                 case "--help":
                     options.ShowHelp = true;
@@ -173,6 +207,9 @@ public class CommandLineOptions
         writer.WriteLine("  -p, --progress           進捗表示を有効化（標準エラー出力）");
         writer.WriteLine("  -r, --recursive          サブディレクトリも対象に含める");
         writer.WriteLine("  -a, --analyzer <種類>    使用する分析器を指定（複数指定可）");
+        writer.WriteLine("  --plot <ディレクトリ>    グラフ画像の出力先ディレクトリ");
+        writer.WriteLine("  --plot-width <幅>        グラフの幅（デフォルト: 800）");
+        writer.WriteLine("  --plot-height <高さ>     グラフの高さ（デフォルト: 600）");
         writer.WriteLine("  --no-continue-on-error   エラー発生時に処理を中断");
         writer.WriteLine("  -h, --help               このヘルプを表示");
         writer.WriteLine();
@@ -199,5 +236,7 @@ public class CommandLineOptions
         writer.WriteLine("  MjlogAnalyzer -d ./mjlogs -o result.csv -p");
         writer.WriteLine("  MjlogAnalyzer ./mjlogs -r -p > result.csv");
         writer.WriteLine("  MjlogAnalyzer -d ./mjlogs -a score -a yaku  # 点数と役のみ分析");
+        writer.WriteLine("  MjlogAnalyzer -d ./mjlogs --plot ./plots    # グラフを出力");
+        writer.WriteLine("  MjlogAnalyzer -d ./mjlogs -o result.csv --plot ./plots --plot-width 1200");
     }
 }

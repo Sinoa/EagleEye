@@ -1,4 +1,4 @@
-﻿﻿// zlib License
+﻿// zlib License
 // 
 // Copyright (c) 2025 Sinoa
 // 
@@ -150,6 +150,25 @@ public static class ApplicationMain
             if (options.ShowProgress)
             {
                 Console.Error.WriteLine($"結果を出力しました: {options.OutputPath}");
+            }
+        }
+
+        // グラフを出力
+        if (!string.IsNullOrEmpty(options.PlotOutputDirectory))
+        {
+            var generatedFiles = AnalysisPlotter.SavePlots(
+                analysisResult,
+                options.PlotOutputDirectory,
+                options.PlotWidth,
+                options.PlotHeight);
+
+            if (options.ShowProgress)
+            {
+                Console.Error.WriteLine($"グラフを出力しました: {options.PlotOutputDirectory} ({generatedFiles.Count}ファイル)");
+                foreach (var file in generatedFiles)
+                {
+                    Console.Error.WriteLine($"  - {Path.GetFileName(file)}");
+                }
             }
         }
 
