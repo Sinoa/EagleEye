@@ -42,13 +42,13 @@ internal class EmbeddingVisualizer
     /// </summary>
     private static readonly Dictionary<string, ScottPlot.Color> TileTypeColors = new()
     {
-        { "萬子", ScottPlot.Color.FromHex("#e74c3c") },      // 赤系
-        { "筒子", ScottPlot.Color.FromHex("#3498db") },      // 青系
-        { "索子", ScottPlot.Color.FromHex("#2ecc71") },      // 緑系
-        { "風牌", ScottPlot.Color.FromHex("#9b59b6") },      // 紫系
-        { "三元牌", ScottPlot.Color.FromHex("#f39c12") },    // オレンジ系
-        { "属性", ScottPlot.Color.FromHex("#95a5a6") },      // グレー系
-        { "その他", ScottPlot.Color.FromHex("#34495e") }     // ダークグレー
+        { "萬子", ScottPlot.Color.FromHex("#e74c3c") }, // 赤系
+        { "筒子", ScottPlot.Color.FromHex("#3498db") }, // 青系
+        { "索子", ScottPlot.Color.FromHex("#2ecc71") }, // 緑系
+        { "風牌", ScottPlot.Color.FromHex("#9b59b6") }, // 紫系
+        { "三元牌", ScottPlot.Color.FromHex("#f39c12") }, // オレンジ系
+        { "属性", ScottPlot.Color.FromHex("#95a5a6") }, // グレー系
+        { "その他", ScottPlot.Color.FromHex("#34495e") } // ダークグレー
     };
 
     /// <summary>
@@ -108,7 +108,7 @@ internal class EmbeddingVisualizer
         foreach (var prop in embeddingsObj.EnumerateObject())
         {
             var tokenName = prop.Name;
-            
+
             // 属性トークンを除外するオプション
             if (!includeAttributes && tokenName.StartsWith("Attr"))
             {
@@ -128,7 +128,7 @@ internal class EmbeddingVisualizer
         // 次元削減とCSV出力
         float[] x, y;
         var methodLower = method.ToLowerInvariant();
-        
+
         if (methodLower == "pca")
         {
             (x, y) = PerformPCA(embeddings);
@@ -230,7 +230,7 @@ internal class EmbeddingVisualizer
         foreach (var prop in embeddingsObj.EnumerateObject())
         {
             var tokenName = prop.Name;
-            
+
             // 属性トークンを除外するオプション
             if (!includeAttributes && tokenName.StartsWith("Attr"))
             {
@@ -250,7 +250,7 @@ internal class EmbeddingVisualizer
         // 次元削減と画像出力
         float[] x, y;
         var methodLower = method.ToLowerInvariant();
-        
+
         if (methodLower == "pca")
         {
             (x, y) = PerformPCA(embeddings);
@@ -307,6 +307,7 @@ internal class EmbeddingVisualizer
             {
                 groups[tileType] = new List<(float, float, string)>();
             }
+
             groups[tileType].Add((x[i], y[i], labels[i]));
         }
 
@@ -332,10 +333,10 @@ internal class EmbeddingVisualizer
         {
             var tileType = GetTileType(labels[i]);
             var color = TileTypeColors.GetValueOrDefault(tileType, TileTypeColors["その他"]);
-            
+
             // ラベルテキストを取得（日本語表示用に変換）
             var displayLabel = GetDisplayLabel(labels[i]);
-            
+
             var text = plot.Add.Text(displayLabel, x[i], y[i]);
             text.LabelFontName = JapaneseFontName;
             text.LabelFontSize = 9;
@@ -369,20 +370,8 @@ internal class EmbeddingVisualizer
     /// </summary>
     private string GetDisplayLabel(string tokenName)
     {
-        // 萬子
-        if (tokenName == "RedMan5") return "赤5m";
-        if (tokenName.StartsWith("Man")) return tokenName.Replace("Man", "") + "m";
-        
-        // 筒子
-        if (tokenName == "RedPin5") return "赤5p";
-        if (tokenName.StartsWith("Pin")) return tokenName.Replace("Pin", "") + "p";
-        
-        // 索子
-        if (tokenName == "RedSou5") return "赤5s";
-        if (tokenName.StartsWith("Sou")) return tokenName.Replace("Sou", "") + "s";
-        
-        // 字牌
-        return tokenName switch
+        // 字牌・属性トークンを先に判定（SouthがSouを含むため）
+        var result = tokenName switch
         {
             "East" => "東",
             "South" => "南",
@@ -391,7 +380,6 @@ internal class EmbeddingVisualizer
             "White" => "白",
             "Green" => "發",
             "Red" => "中",
-            // 属性トークン
             "AttrMan" => "萬",
             "AttrPin" => "筒",
             "AttrSou" => "索",
@@ -402,6 +390,22 @@ internal class EmbeddingVisualizer
             "AttrRed" => "赤",
             _ => tokenName
         };
+
+        if (result != null) return result;
+
+        // 萬子
+        if (tokenName == "RedMan5") return "赤5m";
+        if (tokenName.StartsWith("Man")) return tokenName.Replace("Man", "") + "m";
+
+        // 筒子
+        if (tokenName == "RedPin5") return "赤5p";
+        if (tokenName.StartsWith("Pin")) return tokenName.Replace("Pin", "") + "p";
+
+        // 索子
+        if (tokenName == "RedSou5") return "赤5s";
+        if (tokenName.StartsWith("Sou")) return tokenName.Replace("Sou", "") + "s";
+
+        return tokenName;
     }
 
     /// <summary>
@@ -409,12 +413,14 @@ internal class EmbeddingVisualizer
     /// </summary>
     private string GetTileType(string label)
     {
-        if (label.Contains("Man")) return "萬子";
-        if (label.Contains("Pin")) return "筒子";
-        if (label.Contains("Sou")) return "索子";
+        // 字牌を先に判定（SouthがSouを含むため）
         if (label is "East" or "South" or "West" or "North") return "風牌";
         if (label is "White" or "Green" or "Red") return "三元牌";
         if (label.Contains("Attr")) return "属性";
+        // 数牌
+        if (label.Contains("Man")) return "萬子";
+        if (label.Contains("Pin")) return "筒子";
+        if (label.Contains("Sou")) return "索子";
         return "その他";
     }
 
@@ -714,4 +720,3 @@ internal class EmbeddingVisualizer
         return MathF.Sqrt(sum);
     }
 }
-

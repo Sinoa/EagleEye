@@ -201,6 +201,7 @@ public static class ApplicationMain
                     {
                         options.PlotOutputPath = args[++i];
                     }
+
                     break;
 
                 case "--plot-width":
@@ -208,6 +209,7 @@ public static class ApplicationMain
                     {
                         options.PlotWidth = plotWidth;
                     }
+
                     break;
 
                 case "--plot-height":
@@ -215,6 +217,7 @@ public static class ApplicationMain
                     {
                         options.PlotHeight = plotHeight;
                     }
+
                     break;
 
                 case "-l":
@@ -223,6 +226,7 @@ public static class ApplicationMain
                     {
                         options.LoadEmbeddingPath = args[++i];
                     }
+
                     break;
 
                 case "-h":
@@ -459,7 +463,7 @@ public static class ApplicationMain
         {
             var visualizer = new EmbeddingVisualizer();
             var method = options.VisualizeMethod.ToLowerInvariant();
-            
+
             if (options.ShowProgress)
             {
                 Console.WriteLine();
@@ -468,18 +472,18 @@ public static class ApplicationMain
 
             if (method == "pca" || method == "default")
             {
-                visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes,
                     options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
             }
             else if (method == "umap")
             {
-                visualizer.OutputUMAPToPlot(trainer, options.IncludeAttributes, 
+                visualizer.OutputUMAPToPlot(trainer, options.IncludeAttributes,
                     options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
             }
             else
             {
                 Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
-                visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes,
                     options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
             }
         }
@@ -550,7 +554,7 @@ public static class ApplicationMain
         try
         {
             var loadPath = options.LoadEmbeddingPath!;
-            
+
             if (!File.Exists(loadPath))
             {
                 Console.Error.WriteLine($"エラー: ファイルが見つかりません: {loadPath}");
@@ -558,39 +562,39 @@ public static class ApplicationMain
             }
 
             var visualizer = new EmbeddingVisualizer();
-            var method = string.IsNullOrEmpty(options.VisualizeMethod) || options.VisualizeMethod == "default" 
-                ? "pca"  // デフォルトをPCAに変更
+            var method = string.IsNullOrEmpty(options.VisualizeMethod) || options.VisualizeMethod == "default"
+                ? "pca" // デフォルトをPCAに変更
                 : options.VisualizeMethod;
-            
+
             // ファイル形式の判定と処理
             var extension = Path.GetExtension(loadPath).ToLowerInvariant();
-            
+
             // 画像出力が指定されている場合
             if (!string.IsNullOrEmpty(options.PlotOutputPath))
             {
                 if (extension == ".json")
                 {
-                    visualizer.OutputPlotFromJsonFile(loadPath, method, options.IncludeAttributes, 
+                    visualizer.OutputPlotFromJsonFile(loadPath, method, options.IncludeAttributes,
                         options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
                 }
                 else if (extension == ".safetensors")
                 {
                     var trainer = SkipGramTrainer.LoadFromSafetensors(loadPath);
-                    
+
                     if (method == "pca")
                     {
-                        visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                        visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes,
                             options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
                     }
                     else if (method == "umap")
                     {
-                        visualizer.OutputUMAPToPlot(trainer, options.IncludeAttributes, 
+                        visualizer.OutputUMAPToPlot(trainer, options.IncludeAttributes,
                             options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
                     }
                     else
                     {
                         Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
-                        visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                        visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes,
                             options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
                     }
                 }
@@ -611,7 +615,7 @@ public static class ApplicationMain
                 {
                     // Safetensors形式からロード
                     var trainer = SkipGramTrainer.LoadFromSafetensors(loadPath);
-                    
+
                     if (method == "pca")
                     {
                         visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
@@ -632,7 +636,7 @@ public static class ApplicationMain
                     return 1;
                 }
             }
-            
+
             return 0;
         }
         catch (Exception ex)
