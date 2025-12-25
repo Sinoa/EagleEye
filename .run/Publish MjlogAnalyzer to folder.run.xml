@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Publish MjlogAnalyzer to folder" type="DotNetFolderPublish" factoryName="Publish to folder">
+    <riderPublish configuration="Release" delete_existing_files="true" platform="Any CPU" target_folder="$PROJECT_DIR$/MjlogAnalyzer/bin/Release/net9.0/publish" target_framework="net9.0" uuid_high="1831311714052014432" uuid_low="2774560462647025635">
+      <runtimes>
+        <item value="Portable" />
+      </runtimes>
+    </riderPublish>
+    <method v="2" />
+  </configuration>
+</component>
