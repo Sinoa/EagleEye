@@ -36,6 +36,7 @@ public class MjlogAnalyzer
     private readonly TurnCountAnalyzer _turnCountAnalyzer = new();
     private readonly YakuAnalyzer _yakuAnalyzer = new();
     private readonly DoraAnalyzer _doraAnalyzer = new();
+    private readonly PointDistributionAnalyzer _pointDistributionAnalyzer = new();
     private int _gameCount;
     private int _roundCount;
 
@@ -53,6 +54,7 @@ public class MjlogAnalyzer
         _turnCountAnalyzer.Analyze(game);
         _yakuAnalyzer.Analyze(game);
         _doraAnalyzer.Analyze(game);
+        _pointDistributionAnalyzer.Analyze(game);
     }
 
     /// <summary>
@@ -71,7 +73,8 @@ public class MjlogAnalyzer
             TurnDistribution = DistributionStatistics.Calculate(_turnCountAnalyzer.TurnCounts),
             YakuFrequencies = _yakuAnalyzer.GetResults(),
             DoraIndicatorFrequencies = _doraAnalyzer.GetIndicatorResults(),
-            ActualDoraFrequencies = _doraAnalyzer.GetActualDoraResults()
+            ActualDoraFrequencies = _doraAnalyzer.GetActualDoraResults(),
+            PointDistributionFrequencies = _pointDistributionAnalyzer.GetResults()
         };
     }
 }

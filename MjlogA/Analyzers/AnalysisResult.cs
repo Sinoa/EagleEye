@@ -56,4 +56,7 @@ public class AnalysisResult
 
     /// <summary>実際のドラ牌の出現頻度</summary>
     public IReadOnlyList<FrequencyResult> ActualDoraFrequencies { get; set; } = [];
+
+    /// <summary>局終了時の持ち点分布（100点単位）</summary>
+    public IReadOnlyList<FrequencyResult> PointDistributionFrequencies { get; set; } = [];
 }

@@ -57,6 +57,9 @@ public static class CsvFormatter
         writer.WriteLine();
 
         WriteActualDoraFrequencies(result.ActualDoraFrequencies, writer);
+        writer.WriteLine();
+
+        WritePointDistributionFrequencies(result.PointDistributionFrequencies, writer);
     }
 
     private static void WriteSummary(AnalysisResult result, TextWriter writer)
@@ -125,6 +128,16 @@ public static class CsvFormatter
     {
         writer.WriteLine("# 実際のドラ牌の出現頻度");
         writer.WriteLine("牌,出現回数,出現率");
+        foreach (var freq in frequencies)
+        {
+            writer.WriteLine($"{freq.Name},{freq.Count},{freq.Rate:P2}");
+        }
+    }
+
+    private static void WritePointDistributionFrequencies(IReadOnlyList<FrequencyResult> frequencies, TextWriter writer)
+    {
+        writer.WriteLine("# 局終了時の持ち点分布（100点単位）");
+        writer.WriteLine("持ち点,出現回数,出現率");
         foreach (var freq in frequencies)
         {
             writer.WriteLine($"{freq.Name},{freq.Count},{freq.Rate:P2}");
