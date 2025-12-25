@@ -22,6 +22,7 @@
 // distribution.
 
 using System.Text.Json;
+using ScottPlot;
 using TileEmbedder;
 
 namespace TileEmbedderCli;
@@ -31,6 +32,58 @@ namespace TileEmbedderCli;
 /// </summary>
 internal class EmbeddingVisualizer
 {
+    /// <summary>
+    /// 日本語表示用フォント名
+    /// </summary>
+    private static readonly string JapaneseFontName = GetJapaneseFontName();
+
+    /// <summary>
+    /// 牌種類ごとの表示色
+    /// </summary>
+    private static readonly Dictionary<string, ScottPlot.Color> TileTypeColors = new()
+    {
+        { "萬子", ScottPlot.Color.FromHex("#e74c3c") },      // 赤系
+        { "筒子", ScottPlot.Color.FromHex("#3498db") },      // 青系
+        { "索子", ScottPlot.Color.FromHex("#2ecc71") },      // 緑系
+        { "風牌", ScottPlot.Color.FromHex("#9b59b6") },      // 紫系
+        { "三元牌", ScottPlot.Color.FromHex("#f39c12") },    // オレンジ系
+        { "属性", ScottPlot.Color.FromHex("#95a5a6") },      // グレー系
+        { "その他", ScottPlot.Color.FromHex("#34495e") }     // ダークグレー
+    };
+
+    /// <summary>
+    /// 日本語フォント名を取得（環境に応じて適切なフォントを選択）
+    /// </summary>
+    private static string GetJapaneseFontName()
+    {
+        // Windows: Yu Gothic UI, Meiryo UI など
+        if (OperatingSystem.IsWindows())
+        {
+            return "Yu Gothic UI";
+        }
+
+        // macOS: Hiragino Sans など
+        if (OperatingSystem.IsMacOS())
+        {
+            return "Hiragino Sans";
+        }
+
+        // Linux等: Noto Sans CJK JP など
+        return "Noto Sans CJK JP";
+    }
+
+    /// <summary>
+    /// プロットに日本語フォントを適用
+    /// </summary>
+    private static void ApplyJapaneseFont(Plot plot)
+    {
+        plot.Axes.Title.Label.FontName = JapaneseFontName;
+        plot.Axes.Bottom.Label.FontName = JapaneseFontName;
+        plot.Axes.Left.Label.FontName = JapaneseFontName;
+        plot.Axes.Bottom.TickLabelStyle.FontName = JapaneseFontName;
+        plot.Axes.Left.TickLabelStyle.FontName = JapaneseFontName;
+    }
+
     /// <summary>
     /// JSONファイルから埋め込みベクトルを読み込んでCSV出力
     /// </summary>
@@ -151,6 +204,204 @@ internal class EmbeddingVisualizer
             var type = GetTileType(labels[i]);
             Console.WriteLine($"{labels[i]},{x[i]:F6},{y[i]:F6},{type},{method}");
         }
+    }
+
+    /// <summary>
+    /// JSONファイルから埋め込みベクトルを読み込んで画像出力
+    /// </summary>
+    public void OutputPlotFromJsonFile(string jsonPath, string method, bool includeAttributes, string outputPath, int width, int height)
+    {
+        if (!File.Exists(jsonPath))
+        {
+            throw new FileNotFoundException($"JSONファイルが見つかりません: {jsonPath}");
+        }
+
+        var json = File.ReadAllText(jsonPath);
+        var data = JsonSerializer.Deserialize<JsonElement>(json);
+
+        if (!data.TryGetProperty("embeddings", out var embeddingsObj))
+        {
+            throw new InvalidDataException("JSONファイルに'embeddings'プロパティが見つかりません");
+        }
+
+        var embeddings = new List<float[]>();
+        var labels = new List<string>();
+
+        foreach (var prop in embeddingsObj.EnumerateObject())
+        {
+            var tokenName = prop.Name;
+            
+            // 属性トークンを除外するオプション
+            if (!includeAttributes && tokenName.StartsWith("Attr"))
+            {
+                continue;
+            }
+
+            var vector = new List<float>();
+            foreach (var element in prop.Value.EnumerateArray())
+            {
+                vector.Add(element.GetSingle());
+            }
+
+            embeddings.Add(vector.ToArray());
+            labels.Add(tokenName);
+        }
+
+        // 次元削減と画像出力
+        float[] x, y;
+        var methodLower = method.ToLowerInvariant();
+        
+        if (methodLower == "pca")
+        {
+            (x, y) = PerformPCA(embeddings);
+        }
+        else if (methodLower == "umap")
+        {
+            (x, y) = PerformUMAP(embeddings);
+        }
+        else
+        {
+            throw new ArgumentException($"不明な可視化手法: {method}。'pca'または'umap'を指定してください。");
+        }
+
+        SavePlotImage(labels, x, y, methodLower.ToUpperInvariant(), outputPath, width, height);
+    }
+
+    /// <summary>
+    /// PCAで2次元削減して画像出力
+    /// </summary>
+    public void OutputPCAToPlot(SkipGramTrainer trainer, bool includeAttributes, string outputPath, int width, int height)
+    {
+        var (embeddings, labels) = GetEmbeddings(trainer, includeAttributes);
+        var (x, y) = PerformPCA(embeddings);
+
+        SavePlotImage(labels, x, y, "PCA", outputPath, width, height);
+    }
+
+    /// <summary>
+    /// UMAPで2次元削減して画像出力
+    /// </summary>
+    public void OutputUMAPToPlot(SkipGramTrainer trainer, bool includeAttributes, string outputPath, int width, int height)
+    {
+        var (embeddings, labels) = GetEmbeddings(trainer, includeAttributes);
+        var (x, y) = PerformUMAP(embeddings);
+
+        SavePlotImage(labels, x, y, "UMAP", outputPath, width, height);
+    }
+
+    /// <summary>
+    /// 散布図を画像として保存
+    /// </summary>
+    private void SavePlotImage(List<string> labels, float[] x, float[] y, string method, string outputPath, int width, int height)
+    {
+        var plot = new Plot();
+        ApplyJapaneseFont(plot);
+
+        // 牌の種類ごとにグループ化
+        var groups = new Dictionary<string, List<(float x, float y, string label)>>();
+
+        for (int i = 0; i < labels.Count; i++)
+        {
+            var tileType = GetTileType(labels[i]);
+            if (!groups.ContainsKey(tileType))
+            {
+                groups[tileType] = new List<(float, float, string)>();
+            }
+            groups[tileType].Add((x[i], y[i], labels[i]));
+        }
+
+        // 各グループごとに散布図を描画
+        foreach (var group in groups)
+        {
+            var tileType = group.Key;
+            var points = group.Value;
+            var color = TileTypeColors.GetValueOrDefault(tileType, TileTypeColors["その他"]);
+
+            double[] xValues = points.Select(p => (double)p.x).ToArray();
+            double[] yValues = points.Select(p => (double)p.y).ToArray();
+
+            var scatter = plot.Add.Scatter(xValues, yValues);
+            scatter.LineWidth = 0;
+            scatter.MarkerSize = 10;
+            scatter.MarkerColor = color;
+            scatter.LegendText = tileType;
+        }
+
+        // 各ポイントにラベルを追加
+        for (int i = 0; i < labels.Count; i++)
+        {
+            var tileType = GetTileType(labels[i]);
+            var color = TileTypeColors.GetValueOrDefault(tileType, TileTypeColors["その他"]);
+            
+            // ラベルテキストを取得（日本語表示用に変換）
+            var displayLabel = GetDisplayLabel(labels[i]);
+            
+            var text = plot.Add.Text(displayLabel, x[i], y[i]);
+            text.LabelFontName = JapaneseFontName;
+            text.LabelFontSize = 9;
+            text.LabelFontColor = color;
+            text.LabelOffsetX = 5;
+            text.LabelOffsetY = -5;
+        }
+
+        // タイトルと軸ラベル
+        plot.Title($"牌埋め込みベクトル分布図 ({method})");
+        plot.XLabel($"{method} 第1成分");
+        plot.YLabel($"{method} 第2成分");
+
+        // 凡例を表示
+        plot.ShowLegend();
+
+        // 出力ディレクトリが存在しない場合は作成
+        var directory = Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // 画像を保存
+        plot.SavePng(outputPath, width, height);
+        Console.WriteLine($"画像を保存しました: {outputPath}");
+    }
+
+    /// <summary>
+    /// トークン名を表示用ラベルに変換
+    /// </summary>
+    private string GetDisplayLabel(string tokenName)
+    {
+        // 萬子
+        if (tokenName == "RedMan5") return "赤5m";
+        if (tokenName.StartsWith("Man")) return tokenName.Replace("Man", "") + "m";
+        
+        // 筒子
+        if (tokenName == "RedPin5") return "赤5p";
+        if (tokenName.StartsWith("Pin")) return tokenName.Replace("Pin", "") + "p";
+        
+        // 索子
+        if (tokenName == "RedSou5") return "赤5s";
+        if (tokenName.StartsWith("Sou")) return tokenName.Replace("Sou", "") + "s";
+        
+        // 字牌
+        return tokenName switch
+        {
+            "East" => "東",
+            "South" => "南",
+            "West" => "西",
+            "North" => "北",
+            "White" => "白",
+            "Green" => "發",
+            "Red" => "中",
+            // 属性トークン
+            "AttrMan" => "萬",
+            "AttrPin" => "筒",
+            "AttrSou" => "索",
+            "AttrWind" => "風",
+            "AttrDragon" => "元",
+            "AttrNumber" => "数",
+            "AttrHonor" => "字",
+            "AttrRed" => "赤",
+            _ => tokenName
+        };
     }
 
     /// <summary>

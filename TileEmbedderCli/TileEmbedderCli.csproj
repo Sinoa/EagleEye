@@ -8,6 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ScottPlot" Version="5.0.*" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\TileEmbedder\TileEmbedder.csproj" />
         <ProjectReference Include="..\MjlogJ\MjlogJ.csproj" />
     </ItemGroup>

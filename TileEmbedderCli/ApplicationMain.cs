@@ -196,6 +196,27 @@ public static class ApplicationMain
                     options.IncludeAttributes = true;
                     break;
 
+                case "--plot":
+                    if (i + 1 < args.Length)
+                    {
+                        options.PlotOutputPath = args[++i];
+                    }
+                    break;
+
+                case "--plot-width":
+                    if (i + 1 < args.Length && int.TryParse(args[++i], out var plotWidth))
+                    {
+                        options.PlotWidth = plotWidth;
+                    }
+                    break;
+
+                case "--plot-height":
+                    if (i + 1 < args.Length && int.TryParse(args[++i], out var plotHeight))
+                    {
+                        options.PlotHeight = plotHeight;
+                    }
+                    break;
+
                 case "-l":
                 case "--load":
                     if (i + 1 < args.Length)
@@ -243,6 +264,9 @@ public static class ApplicationMain
                             -v, --visualize           2次元可視化データをCSV形式で標準出力
                             --visualize-method <手法> 次元削減手法 (pca|umap, デフォルト: pca)
                             --include-attributes      属性トークンも含めて可視化
+                            --plot <出力パス>         分布図を画像として出力（PNG形式）
+                            --plot-width <数値>       プロット画像の幅（デフォルト: 800）
+                            --plot-height <数値>      プロット画像の高さ（デフォルト: 600）
 
                           例:
                             # ルールベースのみで生成
@@ -271,6 +295,15 @@ public static class ApplicationMain
 
                             # Safetensorsファイルを属性トークン込みでUMAP可視化
                             TileEmbedderCli -l tile_embeddings.safetensors --visualize-method umap --include-attributes > viz.csv
+
+                            # PCAで分布図を画像として出力
+                            TileEmbedderCli -l tile_embeddings.json --plot distribution.png
+
+                            # UMAPで分布図を画像として出力（サイズ指定）
+                            TileEmbedderCli -l tile_embeddings.json --visualize-method umap --plot distribution.png --plot-width 1200 --plot-height 900
+
+                            # 学習時に同時に分布図を生成
+                            TileEmbedderCli -i ./mjlogs/ -p --plot distribution.png
                           """);
     }
 
@@ -421,6 +454,36 @@ public static class ApplicationMain
             return 0;
         }
 
+        // 画像プロット出力（--plot指定時）
+        if (!string.IsNullOrEmpty(options.PlotOutputPath))
+        {
+            var visualizer = new EmbeddingVisualizer();
+            var method = options.VisualizeMethod.ToLowerInvariant();
+            
+            if (options.ShowProgress)
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== 分布図生成 ===");
+            }
+
+            if (method == "pca" || method == "default")
+            {
+                visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                    options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
+            }
+            else if (method == "umap")
+            {
+                visualizer.OutputUMAPToPlot(trainer, options.IncludeAttributes, 
+                    options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
+            }
+            else
+            {
+                Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
+                visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                    options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
+            }
+        }
+
         // フェーズ3: エクスポート（可視化モードでない場合のみ）
         if (options.ShowProgress)
         {
@@ -502,33 +565,72 @@ public static class ApplicationMain
             // ファイル形式の判定と処理
             var extension = Path.GetExtension(loadPath).ToLowerInvariant();
             
-            if (extension == ".json")
+            // 画像出力が指定されている場合
+            if (!string.IsNullOrEmpty(options.PlotOutputPath))
             {
-                visualizer.OutputFromJsonFile(loadPath, method, options.IncludeAttributes);
-            }
-            else if (extension == ".safetensors")
-            {
-                // Safetensors形式からロード
-                var trainer = SkipGramTrainer.LoadFromSafetensors(loadPath);
-                
-                if (method == "pca")
+                if (extension == ".json")
                 {
-                    visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+                    visualizer.OutputPlotFromJsonFile(loadPath, method, options.IncludeAttributes, 
+                        options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
                 }
-                else if (method == "umap")
+                else if (extension == ".safetensors")
                 {
-                    visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
+                    var trainer = SkipGramTrainer.LoadFromSafetensors(loadPath);
+                    
+                    if (method == "pca")
+                    {
+                        visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                            options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
+                    }
+                    else if (method == "umap")
+                    {
+                        visualizer.OutputUMAPToPlot(trainer, options.IncludeAttributes, 
+                            options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
+                        visualizer.OutputPCAToPlot(trainer, options.IncludeAttributes, 
+                            options.PlotOutputPath, options.PlotWidth, options.PlotHeight);
+                    }
                 }
                 else
                 {
-                    Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
-                    visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+                    Console.Error.WriteLine($"エラー: サポートされていないファイル形式です。.json または .safetensors を指定してください。");
+                    return 1;
                 }
             }
             else
             {
-                Console.Error.WriteLine($"エラー: サポートされていないファイル形式です。.json または .safetensors を指定してください。");
-                return 1;
+                // CSV出力（従来の動作）
+                if (extension == ".json")
+                {
+                    visualizer.OutputFromJsonFile(loadPath, method, options.IncludeAttributes);
+                }
+                else if (extension == ".safetensors")
+                {
+                    // Safetensors形式からロード
+                    var trainer = SkipGramTrainer.LoadFromSafetensors(loadPath);
+                    
+                    if (method == "pca")
+                    {
+                        visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+                    }
+                    else if (method == "umap")
+                    {
+                        visualizer.OutputUMAPToCSV(trainer, options.IncludeAttributes, false);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"警告: 不明な可視化手法 '{options.VisualizeMethod}'。PCAを使用します。");
+                        visualizer.OutputPCAToCSV(trainer, options.IncludeAttributes, false);
+                    }
+                }
+                else
+                {
+                    Console.Error.WriteLine($"エラー: サポートされていないファイル形式です。.json または .safetensors を指定してください。");
+                    return 1;
+                }
             }
             
             return 0;
@@ -561,4 +663,7 @@ internal class CommandLineOptions
     public bool Visualize { get; set; }
     public string VisualizeMethod { get; set; } = "default";
     public bool IncludeAttributes { get; set; }
+    public string? PlotOutputPath { get; set; }
+    public int PlotWidth { get; set; } = 800;
+    public int PlotHeight { get; set; } = 600;
 }
