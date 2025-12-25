@@ -4,6 +4,7 @@
         <Project Path="TileEmbedderCli/TileEmbedderCli.csproj" />
     </Folder>
     <Folder Name="/Lib/">
+        <Project Path="MjlogA/MjlogA.csproj" />
         <Project Path="MjlogJ/MjlogJ.csproj" />
         <Project Path="MLModelUtility/MLModelUtility.csproj" />
         <Project Path="TileEmbedder/TileEmbedder.csproj" />
