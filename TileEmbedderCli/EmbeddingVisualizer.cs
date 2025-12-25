@@ -82,6 +82,7 @@ internal class EmbeddingVisualizer
         plot.Axes.Left.Label.FontName = JapaneseFontName;
         plot.Axes.Bottom.TickLabelStyle.FontName = JapaneseFontName;
         plot.Axes.Left.TickLabelStyle.FontName = JapaneseFontName;
+        plot.Legend.FontName = JapaneseFontName;
     }
 
     /// <summary>
