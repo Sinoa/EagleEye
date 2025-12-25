@@ -1,5 +1,6 @@
 <Solution>
     <Folder Name="/Cli/">
+        <Project Path="MjlogAnalyzer/MjlogAnalyzer.csproj" />
         <Project Path="MjlogConverter/MjlogConverter.csproj" />
         <Project Path="TileEmbedderCli/TileEmbedderCli.csproj" />
     </Folder>
