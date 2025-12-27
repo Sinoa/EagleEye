@@ -21,6 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
+using System.Globalization;
 using System.Text.Json;
 using MLModelUtility.Formats.Safetensors;
 using MLModelUtility.Models;
@@ -55,6 +56,21 @@ public class SkipGramTrainingOptions
 
     /// <summary>チェックポイント保存間隔（エポック数）</summary>
     public int? CheckpointInterval { get; set; }
+}
+
+/// <summary>
+/// ファイルからのロード結果（トレーナーとハイパーパラメータを含む）
+/// </summary>
+public class SkipGramLoadResult
+{
+    /// <summary>ロードされたトレーナー</summary>
+    public required SkipGramTrainer Trainer { get; init; }
+
+    /// <summary>ファイルに保存されていたハイパーパラメータ（存在しない場合はnull）</summary>
+    public TrainingHyperparameters? Hyperparameters { get; init; }
+
+    /// <summary>ハイパーパラメータが存在するか</summary>
+    public bool HasHyperparameters => Hyperparameters != null;
 }
 
 /// <summary>
@@ -107,6 +123,21 @@ public class SkipGramTrainer
         int? randomSeed = null,
         string tensorName = "tile_embeddings")
     {
+        return LoadFromSafetensorsWithHyperparameters(filePath, randomSeed, tensorName).Trainer;
+    }
+
+    /// <summary>
+    /// Safetensors形式から学習済み埋め込みベクトルとハイパーパラメータをロード
+    /// </summary>
+    /// <param name="filePath">Safetensorsファイルのパス</param>
+    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <param name="tensorName">テンソル名（デフォルト: "tile_embeddings"）</param>
+    /// <returns>トレーナーとハイパーパラメータを含むロード結果</returns>
+    public static SkipGramLoadResult LoadFromSafetensorsWithHyperparameters(
+        string filePath,
+        int? randomSeed = null,
+        string tensorName = "tile_embeddings")
+    {
         var handler = new SafetensorsFormatHandler();
         using var collection = handler.ReadTensorsFromFile(filePath);
 
@@ -154,7 +185,67 @@ public class SkipGramTrainer
             }
         }
 
-        return trainer;
+        // ハイパーパラメータをメタデータから読み込み
+        var hyperparameters = ParseHyperparametersFromSafetensors(metadata, embeddingDim);
+
+        return new SkipGramLoadResult
+        {
+            Trainer = trainer,
+            Hyperparameters = hyperparameters
+        };
+    }
+
+    /// <summary>
+    /// Safetensorsメタデータからハイパーパラメータを解析
+    /// </summary>
+    private static TrainingHyperparameters? ParseHyperparametersFromSafetensors(
+        IReadOnlyDictionary<string, string> metadata,
+        int embeddingDim)
+    {
+        // hp_プレフィックス付きのハイパーパラメータがあるか確認
+        if (!metadata.TryGetValue("hp_epochs", out var epochsStr))
+        {
+            return null; // ハイパーパラメータが保存されていない
+        }
+
+        var hyperparameters = new TrainingHyperparameters
+        {
+            EmbeddingDim = embeddingDim
+        };
+
+        if (int.TryParse(epochsStr, out var epochs))
+        {
+            hyperparameters.Epochs = epochs;
+        }
+
+        if (metadata.TryGetValue("hp_negative_samples", out var negSamplesStr) && int.TryParse(negSamplesStr, out var negSamples))
+        {
+            hyperparameters.NegativeSamples = negSamples;
+        }
+
+        if (metadata.TryGetValue("hp_learning_rate", out var lrStr) && float.TryParse(lrStr, NumberStyles.Float, CultureInfo.InvariantCulture, out var lr))
+        {
+            hyperparameters.LearningRate = lr;
+        }
+
+        if (metadata.TryGetValue("hp_random_seed", out var seedStr) && int.TryParse(seedStr, out var seed))
+        {
+            hyperparameters.RandomSeed = seed;
+        }
+
+        if (metadata.TryGetValue("hp_created_at", out var createdAtStr)
+            && DateTime.TryParse(createdAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt))
+        {
+            hyperparameters.CreatedAt = createdAt;
+        }
+
+        if (metadata.TryGetValue("hp_updated_at", out var updatedAtStr)
+            && DateTime.TryParse(updatedAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var updatedAt))
+        {
+            hyperparameters.UpdatedAt = updatedAt;
+        }
+
+        return hyperparameters;
     }
 
     /// <summary>
@@ -164,6 +255,17 @@ public class SkipGramTrainer
     /// <param name="randomSeed">乱数シード（追加学習用）</param>
     /// <returns>埋め込みがロードされたトレーナー</returns>
     public static SkipGramTrainer LoadFromJson(string filePath, int? randomSeed = null)
+    {
+        return LoadFromJsonWithHyperparameters(filePath, randomSeed).Trainer;
+    }
+
+    /// <summary>
+    /// JSON形式から学習済み埋め込みベクトルとハイパーパラメータをロード
+    /// </summary>
+    /// <param name="filePath">JSONファイルのパス</param>
+    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <returns>トレーナーとハイパーパラメータを含むロード結果</returns>
+    public static SkipGramLoadResult LoadFromJsonWithHyperparameters(string filePath, int? randomSeed = null)
     {
         var json = File.ReadAllText(filePath);
         using var doc = JsonDocument.Parse(json);
@@ -208,7 +310,70 @@ public class SkipGramTrainer
             }
         }
 
-        return trainer;
+        // ハイパーパラメータを読み込み
+        var hyperparameters = ParseHyperparametersFromJson(root, embeddingDim);
+
+        return new SkipGramLoadResult
+        {
+            Trainer = trainer,
+            Hyperparameters = hyperparameters
+        };
+    }
+
+    /// <summary>
+    /// JSONからハイパーパラメータを解析
+    /// </summary>
+    private static TrainingHyperparameters? ParseHyperparametersFromJson(JsonElement root, int embeddingDim)
+    {
+        if (!root.TryGetProperty("hyperparameters", out var hpElement))
+        {
+            return null; // ハイパーパラメータが保存されていない
+        }
+
+        var hyperparameters = new TrainingHyperparameters
+        {
+            EmbeddingDim = embeddingDim
+        };
+
+        if (hpElement.TryGetProperty("epochs", out var epochsElement))
+        {
+            hyperparameters.Epochs = epochsElement.GetInt32();
+        }
+
+        if (hpElement.TryGetProperty("negative_samples", out var negSamplesElement))
+        {
+            hyperparameters.NegativeSamples = negSamplesElement.GetInt32();
+        }
+
+        if (hpElement.TryGetProperty("learning_rate", out var lrElement))
+        {
+            hyperparameters.LearningRate = lrElement.GetSingle();
+        }
+
+        if (hpElement.TryGetProperty("random_seed", out var seedElement) && seedElement.ValueKind != JsonValueKind.Null)
+        {
+            hyperparameters.RandomSeed = seedElement.GetInt32();
+        }
+
+        if (hpElement.TryGetProperty("created_at", out var createdAtElement))
+        {
+            var createdAtStr = createdAtElement.GetString();
+            if (createdAtStr != null && DateTime.TryParse(createdAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var createdAt))
+            {
+                hyperparameters.CreatedAt = createdAt;
+            }
+        }
+
+        if (hpElement.TryGetProperty("updated_at", out var updatedAtElement))
+        {
+            var updatedAtStr = updatedAtElement.GetString();
+            if (updatedAtStr != null && DateTime.TryParse(updatedAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var updatedAt))
+            {
+                hyperparameters.UpdatedAt = updatedAt;
+            }
+        }
+
+        return hyperparameters;
     }
 
     /// <summary>

@@ -142,6 +142,9 @@ public class TrainingHyperparameters
     /// <summary>生成日時</summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>更新日時（追加学習時に更新）</summary>
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
     /// <summary>
     /// メタデータ用の辞書に変換
     /// </summary>
@@ -153,7 +156,8 @@ public class TrainingHyperparameters
             ["epochs"] = Epochs.ToString(),
             ["negative_samples"] = NegativeSamples.ToString(),
             ["learning_rate"] = LearningRate.ToString("G"),
-            ["created_at"] = CreatedAt.ToString("o")
+            ["created_at"] = CreatedAt.ToString("o"),
+            ["updated_at"] = UpdatedAt.ToString("o")
         };
 
         if (RandomSeed.HasValue)
@@ -177,6 +181,7 @@ public class TrainingHyperparameters
         sb.AppendLine($"Learning Rate       : {LearningRate:G}");
         sb.AppendLine($"Random Seed         : {(RandomSeed.HasValue ? RandomSeed.Value.ToString() : "Auto (not specified)")}");
         sb.AppendLine($"Created At          : {CreatedAt:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine($"Updated At          : {UpdatedAt:yyyy-MM-dd HH:mm:ss} UTC");
         sb.AppendLine("========================================");
         return sb.ToString();
     }

@@ -215,7 +215,8 @@ public class EmbeddingExporter
                 ["random_seed"] = hyperparameters.RandomSeed.HasValue
                     ? (object)hyperparameters.RandomSeed.Value
                     : null!,
-                ["created_at"] = hyperparameters.CreatedAt.ToString("o")
+                ["created_at"] = hyperparameters.CreatedAt.ToString("o"),
+                ["updated_at"] = hyperparameters.UpdatedAt.ToString("o")
             };
         }
 
