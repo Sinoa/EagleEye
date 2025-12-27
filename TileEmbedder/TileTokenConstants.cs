@@ -118,3 +118,66 @@ public static class TrainingConstants
     /// <summary>順子近接共起のウィンドウサイズ（デフォルト: 2）</summary>
     public const int DefaultWindowSize = 2;
 }
+
+/// <summary>
+/// 学習に使用されたハイパーパラメータ情報
+/// </summary>
+public class TrainingHyperparameters
+{
+    /// <summary>埋め込みベクトルの次元数</summary>
+    public int EmbeddingDim { get; set; }
+
+    /// <summary>学習エポック数</summary>
+    public int Epochs { get; set; }
+
+    /// <summary>ネガティブサンプル数</summary>
+    public int NegativeSamples { get; set; }
+
+    /// <summary>学習率</summary>
+    public float LearningRate { get; set; }
+
+    /// <summary>乱数シード（nullの場合はランダム）</summary>
+    public int? RandomSeed { get; set; }
+
+    /// <summary>生成日時</summary>
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// メタデータ用の辞書に変換
+    /// </summary>
+    public Dictionary<string, string> ToDictionary()
+    {
+        var dict = new Dictionary<string, string>
+        {
+            ["embedding_dim"] = EmbeddingDim.ToString(),
+            ["epochs"] = Epochs.ToString(),
+            ["negative_samples"] = NegativeSamples.ToString(),
+            ["learning_rate"] = LearningRate.ToString("G"),
+            ["created_at"] = CreatedAt.ToString("o")
+        };
+
+        if (RandomSeed.HasValue)
+        {
+            dict["random_seed"] = RandomSeed.Value.ToString();
+        }
+
+        return dict;
+    }
+
+    /// <summary>
+    /// サマリー文字列を生成
+    /// </summary>
+    public string ToSummaryString()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("=== Training Hyperparameters Summary ===");
+        sb.AppendLine($"Embedding Dimension : {EmbeddingDim}");
+        sb.AppendLine($"Epochs              : {Epochs}");
+        sb.AppendLine($"Negative Samples    : {NegativeSamples}");
+        sb.AppendLine($"Learning Rate       : {LearningRate:G}");
+        sb.AppendLine($"Random Seed         : {(RandomSeed.HasValue ? RandomSeed.Value.ToString() : "Auto (not specified)")}");
+        sb.AppendLine($"Created At          : {CreatedAt:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine("========================================");
+        return sb.ToString();
+    }
+}

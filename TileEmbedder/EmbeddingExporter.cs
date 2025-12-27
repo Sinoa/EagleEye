@@ -38,10 +38,12 @@ public class EmbeddingExporter
     /// <param name="trainer">学習済みトレーナー</param>
     /// <param name="filePath">出力ファイルパス</param>
     /// <param name="tensorName">テンソル名（デフォルト: "tile_embeddings"）</param>
+    /// <param name="hyperparameters">学習に使用したハイパーパラメータ（オプション）</param>
     public static void ExportToSafetensors(
         SkipGramTrainer trainer,
         string filePath,
-        string tensorName = "tile_embeddings")
+        string tensorName = "tile_embeddings",
+        TrainingHyperparameters? hyperparameters = null)
     {
         var embeddings = trainer.GetFlatEmbeddings();
         var vocabSize = TrainingConstants.TotalVocabularySize;
@@ -63,6 +65,15 @@ public class EmbeddingExporter
             ["token_mapping"] = CreateTokenMappingJson()
         };
 
+        // ハイパーパラメータをメタデータに追加
+        if (hyperparameters != null)
+        {
+            foreach (var kvp in hyperparameters.ToDictionary())
+            {
+                metadata[$"hp_{kvp.Key}"] = kvp.Value;
+            }
+        }
+
         // TensorCollectionを作成
         using var collection = new TensorCollection(
             new[] { tensorData },
@@ -80,6 +91,7 @@ public class EmbeddingExporter
         SkipGramTrainer trainer,
         string filePath,
         string tensorName = "tile_embeddings",
+        TrainingHyperparameters? hyperparameters = null,
         CancellationToken cancellationToken = default)
     {
         var embeddings = trainer.GetFlatEmbeddings();
@@ -100,6 +112,15 @@ public class EmbeddingExporter
             ["token_mapping"] = CreateTokenMappingJson()
         };
 
+        // ハイパーパラメータをメタデータに追加
+        if (hyperparameters != null)
+        {
+            foreach (var kvp in hyperparameters.ToDictionary())
+            {
+                metadata[$"hp_{kvp.Key}"] = kvp.Value;
+            }
+        }
+
         using var collection = new TensorCollection(
             new[] { tensorData },
             metadata);
@@ -114,12 +135,14 @@ public class EmbeddingExporter
     /// <param name="trainer">学習済みトレーナー</param>
     /// <param name="filePath">出力ファイルパス</param>
     /// <param name="indented">整形出力するか</param>
+    /// <param name="hyperparameters">学習に使用したハイパーパラメータ（オプション）</param>
     public static void ExportToJson(
         SkipGramTrainer trainer,
         string filePath,
-        bool indented = true)
+        bool indented = true,
+        TrainingHyperparameters? hyperparameters = null)
     {
-        var exportData = CreateExportData(trainer);
+        var exportData = CreateExportData(trainer, hyperparameters);
         var options = new JsonSerializerOptions
         {
             WriteIndented = indented
@@ -136,9 +159,10 @@ public class EmbeddingExporter
         SkipGramTrainer trainer,
         string filePath,
         bool indented = true,
+        TrainingHyperparameters? hyperparameters = null,
         CancellationToken cancellationToken = default)
     {
-        var exportData = CreateExportData(trainer);
+        var exportData = CreateExportData(trainer, hyperparameters);
         var options = new JsonSerializerOptions
         {
             WriteIndented = indented
@@ -158,7 +182,9 @@ public class EmbeddingExporter
     /// <summary>
     /// エクスポート用のデータ構造を作成
     /// </summary>
-    private static Dictionary<string, object> CreateExportData(SkipGramTrainer trainer)
+    private static Dictionary<string, object> CreateExportData(
+        SkipGramTrainer trainer,
+        TrainingHyperparameters? hyperparameters = null)
     {
         var vocabSize = TrainingConstants.TotalVocabularySize;
         var embeddings = new Dictionary<string, float[]>();
@@ -168,7 +194,7 @@ public class EmbeddingExporter
             embeddings[tokenId.ToString()] = trainer.GetEmbedding(tokenId);
         }
 
-        return new Dictionary<string, object>
+        var result = new Dictionary<string, object>
         {
             ["format"] = "tile_embeddings",
             ["version"] = "1.0",
@@ -176,6 +202,50 @@ public class EmbeddingExporter
             ["embedding_dim"] = trainer.GetEmbedding(0).Length,
             ["embeddings"] = embeddings
         };
+
+        // ハイパーパラメータを追加
+        if (hyperparameters != null)
+        {
+            result["hyperparameters"] = new Dictionary<string, object>
+            {
+                ["embedding_dim"] = hyperparameters.EmbeddingDim,
+                ["epochs"] = hyperparameters.Epochs,
+                ["negative_samples"] = hyperparameters.NegativeSamples,
+                ["learning_rate"] = hyperparameters.LearningRate,
+                ["random_seed"] = hyperparameters.RandomSeed.HasValue
+                    ? (object)hyperparameters.RandomSeed.Value
+                    : null!,
+                ["created_at"] = hyperparameters.CreatedAt.ToString("o")
+            };
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// ハイパーパラメータサマリーをテキストファイルにエクスポート
+    /// </summary>
+    /// <param name="hyperparameters">ハイパーパラメータ情報</param>
+    /// <param name="filePath">出力ファイルパス</param>
+    public static void ExportSummary(TrainingHyperparameters hyperparameters, string filePath)
+    {
+        var summary = hyperparameters.ToSummaryString();
+        File.WriteAllText(filePath, summary);
+    }
+
+    /// <summary>
+    /// ハイパーパラメータサマリーをテキストファイルに非同期エクスポート
+    /// </summary>
+    /// <param name="hyperparameters">ハイパーパラメータ情報</param>
+    /// <param name="filePath">出力ファイルパス</param>
+    /// <param name="cancellationToken">キャンセルトークン</param>
+    public static async Task ExportSummaryAsync(
+        TrainingHyperparameters hyperparameters,
+        string filePath,
+        CancellationToken cancellationToken = default)
+    {
+        var summary = hyperparameters.ToSummaryString();
+        await File.WriteAllTextAsync(filePath, summary, cancellationToken);
     }
 
     /// <summary>

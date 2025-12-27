@@ -501,6 +501,17 @@ public static class ApplicationMain
 
         var format = options.Format.ToLowerInvariant();
 
+        // ハイパーパラメータ情報を作成
+        var hyperparameters = new TrainingHyperparameters
+        {
+            EmbeddingDim = options.EmbeddingDim,
+            Epochs = options.Epochs,
+            NegativeSamples = options.NegativeSamples,
+            LearningRate = options.LearningRate,
+            RandomSeed = options.RandomSeed,
+            CreatedAt = DateTime.UtcNow
+        };
+
         try
         {
             if (format == "safetensors" || format == "both")
@@ -511,7 +522,7 @@ public static class ApplicationMain
                     Console.WriteLine($"Safetensors形式で保存中: {safetensorsPath}");
                 }
 
-                EmbeddingExporter.ExportToSafetensors(trainer, safetensorsPath);
+                EmbeddingExporter.ExportToSafetensors(trainer, safetensorsPath, hyperparameters: hyperparameters);
                 if (options.ShowProgress)
                 {
                     Console.WriteLine($"✓ Safetensors形式で保存完了: {safetensorsPath}");
@@ -526,11 +537,24 @@ public static class ApplicationMain
                     Console.WriteLine($"JSON形式で保存中: {jsonPath}");
                 }
 
-                EmbeddingExporter.ExportToJson(trainer, jsonPath, indented: true);
+                EmbeddingExporter.ExportToJson(trainer, jsonPath, indented: true, hyperparameters: hyperparameters);
                 if (options.ShowProgress)
                 {
                     Console.WriteLine($"✓ JSON形式で保存完了: {jsonPath}");
                 }
+            }
+
+            // サマリーファイルを出力
+            var summaryPath = outputBaseName + "_summary.txt";
+            if (options.ShowProgress)
+            {
+                Console.WriteLine($"サマリーファイルを保存中: {summaryPath}");
+            }
+
+            EmbeddingExporter.ExportSummary(hyperparameters, summaryPath);
+            if (options.ShowProgress)
+            {
+                Console.WriteLine($"✓ サマリーファイル保存完了: {summaryPath}");
             }
 
             if (options.ShowProgress)
@@ -538,6 +562,9 @@ public static class ApplicationMain
                 Console.WriteLine();
                 Console.WriteLine("=== 完了 ===");
                 Console.WriteLine("埋め込みベクトルの生成が完了しました。");
+                Console.WriteLine();
+                // コンソールにもサマリーを表示
+                Console.WriteLine(hyperparameters.ToSummaryString());
             }
 
             return 0;
