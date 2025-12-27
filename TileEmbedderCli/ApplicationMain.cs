@@ -504,11 +504,11 @@ public static class ApplicationMain
         // ハイパーパラメータ情報を作成
         var hyperparameters = new TrainingHyperparameters
         {
-            EmbeddingDim = options.EmbeddingDim,
-            Epochs = options.Epochs,
-            NegativeSamples = options.NegativeSamples,
-            LearningRate = options.LearningRate,
-            RandomSeed = options.RandomSeed,
+            EmbeddingDim = trainingOptions.EmbeddingDim,
+            Epochs = trainingOptions.Epochs,
+            NegativeSamples = trainingOptions.NegativeSamples,
+            LearningRate = trainingOptions.LearningRate,
+            RandomSeed = trainer.RandomSeed,
             CreatedAt = DateTime.UtcNow
         };
 

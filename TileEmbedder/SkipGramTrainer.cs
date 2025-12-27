@@ -45,9 +45,6 @@ public class SkipGramTrainingOptions
     /// <summary>学習率</summary>
     public float LearningRate { get; set; } = TrainingConstants.DefaultLearningRate;
 
-    /// <summary>乱数シード（再現性のため）</summary>
-    public int? RandomSeed { get; set; }
-
     /// <summary>エポック毎のコールバック</summary>
     public Action<int, float>? OnEpochComplete { get; set; }
 
@@ -80,6 +77,7 @@ public class SkipGramTrainer
 {
     private readonly int _vocabSize;
     private readonly int _embeddingDim;
+    private readonly int _randomSeed;
     private readonly Random _random;
 
     private float[,] _inputWeights; // 入力層重み（語彙 × 次元）
@@ -91,11 +89,16 @@ public class SkipGramTrainer
     public float[,] Embeddings => _inputWeights;
 
     /// <summary>
+    /// 実際に使用されている乱数シードを取得
+    /// </summary>
+    public int RandomSeed => _randomSeed;
+
+    /// <summary>
     /// コンストラクタ
     /// </summary>
     /// <param name="vocabSize">語彙サイズ</param>
     /// <param name="embeddingDim">埋め込み次元数</param>
-    /// <param name="randomSeed">乱数シード</param>
+    /// <param name="randomSeed">乱数シード（nullの場合はランダムに生成されます）</param>
     public SkipGramTrainer(
         int vocabSize = TrainingConstants.TotalVocabularySize,
         int embeddingDim = TrainingConstants.DefaultEmbeddingDim,
@@ -103,7 +106,8 @@ public class SkipGramTrainer
     {
         _vocabSize = vocabSize;
         _embeddingDim = embeddingDim;
-        _random = randomSeed.HasValue ? new Random(randomSeed.Value) : new Random();
+        _randomSeed = randomSeed ?? new Random().Next();
+        _random = new Random(_randomSeed);
 
         _inputWeights = new float[vocabSize, embeddingDim];
         _outputWeights = new float[vocabSize, embeddingDim];
@@ -115,7 +119,7 @@ public class SkipGramTrainer
     /// Safetensors形式から学習済み埋め込みベクトルをロードしてトレーナーを作成
     /// </summary>
     /// <param name="filePath">Safetensorsファイルのパス</param>
-    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <param name="randomSeed">乱数シード（追加学習用、nullの場合はランダムに生成されます）</param>
     /// <param name="tensorName">テンソル名（デフォルト: "tile_embeddings"）</param>
     /// <returns>埋め込みがロードされたトレーナー</returns>
     public static SkipGramTrainer LoadFromSafetensors(
@@ -130,7 +134,7 @@ public class SkipGramTrainer
     /// Safetensors形式から学習済み埋め込みベクトルとハイパーパラメータをロード
     /// </summary>
     /// <param name="filePath">Safetensorsファイルのパス</param>
-    /// <param name="randomSeed">乱数シード（追加学習用）</param>
+    /// <param name="randomSeed">乱数シード（追加学習用、nullの場合はランダムに生成されます）</param>
     /// <param name="tensorName">テンソル名（デフォルト: "tile_embeddings"）</param>
     /// <returns>トレーナーとハイパーパラメータを含むロード結果</returns>
     public static SkipGramLoadResult LoadFromSafetensorsWithHyperparameters(
