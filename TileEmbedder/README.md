@@ -268,3 +268,9 @@ float[] embedding = trainer.GetEmbedding(TileTokenId.East);
 
 zlib License
 
+## 関連プロジェクト
+
+- [TileEmbedderCli](../TileEmbedderCli/README.md) - このライブラリを使用するCLIツール
+- [MjlogJ](../MjlogJ/README.md) - 天鳳牌譜読み込みライブラリ
+- [MLModelUtility](../MLModelUtility/README.md) - AIモデル入出力ライブラリ（Safetensors対応）
+

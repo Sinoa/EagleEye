@@ -182,3 +182,12 @@ CSV形式で以下のセクションを出力します：
 
 - MjlogJ - 牌譜読み込みライブラリ
 
+## 関連プロジェクト
+
+- [MjlogJ](../MjlogJ/README.md) - 天鳳牌譜読み込みライブラリ
+- [MjlogAnalyzer](../MjlogAnalyzer/README.md) - このライブラリを使用するCLIツール
+
+## ライセンス
+
+zlib License - Copyright (c) 2025 Sinoa
+

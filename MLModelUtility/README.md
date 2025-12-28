@@ -445,3 +445,8 @@ zlib License
 
 Copyright (c) 2025 Sinoa
 
+## 関連プロジェクト
+
+- [TileEmbedder](../TileEmbedder/README.md) - 牌埋め込みベクトル生成ライブラリ（Safetensors使用）
+- [TileEmbedderCli](../TileEmbedderCli/README.md) - 牌埋め込みベクトル生成ツール
+

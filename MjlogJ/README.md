@@ -596,3 +596,10 @@ WaitingTilesInfo
 
 zlib License - Copyright (c) 2025 Sinoa
 
+## 関連プロジェクト
+
+- [MjlogConverter](../MjlogConverter/README.md) - 牌譜→JSON変換ツール
+- [MjlogA](../MjlogA/README.md) - 牌譜データ分析ライブラリ
+- [MjlogAnalyzer](../MjlogAnalyzer/README.md) - 牌譜データ分析ツール
+- [TileEmbedder](../TileEmbedder/README.md) - 牌埋め込みベクトル生成ライブラリ
+

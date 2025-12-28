@@ -45,18 +45,22 @@
 | [EagleEye](./EagleEye/) | ライブラリ | 何切るAI推論エンジン本体 | 🚧 開発中 |
 | [MjlogJ](./MjlogJ/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ✅ 実装済 |
 | [MjlogConverter](./MjlogConverter/README.md) | CLIツール | 牌譜→JSON一括変換ツール | ✅ 実装済 |
+| [MjlogA](./MjlogA/README.md) | ライブラリ | 牌譜データ分析ライブラリ | ✅ 実装済 |
+| [MjlogAnalyzer](./MjlogAnalyzer/README.md) | CLIツール | 牌譜データ分析ツール（グラフ出力対応） | ✅ 実装済 |
 | [MLModelUtility](./MLModelUtility/README.md) | ライブラリ | AIモデル入出力（Safetensors/ONNX/Sentis） | ✅ 実装済 |
 | [TileEmbedder](./TileEmbedder/README.md) | ライブラリ | 牌エンベディング生成（Skip-gram） | ✅ 実装済 |
-| [TileEmbedderCli](./TileEmbedderCli/README.md) | CLIツール | 牌エンベディング生成ツール（PCA/UMAP可視化対応） | ✅ 実装済 |
+| [TileEmbedderCli](./TileEmbedderCli/README.md) | CLIツール | 牌エンベディング生成ツール（PCA/UMAP可視化・プロット出力対応） | ✅ 実装済 |
 
 ### 各プロジェクトの役割
 
 - **EagleEye**: 麻雀の「何切る」問題を解く推論エンジン本体（開発中）
 - **MjlogJ**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換
 - **MjlogConverter**: MjlogJを使用して牌譜ファイルをJSON形式に一括変換するCLIツール
+- **MjlogA**: 牌譜データから統計情報（点数分布・役出現頻度・ドラ出現頻度など）を収集・分析するライブラリ
+- **MjlogAnalyzer**: MjlogAを使用して牌譜ファイルを分析し、CSVやグラフ画像として出力するCLIツール
 - **MLModelUtility**: Safetensors、ONNX、Unity Sentis形式のAIモデルを読み書きするユーティリティライブラリ
 - **TileEmbedder**: Skip-gramアーキテクチャで麻雀牌の埋め込みベクトルを生成するライブラリ
-- **TileEmbedderCli**: TileEmbedderを使用してコマンドラインから牌エンベディングを生成し、可視化するツール
+- **TileEmbedderCli**: TileEmbedderを使用してコマンドラインから牌エンベディングを生成し、可視化・プロット出力するツール
 
 ---
 
@@ -107,6 +111,22 @@ TileEmbedderCli -p
 
 # 牌譜データを使った追加学習
 TileEmbedderCli -i ./mjlogs/ -o embeddings -p
+
+# PCAで可視化してCSV出力
+TileEmbedderCli -p --visualize > embeddings.csv
+
+# 分布図をPNG画像として出力
+TileEmbedderCli -l tile_embeddings.json --plot distribution.png
+```
+
+### 牌譜データ分析（MjlogAnalyzer）
+
+```bash
+# 牌譜ディレクトリを分析してCSV出力
+MjlogAnalyzer -d ./mjlogs/ -o result.csv -p
+
+# サブディレクトリも含めてグラフ出力
+MjlogAnalyzer -d ./mjlogs/ -r --plot ./plots -p
 ```
 
 ### AIモデルの読み込み（MLModelUtility）

@@ -131,6 +131,12 @@ CSV形式で以下のセクションを出力します：
 - MjlogJ - 牌譜読み込みライブラリ
 - ScottPlot - グラフ描画ライブラリ
 
+## 関連プロジェクト
+
+- [MjlogA](../MjlogA/README.md) - このツールが使用する分析ライブラリ
+- [MjlogJ](../MjlogJ/README.md) - 天鳳牌譜読み込みライブラリ
+- [MjlogConverter](../MjlogConverter/README.md) - 牌譜→JSON変換ツール
+
 ## グラフ出力
 
 `--plot`オプションを指定すると、分析結果をグラフ画像として出力します。
@@ -145,4 +151,8 @@ CSV形式で以下のセクションを出力します：
 | `yaku_frequency.png` | 役の出現頻度（上位20、横棒グラフ） |
 | `dora_frequency.png` | ドラ牌の出現頻度（棒グラフ） |
 | `point_distribution.png` | 持ち点分布（折れ線グラフ） |
+
+## ライセンス
+
+zlib License - Copyright (c) 2025 Sinoa
 

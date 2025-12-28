@@ -23,6 +23,9 @@
   - [9. 既存のJSONファイルから可視化](#9-既存のjsonファイルから可視化)
   - [10. 既存のSafetensorsファイルから可視化](#10-既存のsafetensorsファイルから可視化)
   - [11. 属性トークンを含めて可視化](#11-属性トークンを含めて可視化)
+  - [12. PCAで分布図を画像として出力](#12-pcaで分布図を画像として出力)
+  - [13. UMAPで分布図を画像として出力（サイズ指定）](#13-umapで分布図を画像として出力サイズ指定)
+  - [14. 学習時に同時に分布図を生成](#14-学習時に同時に分布図を生成)
 - [出力形式](#出力形式)
   - [Safetensors形式](#safetensors形式)
   - [JSON形式](#json形式)
@@ -97,6 +100,9 @@ TileEmbedderCli -l <埋め込みファイル> [可視化オプション]
 | `-v, --visualize` | 2次元可視化データをCSV形式で標準出力 | false |
 | `--visualize-method <手法>` | 次元削減手法（pca/umap） | `pca` |
 | `--include-attributes` | 属性トークンも含めて可視化 | false |
+| `--plot <パス>` | 分布図をPNG画像として出力 | - |
+| `--plot-width <数値>` | プロット画像の幅 | 800 |
+| `--plot-height <数値>` | プロット画像の高さ | 600 |
 
 ## 使用例
 
@@ -196,6 +202,30 @@ TileEmbedderCli -l tile_embeddings.safetensors --visualize-method umap --include
 
 デフォルトでは実牌のみ可視化されますが、`--include-attributes` オプションで属性トークン（萬子/筒子/索子など）も含めて可視化できます。
 
+### 12. PCAで分布図を画像として出力
+
+```bash
+TileEmbedderCli -l tile_embeddings.json --plot distribution.png
+```
+
+既存の埋め込みファイルを読み込んで、PCAで2次元に削減した分布図をPNG画像として出力します。
+
+### 13. UMAPで分布図を画像として出力（サイズ指定）
+
+```bash
+TileEmbedderCli -l tile_embeddings.json --visualize-method umap --plot distribution.png --plot-width 1200 --plot-height 900
+```
+
+UMAPを使用した分布図を、指定サイズでPNG画像として出力します。
+
+### 14. 学習時に同時に分布図を生成
+
+```bash
+TileEmbedderCli -i ./mjlogs/ -p --plot distribution.png
+```
+
+学習と同時に分布図をPNG画像として出力します。
+
 ## 出力形式
 
 ### Safetensors形式
@@ -223,6 +253,14 @@ TileEmbedderCli -l tile_embeddings.safetensors --visualize-method umap --include
   }
 }
 ```
+
+### PNG画像形式（プロット出力）
+
+`--plot` オプションを使用すると、埋め込みベクトルの分布図をPNG画像として出力します。
+
+- 牌の種類ごとに色分けされた散布図
+- 各牌のラベル付き
+- PCAまたはUMAPで2次元に削減した結果を可視化
 
 ### 可視化CSV形式
 
@@ -296,6 +334,12 @@ East,0.345,-0.678,Wind,PCA
 
 `--format` オプションには `safetensors`, `json`, `both` のいずれかを指定してください。
 
+## 依存ライブラリ
+
+- TileEmbedder - 牌埋め込みベクトル生成ライブラリ
+- MjlogJ - 牌譜読み込みライブラリ
+- ScottPlot - グラフ描画ライブラリ（プロット出力用）
+
 ## ライセンス
 
 zlib License
@@ -304,4 +348,6 @@ zlib License
 
 - [TileEmbedder](../TileEmbedder/README.md) - 埋め込みベクトル生成ライブラリ
 - [MjlogJ](../MjlogJ/README.md) - 天鳳牌譜読み込みライブラリ
+- [MjlogA](../MjlogA/README.md) - 牌譜データ分析ライブラリ
+- [MjlogAnalyzer](../MjlogAnalyzer/README.md) - 牌譜データ分析ツール
 

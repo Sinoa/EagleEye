@@ -174,3 +174,9 @@ converted/
 
 zlib License - Copyright (c) 2025 Sinoa
 
+## 関連プロジェクト
+
+- [MjlogJ](../MjlogJ/README.md) - 天鳳牌譜読み込みライブラリ
+- [MjlogA](../MjlogA/README.md) - 牌譜データ分析ライブラリ
+- [MjlogAnalyzer](../MjlogAnalyzer/README.md) - 牌譜データ分析ツール
+
