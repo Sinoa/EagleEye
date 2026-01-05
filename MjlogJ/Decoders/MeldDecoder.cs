@@ -228,7 +228,7 @@ public static class MeldDecoder
     private static void DecodeNuki(int code, MeldInfo meld)
     {
         // 北抜き（三人麻雀）
-        meld.Type = MeldType.AnKan; // 便宜上暗槓として扱う
+        meld.Type = MeldType.Nuki;
         meld.FromPlayer = 0;
 
         var tileId = (code >> 8) & 0xFF;

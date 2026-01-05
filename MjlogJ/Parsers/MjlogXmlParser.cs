@@ -390,8 +390,38 @@ public class MjlogXmlParser
         var meld = MeldDecoder.Decode(meldCode, playerId);
         playerMelds[playerId].Add(meld);
 
-        // 手牌から鳴きに使った牌を削除（暗槓・加槓以外）
-        if (meld.Type != MeldType.AnKan)
+        // 手牌から鳴きに使った牌を削除
+        if (meld.Type == MeldType.Nuki)
+        {
+            // 北抜き: 北1枚を手牌から削除
+            var nukiTile = meld.Tiles[0];
+
+            // バリデーション: 北抜きの牌が北であることを確認
+            if (nukiTile.Suit != TileSuit.Honor || nukiTile.Number != (int)HonorType.North)
+            {
+                throw new InvalidOperationException(
+                    $"北抜きの牌が北ではありません: {nukiTile.DisplayName} (OriginalId: {nukiTile.OriginalId})");
+            }
+
+            var handTile = playerHands[playerId].FirstOrDefault(t => t.OriginalId == nukiTile.OriginalId);
+            if (handTile != null)
+            {
+                playerHands[playerId].Remove(handTile);
+            }
+        }
+        else if (meld.Type == MeldType.AnKan)
+        {
+            // 暗槓は4枚とも自分の牌
+            foreach (var tile in meld.Tiles)
+            {
+                var handTile = playerHands[playerId].FirstOrDefault(t => t.OriginalId == tile.OriginalId);
+                if (handTile != null)
+                {
+                    playerHands[playerId].Remove(handTile);
+                }
+            }
+        }
+        else if (meld.Type != MeldType.KaKan)
         {
             foreach (var tile in meld.Tiles)
             {
@@ -407,10 +437,10 @@ public class MjlogXmlParser
         }
         else
         {
-            // 暗槓は4枚とも自分の牌
-            foreach (var tile in meld.Tiles)
+            // 加槓: 追加した1枚のみ手牌から削除
+            if (meld.CalledTile != null)
             {
-                var handTile = playerHands[playerId].FirstOrDefault(t => t.OriginalId == tile.OriginalId);
+                var handTile = playerHands[playerId].FirstOrDefault(t => t.OriginalId == meld.CalledTile.OriginalId);
                 if (handTile != null)
                 {
                     playerHands[playerId].Remove(handTile);

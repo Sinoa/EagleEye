@@ -30,14 +30,21 @@ public enum MeldType
 {
     /// <summary>チー</summary>
     Chi,
+
     /// <summary>ポン</summary>
     Pon,
+
     /// <summary>大明槓</summary>
     DaiMinKan,
+
     /// <summary>加槓</summary>
     KaKan,
+
     /// <summary>暗槓</summary>
-    AnKan
+    AnKan,
+
+    /// <summary>北抜き（三麻）</summary>
+    Nuki
 }
 
 /// <summary>

@@ -30,16 +30,22 @@ public enum DrawType
 {
     /// <summary>通常流局（荒牌平局）</summary>
     Exhaustive,
+
     /// <summary>九種九牌</summary>
     NineTerminals,
+
     /// <summary>四風連打</summary>
     FourWinds,
+
     /// <summary>四槓散了</summary>
     FourKans,
+
     /// <summary>四家立直</summary>
     FourReach,
+
     /// <summary>三家和了</summary>
     TripleRon,
+
     /// <summary>流し満貫</summary>
     NagashiMangan
 }

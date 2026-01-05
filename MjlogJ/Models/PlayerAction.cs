@@ -30,14 +30,19 @@ public enum ActionType
 {
     /// <summary>ツモ（牌を引く）</summary>
     Draw,
+
     /// <summary>打牌（牌を捨てる）</summary>
     Discard,
+
     /// <summary>鳴き</summary>
     Meld,
+
     /// <summary>リーチ宣言</summary>
     Reach,
+
     /// <summary>リーチ成立（供託）</summary>
     ReachAccepted,
+
     /// <summary>新ドラ表示</summary>
     NewDora
 }

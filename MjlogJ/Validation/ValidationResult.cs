@@ -30,8 +30,10 @@ public enum ValidationSeverity
 {
     /// <summary>情報（参考情報）</summary>
     Info,
+
     /// <summary>警告（処理は続行可能だが注意が必要）</summary>
     Warning,
+
     /// <summary>エラー（データの整合性に問題あり）</summary>
     Error
 }

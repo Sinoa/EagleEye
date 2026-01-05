@@ -30,10 +30,13 @@ public enum TileSuit
 {
     /// <summary>萬子</summary>
     Man,
+
     /// <summary>筒子</summary>
     Pin,
+
     /// <summary>索子</summary>
     Sou,
+
     /// <summary>字牌</summary>
     Honor
 }
@@ -45,16 +48,22 @@ public enum HonorType
 {
     /// <summary>東</summary>
     East = 1,
+
     /// <summary>南</summary>
     South = 2,
+
     /// <summary>西</summary>
     West = 3,
+
     /// <summary>北</summary>
     North = 4,
+
     /// <summary>白</summary>
     White = 5,
+
     /// <summary>發</summary>
     Green = 6,
+
     /// <summary>中</summary>
     Red = 7
 }
