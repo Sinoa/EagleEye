@@ -4,19 +4,19 @@ AIモデルの入出力を抽象化し、複数のフォーマットに対応す
 
 ## 概要
 
-このライブラリは、機械学習モデルのテンソルデータと計算グラフを読み書きするための統一的なインターフェースを提供します。Safetensors、ONNX、Unity Sentis フォーマットをサポートしています。
+このライブラリは、機械学習モデルのテンソルデータと計算グラフを読み書きするための統一的なインターフェースを提供します。Safetensors をプライマリフォーマットとして入出力に対応し、ONNX および Unity Sentis フォーマットへのエクスポートをサポートしています。
 
 ## 対応フォーマット
 
-| フォーマット | テンソル読込 | テンソル書込 | グラフ読込 | グラフ書込 | 状態 |
-|------------|:----------:|:----------:|:--------:|:--------:|:----:|
-| Safetensors | ✅ | ✅ | - | - | 完全実装 |
-| ONNX | ✅ | - | ✅ | ✅ | 完全実装 |
-| Sentis | - | ✅ | - | ✅ | 完全実装 |
+| フォーマット | テンソル読込 | テンソル書込 | グラフ書込 | 用途 |
+|------------|:----------:|:----------:|:--------:|:----:|
+| Safetensors | ✅ | ✅ | - | モデル開発・保存 |
+| ONNX | - | - | ✅ | 他ランタイム向けエクスポート |
+| Sentis | - | ✅ | ✅ | Unity向けエクスポート |
 
-> **Note**: ONNX フォーマットではテンソルのみの書き込みはサポートされません。グラフと一緒に `WriteGraphWithTensors` を使用してください。
+> **Note**: Safetensors はモデル開発のプライマリフォーマットです。テンソルデータの読み書きに完全対応しています。
 
-> **Note**: Sentis フォーマットは Unity の推論エンジン用であり、出力（書き込み）のみをサポートしています。読み込みはサポートされません。
+> **Note**: ONNX および Sentis フォーマットはエクスポート専用です。他のランタイム（ONNX Runtime、Unity Sentis など）で読み込むためのモデル出力に使用します。
 
 ## インストール
 
@@ -122,45 +122,7 @@ using var outputStream = File.Create("output.safetensors");
 handler.WriteTensors(tensors, outputStream);
 ```
 
-### ONNX ファイルの読み込み
-
-```csharp
-using MLModelUtility.Formats.Onnx;
-using MLModelUtility.Models;
-using MLModelUtility.Models.Graph;
-
-var handler = new OnnxFormatHandler();
-
-// グラフとテンソルを同時に読み込む
-var (graph, tensors) = handler.ReadGraphWithTensors(File.OpenRead("model.onnx"));
-
-Console.WriteLine($"Graph: {graph.Name}");
-Console.WriteLine($"IR Version: {graph.IrVersion}");
-Console.WriteLine($"Nodes: {graph.Nodes.Count}");
-Console.WriteLine($"Tensors: {tensors.Count}");
-
-// ノードを列挙
-foreach (var node in graph.Nodes)
-{
-    Console.WriteLine($"  {node.OperatorType}: {node.Name}");
-}
-
-// 入出力情報
-foreach (var input in graph.Inputs)
-{
-    Console.WriteLine($"Input: {input.Name} {input.ShapeToString()}");
-}
-
-// テンソルデータにアクセス
-foreach (var tensor in tensors)
-{
-    Console.WriteLine($"Weight: {tensor.Info.Name} - {tensor.Info.DataType} {tensor.Info.ShapeToString()}");
-}
-
-tensors.Dispose();
-```
-
-### ONNX ファイルの書き込み
+### ONNX ファイルへのエクスポート
 
 ```csharp
 using MLModelUtility.Formats.Onnx;
@@ -207,7 +169,7 @@ var handler = new OnnxFormatHandler();
 handler.WriteGraphWithTensors(graph, tensors, File.Create("output.onnx"));
 ```
 
-### Unity Sentis ファイルの書き込み
+### Unity Sentis ファイルへのエクスポート
 
 ```csharp
 using MLModelUtility.Formats.Sentis;
@@ -303,7 +265,7 @@ var onnx = new OnnxFormatHandler();
 
 // Capability プロパティで確認
 Console.WriteLine($"Safetensors: {safetensors.Capability}");  // TensorOnly
-Console.WriteLine($"ONNX: {onnx.Capability}");  // TensorRead | GraphRead | GraphWrite
+Console.WriteLine($"ONNX: {onnx.Capability}");  // GraphWrite
 
 // 特定機能のサポート確認
 if (safetensors.Supports(ModelFormatCapability.TensorWrite))
@@ -311,9 +273,9 @@ if (safetensors.Supports(ModelFormatCapability.TensorWrite))
     Console.WriteLine("Safetensors はテンソル書き込みをサポート");
 }
 
-if (!safetensors.Supports(ModelFormatCapability.GraphRead))
+if (!onnx.Supports(ModelFormatCapability.TensorRead))
 {
-    Console.WriteLine("Safetensors はグラフ読み込みをサポートしない");
+    Console.WriteLine("ONNX はテンソル読み込みをサポートしない（エクスポート専用）");
 }
 ```
 
@@ -324,11 +286,8 @@ if (!safetensors.Supports(ModelFormatCapability.GraphRead))
 | `None` | 機能なし |
 | `TensorRead` | テンソルデータの読み込み |
 | `TensorWrite` | テンソルデータの書き込み |
-| `GraphRead` | 計算グラフの読み込み |
 | `GraphWrite` | 計算グラフの書き込み |
 | `TensorOnly` | `TensorRead \| TensorWrite` |
-| `GraphOnly` | `GraphRead \| GraphWrite` |
-| `Full` | すべての機能 |
 
 ## 対応データ型
 
@@ -360,7 +319,6 @@ MLModelUtility/
 │   ├── IModelFormatHandler.cs      # フォーマットハンドラ基底インターフェース
 │   ├── ITensorReader.cs            # テンソル読み込みインターフェース
 │   ├── ITensorWriter.cs            # テンソル書き込みインターフェース
-│   ├── IGraphReader.cs             # 計算グラフ読み込みインターフェース
 │   └── IGraphWriter.cs             # 計算グラフ書き込みインターフェース
 ├── Models/
 │   ├── TensorDataType.cs           # データ型列挙
@@ -377,10 +335,10 @@ MLModelUtility/
     │   └── SafetensorsFormatHandler.cs
     ├── Onnx/
     │   ├── Generated/              # protobuf生成コード
-    │   └── OnnxFormatHandler.cs
+    │   └── OnnxFormatHandler.cs    # エクスポート専用
     └── Sentis/
         ├── Generated/              # FlatBuffers生成コード
-        └── SentisFormatHandler.cs
+        └── SentisFormatHandler.cs  # エクスポート専用
 ```
 
 ### クラス図
@@ -392,7 +350,7 @@ IModelFormatHandler
     ├── Capability: ModelFormatCapability
     └── Supports(capability): bool
 
-ITensorReader
+ITensorReader (Safetensorsのみ実装)
     ├── ReadTensors(stream): TensorCollection
     ├── ReadTensorsAsync(stream, ct): Task<TensorCollection>
     ├── ReadTensorsFromFile(path): TensorCollection
@@ -403,6 +361,14 @@ ITensorWriter
     ├── WriteTensorsAsync(tensors, stream, ct): Task
     ├── WriteTensorsToFile(tensors, path): void
     └── WriteTensorsToFileAsync(tensors, path, ct): Task
+
+IGraphWriter (ONNX, Sentisが実装)
+    ├── WriteGraph(graph, stream): void
+    ├── WriteGraphAsync(graph, stream, ct): Task
+    ├── WriteGraphToFile(graph, path): void
+    ├── WriteGraphToFileAsync(graph, path, ct): Task
+    ├── WriteGraphWithTensors(graph, tensors, stream): void
+    └── WriteGraphWithTensorsAsync(graph, tensors, stream, ct): Task
 
 ITensorData (implements IDisposable)
     ├── Info: TensorInfo
@@ -436,7 +402,7 @@ public class MemoryMappedTensorData : ITensorData
 ### 新しいフォーマットの追加
 
 1. `IModelFormatHandler` を実装
-2. 必要に応じて `ITensorReader`, `ITensorWriter`, `IGraphReader`, `IGraphWriter` を実装
+2. 必要に応じて `ITensorReader`, `ITensorWriter`, `IGraphWriter` を実装
 3. `Capability` プロパティで対応機能を宣言
 
 ## ライセンス

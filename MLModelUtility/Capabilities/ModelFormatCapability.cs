@@ -38,18 +38,9 @@ public enum ModelFormatCapability
     /// <summary>テンソルデータの書き込みに対応</summary>
     TensorWrite = 1 << 1,
 
-    /// <summary>計算グラフの読み込みに対応</summary>
-    GraphRead = 1 << 2,
-
     /// <summary>計算グラフの書き込みに対応</summary>
     GraphWrite = 1 << 3,
 
     /// <summary>テンソルの読み書き両対応</summary>
-    TensorOnly = TensorRead | TensorWrite,
-
-    /// <summary>計算グラフの読み書き両対応</summary>
-    GraphOnly = GraphRead | GraphWrite,
-
-    /// <summary>全機能対応</summary>
-    Full = TensorOnly | GraphOnly
+    TensorOnly = TensorRead | TensorWrite
 }
