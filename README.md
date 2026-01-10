@@ -203,6 +203,21 @@ foreach (var tensor in tensors)
 
 ---
 
+## 依存ライブラリ
+
+本プロジェクトは以下のオープンソースライブラリを使用しています：
+
+| ライブラリ | ライセンス | 用途 |
+|----------|-----------|------|
+| [TorchSharp](https://github.com/dotnet/TorchSharp) | BSD 3-Clause | 機械学習フレームワーク |
+| [ScottPlot](https://github.com/ScottPlot/ScottPlot) | MIT | データ可視化・グラフ描画 |
+| [ONNX](https://github.com/onnx/onnx) | Apache 2.0 | モデルフォーマット定義 |
+| [Unity Sentis](https://docs.unity3d.com/Packages/com.unity.sentis@latest) | Unity Companion License | Unityモデルフォーマット定義 |
+
+各ライブラリの詳細なライセンス条項については、[LICENSE.md](./LICENSE.md) をご確認ください。
+
+---
+
 ## ライセンス
 
 [Zlib License](./LICENSE.md)
@@ -212,4 +227,3 @@ Copyright (c) 2025 Sinoa
 
 This software is provided 'as-is', without any express or implied warranty.
 ```
-
