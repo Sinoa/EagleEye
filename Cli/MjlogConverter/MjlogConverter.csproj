@@ -6,6 +6,6 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="..\MjlogJ\MjlogJ.csproj"/>
+        <ProjectReference Include="..\..\Lib\MjlogJ\MjlogJ.csproj"/>
     </ItemGroup>
 </Project>
