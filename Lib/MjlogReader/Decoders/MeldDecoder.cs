@@ -89,16 +89,17 @@ public static class MeldDecoder
         // チーの構造:
         // bit 0-1: 鳴き元
         // bit 2: チーフラグ (1)
-        // bit 3-4: 鳴いた牌の順子内位置 (0=最小, 1=中, 2=最大)
-        // bit 5-6: unused
-        // bit 7-15: base tile info
+        // bit 3-4: 1枚目の牌インデックス
+        // bit 5-6: 2枚目の牌インデックス
+        // bit 7-8: 3枚目の牌インデックス
+        // bit 10-15: 順子情報 (t = raw, r = t%3が鳴いた牌の位置, t/3がベース)
 
-        var t = (code >> 10) * 3;
-        var r = (code >> 3) & 0x3; // 鳴いた牌の位置
-
-        var baseTypeId = t / 3;
-        var suitOffset = baseTypeId / 7 * 9;
-        var num = baseTypeId % 7;
+        var raw = (code >> 10) & 0x3F;
+        var calledPos = raw % 3; // 鳴いた牌の順子内位置
+        var baseNum = raw / 3; // 順子のベース番号
+        var suitOffset = (baseNum / 7) * 9; // スートのオフセット
+        var startNum = baseNum % 7; // 順子の開始数字
+        var baseId = (suitOffset + startNum) * 4;
 
         var tiles = new List<Tile>();
         Tile? calledTile = null;
@@ -107,11 +108,11 @@ public static class MeldDecoder
         {
             // 各牌のインデックスを取得（bit 3-4, 5-6, 7-8）
             var tileIdx = (code >> (3 + i * 2)) & 0x3;
-            var tileId = (suitOffset + num + i) * 4 + tileIdx;
+            var tileId = baseId + i * 4 + tileIdx;
             var tile = TileDecoder.Decode(tileId);
             tiles.Add(tile);
 
-            if (i == r)
+            if (i == calledPos)
             {
                 calledTile = tile;
             }
@@ -131,14 +132,12 @@ public static class MeldDecoder
         // bit 3: ポンフラグ (1)
         // bit 4: unused
         // bit 5-6: 使用しない牌のインデックス
-        // bit 7-8: 鳴いた牌のインデックス
-        // bit 9-15: 牌種 * 3
+        // bit 9-15: 牌種情報 (raw, r = raw%3が鳴いた牌の位置, raw/3が牌種)
 
-        var t = (code >> 9) * 3;
-        var r = (code >> 5) & 0x3; // 使用しない牌
-        var calledIdx = (code >> 7) & 0x3; // 鳴いた牌の位置
-
-        var typeId = t / 3;
+        var unused = (code >> 5) & 0x3; // 使用しない牌
+        var raw = (code >> 9) & 0x7F;
+        var calledPos = raw % 3; // 鳴いた牌の位置（3枚のうち何番目か）
+        var typeId = raw / 3; // 牌種
         var baseId = typeId * 4;
 
         var tiles = new List<Tile>();
@@ -147,17 +146,19 @@ public static class MeldDecoder
         var pos = 0;
         for (var i = 0; i < 4; i++)
         {
-            if (i == r) continue; // 使用しない牌はスキップ
+            if (i == unused) continue; // 使用しない牌はスキップ
 
             var tile = TileDecoder.Decode(baseId + i);
             tiles.Add(tile);
 
-            if (pos == calledIdx)
+            if (pos == calledPos)
             {
                 calledTile = tile;
             }
 
             pos++;
+
+            if (tiles.Count >= 3) break;
         }
 
         meld.Tiles = tiles;
@@ -174,13 +175,12 @@ public static class MeldDecoder
         // bit 3: 0
         // bit 4: 加槓フラグ (1)
         // bit 5-6: 追加した牌のインデックス
-        // bit 7-8: unused
-        // bit 9-15: 牌種 * 3
+        // bit 9-15: 牌種情報 (raw, r = raw%3が元のポン相手位置, raw/3が牌種)
 
-        var t = (code >> 9) * 3;
-        var addedIdx = (code >> 5) & 0x3;
-
-        var typeId = t / 3;
+        var addedIdx = (code >> 5) & 0x3; // 追加した牌のインデックス
+        var raw = (code >> 9) & 0x7F;
+        // var ponFromPos = raw % 3; // 元のポン相手の位置（表示用、今は未使用）
+        var typeId = raw / 3; // 牌種
         var baseId = typeId * 4;
 
         var tiles = new List<Tile>();
@@ -209,11 +209,11 @@ public static class MeldDecoder
         // bit 0-1: 0 (自分)
         // bit 2-4: 0
         // bit 5: 抜きフラグ (1)
-        // bit 6-7: 牌インデックス
-        // bit 8-15: unused
+        // bit 6-7: unused
+        // bit 8-15: 牌ID
 
-        var tileIdx = (code >> 8);
-        var tile = TileDecoder.Decode(tileIdx);
+        var tileId = (code >> 8) & 0xFF;
+        var tile = TileDecoder.Decode(tileId);
 
         meld.Tiles = [tile];
         meld.CalledTile = tile;
@@ -229,7 +229,7 @@ public static class MeldDecoder
         var from = code & 0x3;
         meld.Type = from == 0 ? MeldType.AnKan : MeldType.DaiMinKan;
 
-        var tileId = (code >> 8);
+        var tileId = (code >> 8) & 0xFF;
         var typeId = tileId / 4;
         var baseId = typeId * 4;
 
