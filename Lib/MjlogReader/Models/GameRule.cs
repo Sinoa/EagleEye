@@ -51,4 +51,24 @@ public class GameRule
 
     /// <summary>ロビー番号</summary>
     public int Lobby { get; set; }
+
+    /// <summary>
+    /// 文字列表現を取得します。
+    /// </summary>
+    /// <returns>ゲームルールの文字列表現を返します</returns>
+    public override string ToString()
+    {
+        var dora = HasRedDora ? "アリ" : "ナシ";
+        var kuitan = HasOpenTanyao ? "アリ" : "ナシ";
+        var mode = $"{(IsThreePlayer ? "三" : "四")}{(IsEastOnly ? "東" : "南")}";
+        var speedStr = Speed switch
+        {
+            0 => "普通",
+            1 => "高速",
+            2 => "超高速",
+            _ => "不明"
+        };
+        var kuikae = HasKuikae ? "アリ" : "ナシ";
+        return $"GameRule(モード={mode}, 赤={dora}, クイタン={kuitan}, 喰い替え={kuikae}, 速度={speedStr}, 生値=0x{OriginalFlags:X}, ロビー番号={Lobby})";
+    }
 }
