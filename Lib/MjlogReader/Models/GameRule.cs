@@ -40,11 +40,11 @@ public class GameRule
     /// <summary>三人麻雀かどうか</summary>
     public bool IsThreePlayer { get; set; }
 
-    /// <summary>速度（0=普通, 1=高速, 2=超高速）</summary>
-    public int Speed { get; set; }
+    /// <summary>速卓かどうか</summary>
+    public bool IsFast { get; set; }
 
-    /// <summary>喰い替えの有無</summary>
-    public bool HasKuikae { get; set; }
+    /// <summary>卓レベル（0=一般, 1=上級, 2=特上, 3=鳳凰）</summary>
+    public int TierLevel { get; set; }
 
     /// <summary>ルールのビットフラグ（元データ）</summary>
     public int OriginalFlags { get; set; }
@@ -61,14 +61,15 @@ public class GameRule
         var dora = HasRedDora ? "アリ" : "ナシ";
         var kuitan = HasOpenTanyao ? "アリ" : "ナシ";
         var mode = $"{(IsThreePlayer ? "三" : "四")}{(IsEastOnly ? "東" : "南")}";
-        var speedStr = Speed switch
+        var tierStr = TierLevel switch
         {
-            0 => "普通",
-            1 => "高速",
-            2 => "超高速",
+            0 => "一般",
+            1 => "上級",
+            2 => "特上",
+            3 => "鳳凰",
             _ => "不明"
         };
-        var kuikae = HasKuikae ? "アリ" : "ナシ";
-        return $"GameRule(モード={mode}, 赤={dora}, クイタン={kuitan}, 喰い替え={kuikae}, 速度={speedStr}, 生値=0x{OriginalFlags:X}, ロビー番号={Lobby})";
+        var speedStr = IsFast ? "速" : "普通";
+        return $"GameRule(モード={mode}, 赤={dora}, クイタン={kuitan}, 卓={tierStr}, 速度={speedStr}, 生値=0x{OriginalFlags:X}, ロビー番号={Lobby})";
     }
 }

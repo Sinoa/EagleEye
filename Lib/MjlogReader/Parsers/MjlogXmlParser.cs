@@ -310,12 +310,12 @@ public class MjlogXmlParser
         {
             OriginalFlags = type,
             Lobby = lobby,
-            HasRedDora = (type & 0x02) == 0, // bit1: 0=赤あり, 1=赤なし
-            HasOpenTanyao = (type & 0x04) == 0, // bit2: 0=喰いタンあり, 1=なし
-            IsEastOnly = (type & 0x08) != 0, // bit3: 1=東風戦
-            IsThreePlayer = (type & 0x10) != 0, // bit4: 1=三人麻雀
-            Speed = (type >> 6) & 0x03, // bit6-7: 速度
-            HasKuikae = (type & 0x80) == 0 // bit7: 0=喰い替えあり
+            HasRedDora = (type & 0x02) == 0, // bit1: 0=赤あり, 1=赤なし (NOAKA)
+            HasOpenTanyao = (type & 0x04) == 0, // bit2: 0=喰いタンあり, 1=なし (NOKUI)
+            IsEastOnly = (type & 0x08) == 0, // bit3: 0=東風戦, 1=東南戦 (NAN)
+            IsThreePlayer = (type & 0x10) != 0, // bit4: 1=三人麻雀 (SANMA)
+            IsFast = (type & 0x40) != 0, // bit6: 1=速卓 (SAKU)
+            TierLevel = ((type & 0x20) >> 4) | ((type & 0x80) >> 7) // 0=一般, 1=上級, 2=特上, 3=鳳凰 (TOKU|HIGH)
         };
     }
 
