@@ -29,6 +29,7 @@ namespace MjlogReader.Models.Actions;
 public abstract class MjlogAction
 {
     /// <summary>行動の種類</summary>
+    // ReSharper disable once MemberCanBeProtected.Global
     public abstract ActionType ActionType { get; }
 
     /// <summary>

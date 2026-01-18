@@ -70,6 +70,7 @@ public static class MjlogReader
     /// </summary>
     /// <param name="path">ファイルパス（.mjlogなど）</param>
     /// <returns>MjlogDocument</returns>
+    // ReSharper disable once MemberCanBePrivate.Global
     public static MjlogDocument LoadFromGzip(string path)
     {
         using var fileStream = File.OpenRead(path);
@@ -84,6 +85,7 @@ public static class MjlogReader
     /// </summary>
     /// <param name="xmlContent">XML文字列</param>
     /// <returns>MjlogDocument</returns>
+    // ReSharper disable once MemberCanBePrivate.Global
     public static MjlogDocument Parse(string xmlContent)
     {
         return DefaultParser.Parse(xmlContent);
@@ -145,6 +147,7 @@ public static class MjlogReader
     /// <param name="path">ファイルパス</param>
     /// <param name="cancellationToken">キャンセルトークン</param>
     /// <returns>MjlogDocument</returns>
+    // ReSharper disable once MemberCanBePrivate.Global
     public static async Task<MjlogDocument> LoadFromGzipAsync(string path, CancellationToken cancellationToken = default)
     {
         await using var fileStream = File.OpenRead(path);
