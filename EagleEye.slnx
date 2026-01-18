@@ -10,6 +10,7 @@
     <Folder Name="/Lib/">
         <Project Path="Lib/MjlogA/MjlogA.csproj" />
         <Project Path="Lib/MjlogJ/MjlogJ.csproj" />
+        <Project Path="Lib/MjlogReader/MjlogReader.csproj" />
         <Project Path="Lib/MLModelCodec/MLModelCodec.csproj" />
         <Project Path="Lib/MLModelUtility/MLModelUtility.csproj" />
         <Project Path="Lib/TileEmbedder/TileEmbedder.csproj" />

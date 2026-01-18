@@ -1,0 +1,44 @@
+// zlib License
+// 
+// Copyright (c) 2026 Sinoa
+// 
+// This software is provided 'as-is', without any express or implied
+// warranty. In no event will the authors be held liable for any damages
+// arising from the use of this software.
+// 
+// Permission is granted to anyone to use this software for any purpose,
+// including commercial applications, and to alter it and redistribute it
+// freely, subject to the following restrictions:
+// 
+// 1. The origin of this software must not be misrepresented; you must not
+// claim that you wrote the original software. If you use this software
+// in a product, an acknowledgment in the product documentation would be
+// appreciated but is not required.
+// 
+// 2. Altered source versions must be plainly marked as such, and must not be
+// misrepresented as being the original software.
+// 
+// 3. This notice may not be removed or altered from any source
+// distribution.
+
+namespace MjlogReader.Models.Actions;
+
+/// <summary>
+/// リーチ宣言行動
+/// </summary>
+public class ReachAction : MjlogAction
+{
+    /// <inheritdoc/>
+    public override ActionType ActionType => ActionType.Reach;
+
+    /// <summary>リーチステップ（1=宣言、2=成立/供託）</summary>
+    public int Step { get; set; }
+
+    /// <summary>リーチが成立（供託完了）したかどうか</summary>
+    public bool IsAccepted => Step == 2;
+
+    /// <summary>
+    /// 文字列表現を取得
+    /// </summary>
+    public override string ToString() => $"Reach(Step={Step})";
+}
