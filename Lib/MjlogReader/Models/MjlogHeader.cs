@@ -28,12 +28,6 @@ namespace Foxtamp.MjlogReader.Models;
 /// </summary>
 public class MjlogHeader
 {
-    /// <summary>牌譜ID</summary>
-    public string GameId { get; set; } = "";
-
-    /// <summary>対戦日時</summary>
-    public DateTime PlayedAt { get; set; }
-
     /// <summary>プレイヤー名リスト（席順、インデックス0-3）</summary>
     public string[] PlayerNames { get; set; } = new string[4];
 
