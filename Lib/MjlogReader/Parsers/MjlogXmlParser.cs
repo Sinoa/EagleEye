@@ -22,12 +22,12 @@
 // distribution.
 
 using System.Xml.Linq;
-using MjlogReader.Decoders;
-using MjlogReader.Models;
-using MjlogReader.Models.Actions;
-using MjlogReader.Models.Results;
+using Foxtamp.MjlogReader.Decoders;
+using Foxtamp.MjlogReader.Models;
+using Foxtamp.MjlogReader.Models.Actions;
+using Foxtamp.MjlogReader.Models.Results;
 
-namespace MjlogReader.Parsers;
+namespace Foxtamp.MjlogReader.Parsers;
 
 /// <summary>
 /// 天鳳の牌譜XMLを解析するパーサー

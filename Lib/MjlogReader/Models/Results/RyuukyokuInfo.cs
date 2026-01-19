@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace MjlogReader.Models.Results;
+namespace Foxtamp.MjlogReader.Models.Results;
 
 /// <summary>
 /// 流局の種類

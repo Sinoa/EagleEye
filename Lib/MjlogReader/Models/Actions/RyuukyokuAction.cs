@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace MjlogReader.Models.Actions;
+namespace Foxtamp.MjlogReader.Models.Actions;
 
 /// <summary>
 /// 流局行動（流局したという事実の記録のみ、詳細は MjlogSessionResult に）

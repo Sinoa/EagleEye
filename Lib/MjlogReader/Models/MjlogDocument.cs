@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace MjlogReader.Models;
+namespace Foxtamp.MjlogReader.Models;
 
 /// <summary>
 /// 牌譜ドキュメント（牌譜全体のルートオブジェクト）

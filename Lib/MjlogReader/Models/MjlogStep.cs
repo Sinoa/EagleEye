@@ -21,9 +21,9 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using MjlogReader.Models.Actions;
+using Foxtamp.MjlogReader.Models.Actions;
 
-namespace MjlogReader.Models;
+namespace Foxtamp.MjlogReader.Models;
 
 /// <summary>
 /// 牌譜ステップ（1つの行動を表す）

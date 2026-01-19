@@ -21,9 +21,9 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using MjlogReader.Models.Results;
+using Foxtamp.MjlogReader.Models.Results;
 
-namespace MjlogReader.Models;
+namespace Foxtamp.MjlogReader.Models;
 
 /// <summary>
 /// 牌譜セッション（INIT から AGARI または RYUUKYOKU までの1局分）

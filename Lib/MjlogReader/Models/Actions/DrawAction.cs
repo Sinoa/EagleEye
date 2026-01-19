@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace MjlogReader.Models.Actions;
+namespace Foxtamp.MjlogReader.Models.Actions;
 
 /// <summary>
 /// ツモ（牌を引く）行動

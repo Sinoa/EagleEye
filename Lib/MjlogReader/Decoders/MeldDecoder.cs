@@ -21,9 +21,9 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using MjlogReader.Models;
+using Foxtamp.MjlogReader.Models;
 
-namespace MjlogReader.Decoders;
+namespace Foxtamp.MjlogReader.Decoders;
 
 /// <summary>
 /// 天鳳形式の鳴きコードをデコードするクラス

@@ -22,10 +22,10 @@
 // distribution.
 
 using System.IO.Compression;
-using MjlogReader.Models;
-using MjlogReader.Parsers;
+using Foxtamp.MjlogReader.Models;
+using Foxtamp.MjlogReader.Parsers;
 
-namespace MjlogReader;
+namespace Foxtamp.MjlogReader;
 
 /// <summary>
 /// 天鳳牌譜（mjlog）を読み込むためのファサードAPI
