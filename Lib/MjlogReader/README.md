@@ -31,17 +31,17 @@ MjlogReader は天鳳の牌譜ファイル（.mjlog / XML）を読み込み、C#
 using MjlogReader;
 
 // ファイルから読み込み（GZip自動判定）
-MjlogDocument document = MjlogReader.Load("path/to/file.mjlog");
+MjlogDocument document = MjlogDocumentReader.Load("path/to/file.mjlog");
 
 // 非同期で読み込み
-MjlogDocument document = await MjlogReader.LoadAsync("path/to/file.mjlog");
+MjlogDocument document = await MjlogDocumentReader.LoadAsync("path/to/file.mjlog");
 
 // XML文字列からパース
-MjlogDocument document = MjlogReader.Parse(xmlString);
+MjlogDocument document = MjlogDocumentReader.Parse(xmlString);
 
 // ストリームから読み込み
 using var stream = File.OpenRead("path/to/file.xml");
-MjlogDocument document = MjlogReader.Load(stream);
+MjlogDocument document = MjlogDocumentReader.Load(stream);
 ```
 
 ### 基本的な使用例
@@ -52,7 +52,7 @@ using MjlogReader.Models;
 using MjlogReader.Models.Actions;
 
 // 牌譜を読み込み
-var document = MjlogReader.Load("game.mjlog");
+var document = MjlogDocumentReader.Load("game.mjlog");
 
 // ヘッダー情報を取得
 Console.WriteLine($"対局日時: {document.Header.PlayedAt}");
@@ -99,7 +99,7 @@ foreach (var session in document.Sessions)
 
 ## API リファレンス
 
-### MjlogReader クラス
+### MjlogDocumentReader クラス
 
 牌譜ファイルを読み込むためのメインAPI（静的クラス）
 

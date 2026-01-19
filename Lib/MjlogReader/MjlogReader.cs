@@ -30,7 +30,7 @@ namespace Foxtamp.MjlogReader;
 /// <summary>
 /// 天鳳牌譜（mjlog）を読み込むためのファサードAPI
 /// </summary>
-public static class MjlogReader
+public static class MjlogDocumentReader
 {
     private static readonly MjlogXmlParser DefaultParser = new();
 
