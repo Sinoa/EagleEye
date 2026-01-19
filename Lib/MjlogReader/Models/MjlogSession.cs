@@ -30,6 +30,9 @@ namespace Foxtamp.MjlogReader.Models;
 /// </summary>
 public class MjlogSession
 {
+    /// <summary>プレイヤー人数（3または4）</summary>
+    public int PlayerCount { get; }
+
     /// <summary>場風（0=東, 1=南, 2=西, 3=北）</summary>
     public int RoundWind { get; set; }
 
@@ -58,10 +61,10 @@ public class MjlogSession
     public int DealerId { get; set; }
 
     /// <summary>各プレイヤーの開始時得点</summary>
-    public int[] StartScores { get; set; } = new int[4];
+    public int[] StartScores { get; set; }
 
     /// <summary>各プレイヤーの配牌</summary>
-    public List<Tile>[] InitialHands { get; set; } = [[], [], [], []];
+    public List<Tile>[] InitialHands { get; set; }
 
     /// <summary>ドラ表示牌（初期）</summary>
     public Tile? InitialDoraIndicator { get; set; }
@@ -77,4 +80,19 @@ public class MjlogSession
 
     /// <summary>セッションの結果（和了または流局）</summary>
     public MjlogSessionResult? Result { get; set; }
+
+    /// <summary>
+    /// コンストラクタ
+    /// </summary>
+    /// <param name="playerCount">プレイヤー人数（3または4）</param>
+    public MjlogSession(int playerCount)
+    {
+        PlayerCount = playerCount;
+        StartScores = new int[playerCount];
+        InitialHands = new List<Tile>[playerCount];
+        for (var i = 0; i < playerCount; i++)
+        {
+            InitialHands[i] = [];
+        }
+    }
 }

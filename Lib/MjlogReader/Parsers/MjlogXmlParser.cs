@@ -76,12 +76,27 @@ public class MjlogXmlParser
         var doc = XDocument.Parse(xmlContent);
         var root = doc.Root ?? throw new InvalidOperationException("Invalid XML: no root element");
 
-        var document = new MjlogDocument();
+        // 先にGOタグを解析してプレイヤー数を確定
+        var playerCount = DeterminePlayerCount(root);
+        var document = new MjlogDocument(playerCount);
 
         // ルート要素からゲームデータを解析
         ParseGameElement(root, document);
 
         return document;
+    }
+
+    /// <summary>
+    /// GOタグを解析してプレイヤー数を確定
+    /// </summary>
+    private int DeterminePlayerCount(XElement gameElement)
+    {
+        var goElement = gameElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("GO", StringComparison.OrdinalIgnoreCase));
+        if (goElement == null) return 4; // デフォルトは4人麻雀
+
+        var type = int.Parse(goElement.Attribute("type")?.Value ?? "0");
+        var isThreePlayer = (type & 0x10) != 0; // bit4: 1=三人麻雀
+        return isThreePlayer ? 3 : 4;
     }
 
     private void ParseGameElement(XElement gameElement, MjlogDocument document)
@@ -93,10 +108,15 @@ public class MjlogXmlParser
         var turnNumber = 1;
         var discardCountInTurn = 0; // 現在の巡での打牌数
         var dealerId = 0; // 親のプレイヤーID
-        var playerCount = 4; // プレイヤー数（三麻対応用）
+        var playerCount = document.PlayerCount; // プレイヤー数
 
-        // 得点追跡
-        int[] currentScores = [25000, 25000, 25000, 25000];
+        // 得点追跡（三麻は35000点、四麻は25000点スタート）
+        var initialScore = playerCount == 3 ? 35000 : 25000;
+        var currentScores = new int[playerCount];
+        for (var i = 0; i < playerCount; i++)
+        {
+            currentScores[i] = initialScore;
+        }
 
         foreach (var element in gameElement.Elements())
         {
@@ -113,7 +133,6 @@ public class MjlogXmlParser
 
                     case "GO":
                         ParseGameOptions(element, document.Header);
-                        playerCount = document.Header.Rule?.IsThreePlayer == true ? 3 : 4;
                         break;
 
                     case "UN":
@@ -126,7 +145,7 @@ public class MjlogXmlParser
 
                     case "INIT":
                         // 新しい局の開始
-                        currentSession = ParseInit(element, currentScores);
+                        currentSession = ParseInit(element, currentScores, playerCount);
                         document.Sessions.Add(currentSession);
                         stepIndex = 0;
                         turnNumber = 1;
@@ -159,7 +178,7 @@ public class MjlogXmlParser
                     case "AGARI":
                         if (currentSession != null)
                         {
-                            var agariInfo = ParseAgari(element, currentScores);
+                            var agariInfo = ParseAgari(element, currentScores, playerCount);
 
                             // 和了ステップを追加
                             currentSession.Steps.Add(new MjlogStep
@@ -171,9 +190,9 @@ public class MjlogXmlParser
                             });
 
                             // 結果を設定
-                            currentSession.Result ??= new MjlogSessionResult { IsAgari = true };
+                            currentSession.Result ??= new MjlogSessionResult(playerCount) { IsAgari = true };
                             currentSession.Result.AgariInfos.Add(agariInfo);
-                            Array.Copy(currentScores, currentSession.Result.FinalScores, 4);
+                            Array.Copy(currentScores, currentSession.Result.FinalScores, playerCount);
                         }
 
                         break;
@@ -181,7 +200,7 @@ public class MjlogXmlParser
                     case "RYUUKYOKU":
                         if (currentSession != null)
                         {
-                            var ryuukyokuInfo = ParseRyuukyoku(element, currentScores);
+                            var ryuukyokuInfo = ParseRyuukyoku(element, currentScores, playerCount);
 
                             // 流局ステップを追加
                             currentSession.Steps.Add(new MjlogStep
@@ -193,12 +212,12 @@ public class MjlogXmlParser
                             });
 
                             // 結果を設定
-                            currentSession.Result = new MjlogSessionResult
+                            currentSession.Result = new MjlogSessionResult(playerCount)
                             {
                                 IsAgari = false,
                                 RyuukyokuInfo = ryuukyokuInfo
                             };
-                            Array.Copy(currentScores, currentSession.Result.FinalScores, 4);
+                            Array.Copy(currentScores, currentSession.Result.FinalScores, playerCount);
                         }
 
                         break;
@@ -320,7 +339,7 @@ public class MjlogXmlParser
 
     private void ParseUserNames(XElement element, MjlogHeader header)
     {
-        for (var i = 0; i < 4; i++)
+        for (var i = 0; i < header.PlayerCount; i++)
         {
             var nameAttr = element.Attribute($"n{i}");
             if (nameAttr != null)
@@ -360,9 +379,9 @@ public class MjlogXmlParser
         }
     }
 
-    private MjlogSession ParseInit(XElement element, int[] currentScores)
+    private MjlogSession ParseInit(XElement element, int[] currentScores, int playerCount)
     {
-        var session = new MjlogSession();
+        var session = new MjlogSession(playerCount);
 
         // 局情報: seed="局,本場,供託,ダイス1,ダイス2,ドラ表示牌"
         var seedAttr = element.Attribute("seed")?.Value;
@@ -394,7 +413,7 @@ public class MjlogXmlParser
         if (tenAttr != null)
         {
             var tens = tenAttr.Split(',');
-            for (var i = 0; i < Math.Min(4, tens.Length); i++)
+            for (var i = 0; i < Math.Min(playerCount, tens.Length); i++)
             {
                 session.StartScores[i] = int.Parse(tens[i]) * 100;
                 currentScores[i] = session.StartScores[i];
@@ -402,7 +421,7 @@ public class MjlogXmlParser
         }
 
         // 配牌
-        for (var i = 0; i < 4; i++)
+        for (var i = 0; i < playerCount; i++)
         {
             var haiAttr = element.Attribute($"hai{i}")?.Value;
             if (haiAttr != null)
@@ -461,7 +480,7 @@ public class MjlogXmlParser
         });
     }
 
-    private AgariInfo ParseAgari(XElement element, int[] currentScores)
+    private AgariInfo ParseAgari(XElement element, int[] currentScores, int playerCount)
     {
         var agari = new AgariInfo();
 
@@ -579,17 +598,20 @@ public class MjlogXmlParser
             var scs = scAttr.Split(',');
             for (var i = 0; i + 1 < scs.Length; i += 2)
             {
+                var playerIndex = i / 2;
+                if (playerIndex >= playerCount) break; // プレイヤー数を超えたらスキップ
+
                 var baseScore = int.Parse(scs[i]) * 100;
                 var change = int.Parse(scs[i + 1]) * 100;
-                agari.ScoreChanges[i / 2] = change;
-                currentScores[i / 2] = baseScore + change;
+                agari.ScoreChanges[playerIndex] = change;
+                currentScores[playerIndex] = baseScore + change;
             }
         }
 
         return agari;
     }
 
-    private RyuukyokuInfo ParseRyuukyoku(XElement element, int[] currentScores)
+    private RyuukyokuInfo ParseRyuukyoku(XElement element, int[] currentScores, int playerCount)
     {
         var ryuukyoku = new RyuukyokuInfo();
 
@@ -607,7 +629,7 @@ public class MjlogXmlParser
         };
 
         // テンパイ者: hai0="牌,牌,..." (存在すればテンパイ)
-        for (var i = 0; i < 4; i++)
+        for (var i = 0; i < playerCount; i++)
         {
             var haiAttr = element.Attribute($"hai{i}")?.Value;
             if (haiAttr != null && !string.IsNullOrEmpty(haiAttr))
@@ -623,10 +645,13 @@ public class MjlogXmlParser
             var scs = scAttr.Split(',');
             for (var i = 0; i + 1 < scs.Length; i += 2)
             {
+                var playerIndex = i / 2;
+                if (playerIndex >= playerCount) break; // プレイヤー数を超えたらスキップ
+
                 var baseScore = int.Parse(scs[i]) * 100;
                 var change = int.Parse(scs[i + 1]) * 100;
-                ryuukyoku.ScoreChanges[i / 2] = change;
-                currentScores[i / 2] = baseScore + change;
+                ryuukyoku.ScoreChanges[playerIndex] = change;
+                currentScores[playerIndex] = baseScore + change;
             }
         }
 

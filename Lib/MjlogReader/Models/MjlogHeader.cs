@@ -28,17 +28,20 @@ namespace Foxtamp.MjlogReader.Models;
 /// </summary>
 public class MjlogHeader
 {
-    /// <summary>プレイヤー名リスト（席順、インデックス0-3）</summary>
-    public string[] PlayerNames { get; set; } = new string[4];
+    /// <summary>プレイヤー人数（3または4）</summary>
+    public int PlayerCount { get; }
+
+    /// <summary>プレイヤー名リスト（席順）</summary>
+    public string[] PlayerNames { get; set; }
 
     /// <summary>プレイヤーの段位</summary>
-    public string[] PlayerDans { get; set; } = new string[4];
+    public string[] PlayerDans { get; set; }
 
     /// <summary>プレイヤーのレート</summary>
-    public float[] PlayerRates { get; set; } = new float[4];
+    public float[] PlayerRates { get; set; }
 
     /// <summary>プレイヤーの性別（M=男, F=女, C=コンピュータ）</summary>
-    public string[] PlayerSexes { get; set; } = new string[4];
+    public string[] PlayerSexes { get; set; }
 
     /// <summary>ゲームルール</summary>
     public GameRule? Rule { get; set; }
@@ -48,4 +51,17 @@ public class MjlogHeader
 
     /// <summary>牌譜のリファレンス情報</summary>
     public string? Reference { get; set; }
+
+    /// <summary>
+    /// コンストラクタ
+    /// </summary>
+    /// <param name="playerCount">プレイヤー人数（3または4）</param>
+    public MjlogHeader(int playerCount)
+    {
+        PlayerCount = playerCount;
+        PlayerNames = new string[playerCount];
+        PlayerDans = new string[playerCount];
+        PlayerRates = new float[playerCount];
+        PlayerSexes = new string[playerCount];
+    }
 }

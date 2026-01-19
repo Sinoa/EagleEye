@@ -28,9 +28,22 @@ namespace Foxtamp.MjlogReader.Models;
 /// </summary>
 public class MjlogDocument
 {
+    /// <summary>プレイヤー人数（3または4）</summary>
+    public int PlayerCount { get; }
+
     /// <summary>牌譜ヘッダー情報</summary>
-    public MjlogHeader Header { get; set; } = new();
+    public MjlogHeader Header { get; set; }
 
     /// <summary>セッション（局）のリスト</summary>
     public List<MjlogSession> Sessions { get; set; } = [];
+
+    /// <summary>
+    /// コンストラクタ
+    /// </summary>
+    /// <param name="playerCount">プレイヤー人数（3または4）</param>
+    public MjlogDocument(int playerCount)
+    {
+        PlayerCount = playerCount;
+        Header = new MjlogHeader(playerCount);
+    }
 }

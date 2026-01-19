@@ -28,6 +28,9 @@ namespace Foxtamp.MjlogReader.Models.Results;
 /// </summary>
 public class MjlogSessionResult
 {
+    /// <summary>プレイヤー人数（3または4）</summary>
+    public int PlayerCount { get; }
+
     /// <summary>和了による終局かどうか</summary>
     public bool IsAgari { get; set; }
 
@@ -38,7 +41,17 @@ public class MjlogSessionResult
     public RyuukyokuInfo? RyuukyokuInfo { get; set; }
 
     /// <summary>終局後の各プレイヤーの得点</summary>
-    public int[] FinalScores { get; set; } = new int[4];
+    public int[] FinalScores { get; set; }
+
+    /// <summary>
+    /// コンストラクタ
+    /// </summary>
+    /// <param name="playerCount">プレイヤー人数（3または4）</param>
+    public MjlogSessionResult(int playerCount)
+    {
+        PlayerCount = playerCount;
+        FinalScores = new int[playerCount];
+    }
 
     /// <summary>
     /// 文字列表現を取得
