@@ -1,5 +1,6 @@
 <Solution>
     <Folder Name="/Lib/">
         <Project Path="src/MjlogReader/MjlogReader.csproj" />
+        <Project Path="src/MjlogReplayer/MjlogReplayer.csproj" />
     </Folder>
 </Solution>
