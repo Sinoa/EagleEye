@@ -39,11 +39,11 @@ public class MjlogXmlParser
     /// </summary>
     private class ParseContext
     {
-        public MjlogSession? CurrentSession { get; set; }
-        public int StepIndex { get; set; }
-        public int TurnNumber { get; set; } = 1;
+        public MjlogSession? CurrentSession { get; private set; }
+        private int StepIndex { get; set; }
+        private int TurnNumber { get; set; } = 1;
         public int DiscardCountInTurn { get; set; }
-        public int DealerId { get; set; }
+        private int DealerId { get; set; }
         public int PlayerCount { get; }
         public int[] CurrentScores { get; }
 
