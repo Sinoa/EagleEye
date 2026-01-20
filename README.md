@@ -10,23 +10,19 @@
 
 **EagleEye** は、麻雀における「何切る」問題（手牌から最適な打牌を選択する問題）を解決するためのAI推論エンジンおよびそのアーキテクチャ名です。本プロジェクトでは、AIモデルの学習・推論・配布に必要なすべてのツールチェーンを統合し、汎用的なライブラリとして一般提供することを目指しています。
 
-本リポジトリには、EagleEyeエンジン本体に加えて、天鳳牌譜の読み込み・変換、麻雀牌の埋め込みベクトル生成、AIモデルの入出力など、麻雀AIの学習・開発に必要な複数のライブラリとツールが含まれています。
+> **⚠️ 注意**: 本プロジェクトは現在大規模なリファクタリング中です。一部のコンポーネントは再設計・再実装中のため、利用できない場合があります。
 
 ### 誰のためのプロジェクト？
 
-- 🎮 **ゲーム開発者** - Unity Sentis 対応により、麻雀ゲームへのAI組み込みが容易に
-- 🔬 **研究者・開発者** - ONNX/Safetensors 対応により、独自の学習・解析が可能
+- 🎮 **ゲーム開発者** - 麻雀ゲームへのAI組み込みが容易に
+- 🔬 **研究者・開発者** - 天鳳牌譜の解析・独自の学習・解析が可能
 - 🀄 **麻雀プレイヤー** - AIによる打牌選択の参考に
 
 ## 特徴
 
-- 🧠 **何切る特化AI** - 麻雀の「何切る」問題に特化した推論エンジン「EagleEye」を開発
+- 🧠 **何切る特化AI** - 麻雀の「何切る」問題に特化した推論エンジン「EagleEye」を開発（予定）
 - 🀄 **天鳳牌譜対応** - 天鳳の牌譜ファイル（mjlog/XML）を読み込み、学習データとして活用
-- 🎯 **牌エンベディング** - Skip-gramアーキテクチャによる麻雀牌の埋め込みベクトル生成
-- 🤖 **複数フォーマット対応** - ONNX、Safetensors、Unity Sentis など主要なAIモデルフォーマットに対応
-- 🎮 **ゲーム組み込み対応** - Unity Sentis 出力により、ゲームエンジンへの組み込みを想定した設計
-- 📦 **モジュラー設計** - 各機能を独立したライブラリ/ツールとして提供し、必要な部分のみ利用可能
-- 🔧 **学習パイプライン内蔵** - 牌譜からの特徴抽出、エンベディング生成、モデル訓練まで一貫して対応
+- 📦 **モジュラー設計** - 各機能を独立したライブラリとして提供し、必要な部分のみ利用可能
 
 ---
 
@@ -42,31 +38,18 @@
 
 | プロジェクト | 種別 | 説明 | 状態 |
 |-------------|------|------|:----:|
-| [EagleEye](./EagleEye/) | ライブラリ | 何切るAI推論エンジン本体 | 🚧 開発中 |
-| [MjlogJ](./MjlogJ/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ✅ 実装済 |
-| [MjlogConverter](./MjlogConverter/README.md) | CLIツール | 牌譜→JSON一括変換ツール | ✅ 実装済 |
-| [MjlogA](./MjlogA/README.md) | ライブラリ | 牌譜データ分析ライブラリ | ✅ 実装済 |
-| [MjlogAnalyzer](./MjlogAnalyzer/README.md) | CLIツール | 牌譜データ分析ツール（グラフ出力対応） | ✅ 実装済 |
-| [MLModelUtility](./MLModelUtility/README.md) | ライブラリ | AIモデル入出力（Safetensors/ONNX/Sentis） | ✅ 実装済 |
-| [TileEmbedder](./TileEmbedder/README.md) | ライブラリ | 牌エンベディング生成（Skip-gram） | ✅ 実装済 |
-| [TileEmbedderCli](./TileEmbedderCli/README.md) | CLIツール | 牌エンベディング生成ツール（PCA/UMAP可視化・プロット出力対応） | ✅ 実装済 |
+| [MjlogReader](./src/MjlogReader/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ✅ 実装済 |
+| EagleEye | ライブラリ | 何切るAI推論エンジン本体 | 🚧 計画中 |
 
 ### 各プロジェクトの役割
 
-- **EagleEye**: 麻雀の「何切る」問題を解く推論エンジン本体（開発中）
-- **MjlogJ**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換
-- **MjlogConverter**: MjlogJを使用して牌譜ファイルをJSON形式に一括変換するCLIツール
-- **MjlogA**: 牌譜データから統計情報（点数分布・役出現頻度・ドラ出現頻度など）を収集・分析するライブラリ
-- **MjlogAnalyzer**: MjlogAを使用して牌譜ファイルを分析し、CSVやグラフ画像として出力するCLIツール
-- **MLModelUtility**: Safetensors、ONNX、Unity Sentis形式のAIモデルを読み書きするユーティリティライブラリ
-- **TileEmbedder**: Skip-gramアーキテクチャで麻雀牌の埋め込みベクトルを生成するライブラリ
-- **TileEmbedderCli**: TileEmbedderを使用してコマンドラインから牌エンベディングを生成し、可視化・プロット出力するツール
+- **MjlogReader**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換するライブラリ
 
 ---
 
 ## 必要環境
 
-- .NET 9.0 SDK
+- .NET 10.0 SDK
 
 ---
 
@@ -82,94 +65,75 @@ dotnet build
 dotnet build -c Release
 ```
 
-### 牌譜の読み込み（MjlogJ）
+### 牌譜の読み込み（MjlogReader）
 
 ```csharp
-using MjlogJ;
-using MjlogJ.Formatters;
+using Foxtamp.MjlogReader;
 
-// 牌譜ファイルを読み込み
-GameRecord record = MjlogReader.Load("path/to/file.mjlog");
+// ファイルから読み込み（GZip自動判定）
+MjlogDocument document = MjlogDocumentReader.Load("path/to/file.mjlog");
 
-// JSON形式で出力
-var formatter = new JsonOutputFormatter();
-string json = formatter.FormatToString(record);
+// 非同期で読み込み
+MjlogDocument document = await MjlogDocumentReader.LoadAsync("path/to/file.mjlog");
+
+// XML文字列からパース
+MjlogDocument document = MjlogDocumentReader.Parse(xmlString);
 ```
 
-### 牌譜の一括変換（MjlogConverter）
-
-```bash
-# ディレクトリ内のすべての牌譜をJSONに変換
-MjlogConverter -i logs/ -o converted/ -p
-```
-
-### 牌エンベディング生成（TileEmbedderCli）
-
-```bash
-# ルールベースの共起関係から牌エンベディングを生成
-TileEmbedderCli -p
-
-# 牌譜データを使った追加学習
-TileEmbedderCli -i ./mjlogs/ -o embeddings -p
-
-# PCAで可視化してCSV出力
-TileEmbedderCli -p --visualize > embeddings.csv
-
-# 分布図をPNG画像として出力
-TileEmbedderCli -l tile_embeddings.json --plot distribution.png
-```
-
-### 牌譜データ分析（MjlogAnalyzer）
-
-```bash
-# 牌譜ディレクトリを分析してCSV出力
-MjlogAnalyzer -d ./mjlogs/ -o result.csv -p
-
-# サブディレクトリも含めてグラフ出力
-MjlogAnalyzer -d ./mjlogs/ -r --plot ./plots -p
-```
-
-### AIモデルの読み込み（MLModelUtility）
+#### 基本的な使用例
 
 ```csharp
-using MLModelUtility.Formats.Safetensors;
+using Foxtamp.MjlogReader;
+using Foxtamp.MjlogReader.Models;
+using Foxtamp.MjlogReader.Models.Actions;
 
-var handler = new SafetensorsFormatHandler();
-using TensorCollection tensors = handler.ReadTensorsFromFile("model.safetensors");
+// 牌譜を読み込み
+var document = MjlogDocumentReader.Load("game.mjlog");
 
-foreach (var tensor in tensors)
+// ヘッダー情報を取得
+Console.WriteLine($"対局日時: {document.Header.PlayedAt}");
+Console.WriteLine($"プレイヤー: {string.Join(", ", document.Header.PlayerNames)}");
+
+// 各局（セッション）を処理
+foreach (var session in document.Sessions)
 {
-    Console.WriteLine($"{tensor.Info.Name}: {tensor.Info.ShapeToString()}");
+    Console.WriteLine($"\n{session.RoundName} {session.Honba}本場");
+    Console.WriteLine($"親: P{session.DealerId}");
+    
+    // 行動ステップを処理
+    foreach (var step in session.Steps)
+    {
+        switch (step.Action)
+        {
+            case DrawAction draw:
+                Console.WriteLine($"  P{step.PlayerId} ツモ: {draw.Tile}");
+                break;
+            case DiscardAction discard:
+                Console.WriteLine($"  P{step.PlayerId} 打牌: {discard.Tile}");
+                break;
+            case MeldAction meld:
+                Console.WriteLine($"  P{step.PlayerId} 鳴き: {meld.Meld}");
+                break;
+            case ReachAction reach:
+                Console.WriteLine($"  P{step.PlayerId} リーチ");
+                break;
+        }
+    }
 }
 ```
+
+詳細なAPIリファレンスは [MjlogReader README](./src/MjlogReader/README.md) を参照してください。
 
 ---
 
 ## 対応フォーマット
 
-### AIモデルフォーマット（MLModelUtility）
-
-| フォーマット | テンソル読込 | テンソル書込 | グラフ読込 | グラフ書込 |
-|------------|:----------:|:----------:|:--------:|:--------:|
-| Safetensors | ✅ | ✅ | - | - |
-| ONNX | ✅ | - | ✅ | ✅ |
-| Unity Sentis | - | ✅ | - | ✅ |
-
-### 牌譜フォーマット（MjlogJ）
+### 牌譜フォーマット（MjlogReader）
 
 | フォーマット | 読込 | 備考 |
 |------------|:----:|------|
 | mjlog (GZip) | ✅ | 天鳳標準形式 |
 | mjlog (XML) | ✅ | 非圧縮形式 |
-
-### 牌エンベディングフォーマット（TileEmbedder）
-
-| フォーマット | 読込 | 書込 | 備考 |
-|------------|:----:|:----:|------|
-| Safetensors | ✅ | ✅ | 推論・配布用（推奨） |
-| JSON | ✅ | ✅ | デバッグ・可読性確認用 |
-| バイナリ (.bin) | ✅ | ✅ | 学習の完全な再開用 |
-| CSV | - | ✅ | 2次元可視化用（PCA/UMAP） |
 
 ---
 
@@ -177,6 +141,7 @@ foreach (var tensor in tensors)
 
 ### v1.0 初期リリースに向けて
 
+- [x] MjlogReader ライブラリ実装
 - [ ] EagleEye 推論エンジンコア実装
 - [ ] 訓練用データセット生成パイプライン
 - [ ] 基本的な訓練済みモデルの公開
@@ -205,14 +170,12 @@ foreach (var tensor in tensors)
 
 ## 依存ライブラリ
 
-本プロジェクトは以下のオープンソースライブラリを使用しています：
+現在のプロジェクトは外部ライブラリへの依存はありません。将来的に以下のライブラリの使用を予定しています：
 
-| ライブラリ | ライセンス | 用途 |
-|----------|-----------|------|
-| [TorchSharp](https://github.com/dotnet/TorchSharp) | BSD 3-Clause | 機械学習フレームワーク |
-| [ScottPlot](https://github.com/ScottPlot/ScottPlot) | MIT | データ可視化・グラフ描画 |
-| [ONNX](https://github.com/onnx/onnx) | Apache 2.0 | モデルフォーマット定義 |
-| [Unity Sentis](https://docs.unity3d.com/Packages/com.unity.sentis@latest) | Unity Companion License | Unityモデルフォーマット定義 |
+| ライブラリ | ライセンス | 用途 | 状態 |
+|----------|-----------|------|:----:|
+| [TorchSharp](https://github.com/dotnet/TorchSharp) | BSD 3-Clause | 機械学習フレームワーク | 📋 予定 |
+| [ONNX](https://github.com/onnx/onnx) | Apache 2.0 | モデルフォーマット定義 | 📋 予定 |
 
 各ライブラリの詳細なライセンス条項については、[LICENSE.md](./LICENSE.md) をご確認ください。
 
@@ -223,7 +186,7 @@ foreach (var tensor in tensors)
 [Zlib License](./LICENSE.md)
 
 ```
-Copyright (c) 2025 Sinoa
+Copyright (c) 2025-2026 Sinoa
 
 This software is provided 'as-is', without any express or implied warranty.
 ```

@@ -28,7 +28,7 @@ MjlogReader は天鳳の牌譜ファイル（.mjlog / XML）を読み込み、C#
 ## クイックスタート
 
 ```csharp
-using MjlogReader;
+using Foxtamp.MjlogReader;
 
 // ファイルから読み込み（GZip自動判定）
 MjlogDocument document = MjlogDocumentReader.Load("path/to/file.mjlog");
@@ -47,9 +47,9 @@ MjlogDocument document = MjlogDocumentReader.Load(stream);
 ### 基本的な使用例
 
 ```csharp
-using MjlogReader;
-using MjlogReader.Models;
-using MjlogReader.Models.Actions;
+using Foxtamp.MjlogReader;
+using Foxtamp.MjlogReader.Models;
+using Foxtamp.MjlogReader.Models.Actions;
 
 // 牌譜を読み込み
 var document = MjlogDocumentReader.Load("game.mjlog");
@@ -380,4 +380,4 @@ RyuukyokuInfo
 
 ## ライセンス
 
-zlib License - Copyright (c) 2025 Sinoa
+zlib License - Copyright (c) 2025-2026 Sinoa
