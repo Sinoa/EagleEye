@@ -185,6 +185,10 @@ public class MjlogXmlParser
     /// </summary>
     /// <param name="gameElement">ゲーム全体を表すルートXML要素</param>
     /// <param name="document">解析結果を格納するドキュメント</param>
+    /// <exception cref="AggregateException">
+    /// 解析中に1つ以上のエラーが発生した場合にスローされます。
+    /// 個別の要素解析で発生した例外はすべて収集され、最後にまとめてスローされます。
+    /// </exception>
     /// <remarks>
     /// 各子要素（SHUFFLE, GO, UN, INIT, DORA, AGARI, RYUUKYOKU, N, REACH, ツモ/打牌）を
     /// 順次解析し、対応するモデルに変換します。
@@ -192,6 +196,7 @@ public class MjlogXmlParser
     private void ParseGameElement(XElement gameElement, MjlogDocument document)
     {
         var context = new ParseContext(document.PlayerCount);
+        var exceptions = new List<Exception>();
 
         foreach (var element in gameElement.Elements())
         {
@@ -251,10 +256,16 @@ public class MjlogXmlParser
                         break;
                 }
             }
-            catch (Exception)
+            catch (Exception error)
             {
-                // 個別要素の解析エラーは無視して続行
+                // 個別要素の解析エラーはリストに保持して続行
+                exceptions.Add(error);
             }
+        }
+
+        if (exceptions.Count > 0)
+        {
+            throw new AggregateException("XML解析中に1つ以上のエラーが発生しました。", exceptions);
         }
     }
 
