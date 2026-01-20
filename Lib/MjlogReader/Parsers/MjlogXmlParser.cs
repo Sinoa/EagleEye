@@ -34,6 +34,73 @@ namespace Foxtamp.MjlogReader.Parsers;
 /// </summary>
 public class MjlogXmlParser
 {
+    /// <summary>
+    /// 解析中の状態を管理するコンテキスト
+    /// </summary>
+    private class ParseContext
+    {
+        public MjlogSession? CurrentSession { get; set; }
+        public int StepIndex { get; set; }
+        public int TurnNumber { get; set; } = 1;
+        public int DiscardCountInTurn { get; set; }
+        public int DealerId { get; set; }
+        public int PlayerCount { get; }
+        public int[] CurrentScores { get; }
+
+        public ParseContext(int playerCount)
+        {
+            PlayerCount = playerCount;
+            // 得点追跡（三麻は35000点、四麻は25000点スタート）
+            var initialScore = playerCount == 3 ? 35000 : 25000;
+            CurrentScores = new int[playerCount];
+            for (var i = 0; i < playerCount; i++)
+            {
+                CurrentScores[i] = initialScore;
+            }
+        }
+
+        /// <summary>
+        /// 新しい局の開始時に状態をリセット
+        /// </summary>
+        public void ResetForNewSession(MjlogSession session)
+        {
+            CurrentSession = session;
+            StepIndex = 0;
+            TurnNumber = 1;
+            DiscardCountInTurn = 0;
+            DealerId = session.DealerId;
+        }
+
+        /// <summary>
+        /// ステップを追加し、StepIndexをインクリメント
+        /// </summary>
+        public void AddStep(int playerId, MjlogAction action)
+        {
+            CurrentSession?.Steps.Add(new MjlogStep
+            {
+                StepIndex = StepIndex++,
+                TurnNumber = TurnNumber,
+                PlayerId = playerId,
+                Action = action
+            });
+        }
+
+        /// <summary>
+        /// 打牌後の巡目更新処理
+        /// </summary>
+        public void UpdateTurnAfterDiscard(int playerId)
+        {
+            DiscardCountInTurn++;
+            // 全プレイヤーが打牌したら次の巡へ
+            // （鳴きがあると人数が減るが、親が打牌したタイミングで巡目を進める）
+            if (playerId == DealerId && DiscardCountInTurn >= PlayerCount)
+            {
+                TurnNumber++;
+                DiscardCountInTurn = 0;
+            }
+        }
+    }
+
     // 役名テーブル
     private static readonly string[] YakuNames =
     [
@@ -101,22 +168,7 @@ public class MjlogXmlParser
 
     private void ParseGameElement(XElement gameElement, MjlogDocument document)
     {
-        MjlogSession? currentSession = null;
-        var stepIndex = 0;
-
-        // 巡目計算用の状態
-        var turnNumber = 1;
-        var discardCountInTurn = 0; // 現在の巡での打牌数
-        var dealerId = 0; // 親のプレイヤーID
-        var playerCount = document.PlayerCount; // プレイヤー数
-
-        // 得点追跡（三麻は35000点、四麻は25000点スタート）
-        var initialScore = playerCount == 3 ? 35000 : 25000;
-        var currentScores = new int[playerCount];
-        for (var i = 0; i < playerCount; i++)
-        {
-            currentScores[i] = initialScore;
-        }
+        var context = new ParseContext(document.PlayerCount);
 
         foreach (var element in gameElement.Elements())
         {
@@ -127,8 +179,7 @@ public class MjlogXmlParser
                 switch (name)
                 {
                     case "SHUFFLE":
-                        document.Header.ShuffleSeed = element.Attribute("seed")?.Value;
-                        document.Header.Reference = element.Attribute("ref")?.Value;
+                        ParseShuffle(element, document.Header);
                         break;
 
                     case "GO":
@@ -144,171 +195,36 @@ public class MjlogXmlParser
                         break;
 
                     case "INIT":
-                        // 新しい局の開始
-                        currentSession = ParseInit(element, currentScores, playerCount);
-                        document.Sessions.Add(currentSession);
-                        stepIndex = 0;
-                        turnNumber = 1;
-                        discardCountInTurn = 0;
-                        dealerId = currentSession.DealerId;
+                        ParseSessionInit(element, document, context);
                         break;
 
                     case "DORA":
-                        if (currentSession != null)
-                        {
-                            var doraAttr = element.Attribute("hai");
-                            if (doraAttr != null && int.TryParse(doraAttr.Value, out var doraId))
-                            {
-                                var doraTile = TileDecoder.Decode(doraId);
-                                currentSession.DoraIndicators.Add(doraTile);
-
-                                // 新ドラとしてステップに追加
-                                currentSession.Steps.Add(new MjlogStep
-                                {
-                                    StepIndex = stepIndex++,
-                                    TurnNumber = turnNumber,
-                                    PlayerId = -1, // システム行動
-                                    Action = new DoraAction { Tile = doraTile }
-                                });
-                            }
-                        }
-
+                        ParseDora(element, context);
                         break;
 
                     case "AGARI":
-                        if (currentSession != null)
-                        {
-                            var agariInfo = ParseAgari(element, currentScores, playerCount);
-
-                            // 和了ステップを追加
-                            currentSession.Steps.Add(new MjlogStep
-                            {
-                                StepIndex = stepIndex++,
-                                TurnNumber = turnNumber,
-                                PlayerId = agariInfo.WinnerId,
-                                Action = new AgariAction()
-                            });
-
-                            // 結果を設定
-                            currentSession.Result ??= new MjlogSessionResult(playerCount) { IsAgari = true };
-                            currentSession.Result.AgariInfos.Add(agariInfo);
-                            Array.Copy(currentScores, currentSession.Result.FinalScores, playerCount);
-                        }
-
+                        ParseAgariStep(element, context);
                         break;
 
                     case "RYUUKYOKU":
-                        if (currentSession != null)
-                        {
-                            var ryuukyokuInfo = ParseRyuukyoku(element, currentScores, playerCount);
-
-                            // 流局ステップを追加
-                            currentSession.Steps.Add(new MjlogStep
-                            {
-                                StepIndex = stepIndex++,
-                                TurnNumber = turnNumber,
-                                PlayerId = -1, // システム行動
-                                Action = new RyuukyokuAction()
-                            });
-
-                            // 結果を設定
-                            currentSession.Result = new MjlogSessionResult(playerCount)
-                            {
-                                IsAgari = false,
-                                RyuukyokuInfo = ryuukyokuInfo
-                            };
-                            Array.Copy(currentScores, currentSession.Result.FinalScores, playerCount);
-                        }
-
+                        ParseRyuukyokuStep(element, context);
                         break;
 
                     case "BYE":
                         // プレイヤー切断、特に処理なし
                         break;
 
+                    case "N":
+                        ParseMeld(element, context);
+                        break;
+
+                    case "REACH":
+                        ParseReach(element, context);
+                        break;
+
                     default:
-                        // T0-T3: ツモ、D0-D3: 打牌、N: 鳴き、REACH: リーチ
-                        if (currentSession != null)
-                        {
-                            if (name.Length >= 1 && (name[0] == 'T' || name[0] == 'U' || name[0] == 'V' || name[0] == 'W'))
-                            {
-                                // ツモ: T=0, U=1, V=2, W=3
-                                var playerId = name[0] switch { 'T' => 0, 'U' => 1, 'V' => 2, 'W' => 3, _ => -1 };
-                                if (playerId >= 0)
-                                {
-                                    var tileIdStr = name.Length > 1 ? name[1..] : element.Value;
-                                    if (int.TryParse(tileIdStr, out var tileId))
-                                    {
-                                        var tile = TileDecoder.Decode(tileId);
-
-                                        currentSession.Steps.Add(new MjlogStep
-                                        {
-                                            StepIndex = stepIndex++,
-                                            TurnNumber = turnNumber,
-                                            PlayerId = playerId,
-                                            Action = new DrawAction { Tile = tile }
-                                        });
-                                    }
-                                }
-                            }
-                            else if (name.Length >= 1 && (name[0] == 'D' || name[0] == 'E' || name[0] == 'F' || name[0] == 'G'))
-                            {
-                                // 打牌: D=0, E=1, F=2, G=3
-                                var playerId = name[0] switch { 'D' => 0, 'E' => 1, 'F' => 2, 'G' => 3, _ => -1 };
-                                if (playerId >= 0)
-                                {
-                                    var tileIdStr = name.Length > 1 ? name[1..] : element.Value;
-                                    if (int.TryParse(tileIdStr, out var tileId))
-                                    {
-                                        var tile = TileDecoder.Decode(tileId);
-
-                                        // ツモ切り判定（直前のツモ牌と同じかどうか）
-                                        var isTsumogiri = false;
-                                        if (currentSession.Steps.Count > 0)
-                                        {
-                                            var lastStep = currentSession.Steps[^1];
-                                            if (lastStep.PlayerId == playerId
-                                                && lastStep.Action is DrawAction drawAction
-                                                && drawAction.Tile?.OriginalId == tileId)
-                                            {
-                                                isTsumogiri = true;
-                                            }
-                                        }
-
-                                        currentSession.Steps.Add(new MjlogStep
-                                        {
-                                            StepIndex = stepIndex++,
-                                            TurnNumber = turnNumber,
-                                            PlayerId = playerId,
-                                            Action = new DiscardAction
-                                            {
-                                                Tile = tile,
-                                                IsTsumogiri = isTsumogiri
-                                            }
-                                        });
-
-                                        // 巡目の更新
-                                        discardCountInTurn++;
-                                        // 全プレイヤーが打牌したら次の巡へ
-                                        // （鳴きがあると人数が減るが、親が打牌したタイミングで巡目を進める）
-                                        if (playerId == dealerId && discardCountInTurn >= playerCount)
-                                        {
-                                            turnNumber++;
-                                            discardCountInTurn = 0;
-                                        }
-                                    }
-                                }
-                            }
-                            else if (name == "N")
-                            {
-                                ParseMeld(element, currentSession, ref stepIndex, turnNumber, ref discardCountInTurn);
-                            }
-                            else if (name == "REACH")
-                            {
-                                ParseReach(element, currentSession, ref stepIndex, turnNumber);
-                            }
-                        }
-
+                        // ツモ・打牌の処理
+                        ParseTileAction(name, element, context);
                         break;
                 }
             }
@@ -317,6 +233,130 @@ public class MjlogXmlParser
                 // 個別要素の解析エラーは無視して続行
             }
         }
+    }
+
+    private static void ParseShuffle(XElement element, MjlogHeader header)
+    {
+        header.ShuffleSeed = element.Attribute("seed")?.Value;
+        header.Reference = element.Attribute("ref")?.Value;
+    }
+
+    private void ParseSessionInit(XElement element, MjlogDocument document, ParseContext context)
+    {
+        var session = ParseInit(element, context.CurrentScores, context.PlayerCount);
+        document.Sessions.Add(session);
+        context.ResetForNewSession(session);
+    }
+
+    private static void ParseDora(XElement element, ParseContext context)
+    {
+        if (context.CurrentSession == null) return;
+
+        var doraAttr = element.Attribute("hai");
+        if (doraAttr == null || !int.TryParse(doraAttr.Value, out var doraId)) return;
+
+        var doraTile = TileDecoder.Decode(doraId);
+        context.CurrentSession.DoraIndicators.Add(doraTile);
+        context.AddStep(-1, new DoraAction { Tile = doraTile });
+    }
+
+    private void ParseAgariStep(XElement element, ParseContext context)
+    {
+        if (context.CurrentSession == null) return;
+
+        var agariInfo = ParseAgari(element, context.CurrentScores, context.PlayerCount);
+        context.AddStep(agariInfo.WinnerId, new AgariAction());
+
+        // 結果を設定
+        context.CurrentSession.Result ??= new MjlogSessionResult(context.PlayerCount) { IsAgari = true };
+        context.CurrentSession.Result.AgariInfos.Add(agariInfo);
+        Array.Copy(context.CurrentScores, context.CurrentSession.Result.FinalScores, context.PlayerCount);
+    }
+
+    private void ParseRyuukyokuStep(XElement element, ParseContext context)
+    {
+        if (context.CurrentSession == null) return;
+
+        var ryuukyokuInfo = ParseRyuukyoku(element, context.CurrentScores, context.PlayerCount);
+        context.AddStep(-1, new RyuukyokuAction());
+
+        // 結果を設定
+        context.CurrentSession.Result = new MjlogSessionResult(context.PlayerCount)
+        {
+            IsAgari = false,
+            RyuukyokuInfo = ryuukyokuInfo
+        };
+        Array.Copy(context.CurrentScores, context.CurrentSession.Result.FinalScores, context.PlayerCount);
+    }
+
+    private static void ParseTileAction(string name, XElement element, ParseContext context)
+    {
+        if (context.CurrentSession == null || name.Length < 1) return;
+
+        var firstChar = name[0];
+
+        switch (firstChar)
+        {
+            case 'T':
+            case 'U':
+            case 'V':
+            case 'W':
+                ParseDraw(name, element, context, firstChar);
+                break;
+
+            case 'D':
+            case 'E':
+            case 'F':
+            case 'G':
+                ParseDiscard(name, element, context, firstChar);
+                break;
+        }
+    }
+
+    private static void ParseDraw(string name, XElement element, ParseContext context, char firstChar)
+    {
+        // ツモ: T=0, U=1, V=2, W=3
+        var playerId = firstChar switch { 'T' => 0, 'U' => 1, 'V' => 2, 'W' => 3, _ => -1 };
+        if (playerId < 0) return;
+
+        var tileIdStr = name.Length > 1 ? name[1..] : element.Value;
+        if (!int.TryParse(tileIdStr, out var tileId)) return;
+
+        var tile = TileDecoder.Decode(tileId);
+        context.AddStep(playerId, new DrawAction { Tile = tile });
+    }
+
+    private static void ParseDiscard(string name, XElement element, ParseContext context, char firstChar)
+    {
+        // 打牌: D=0, E=1, F=2, G=3
+        var playerId = firstChar switch { 'D' => 0, 'E' => 1, 'F' => 2, 'G' => 3, _ => -1 };
+        if (playerId < 0) return;
+
+        var tileIdStr = name.Length > 1 ? name[1..] : element.Value;
+        if (!int.TryParse(tileIdStr, out var tileId)) return;
+
+        var tile = TileDecoder.Decode(tileId);
+
+        // ツモ切り判定（直前のツモ牌と同じかどうか）
+        var isTsumogiri = false;
+        if (context.CurrentSession!.Steps.Count > 0)
+        {
+            var lastStep = context.CurrentSession.Steps[^1];
+            if (lastStep.PlayerId == playerId
+                && lastStep.Action is DrawAction drawAction
+                && drawAction.Tile?.OriginalId == tileId)
+            {
+                isTsumogiri = true;
+            }
+        }
+
+        context.AddStep(playerId, new DiscardAction
+        {
+            Tile = tile,
+            IsTsumogiri = isTsumogiri
+        });
+
+        context.UpdateTurnAfterDiscard(playerId);
     }
 
     private void ParseGameOptions(XElement element, MjlogHeader header)
@@ -433,8 +473,10 @@ public class MjlogXmlParser
         return session;
     }
 
-    private void ParseMeld(XElement element, MjlogSession session, ref int stepIndex, int turnNumber, ref int discardCountInTurn)
+    private static void ParseMeld(XElement element, ParseContext context)
     {
+        if (context.CurrentSession == null) return;
+
         var whoAttr = element.Attribute("who")?.Value;
         var mAttr = element.Attribute("m")?.Value;
 
@@ -444,25 +486,20 @@ public class MjlogXmlParser
         var meldCode = int.Parse(mAttr);
 
         var meld = MeldDecoder.Decode(meldCode, playerId);
-
-        session.Steps.Add(new MjlogStep
-        {
-            StepIndex = stepIndex++,
-            TurnNumber = turnNumber,
-            PlayerId = playerId,
-            Action = new MeldAction { Meld = meld }
-        });
+        context.AddStep(playerId, new MeldAction { Meld = meld });
 
         // 鳴きが発生すると巡の途中でもカウントをリセット（順番がスキップされるため）
         // ただし暗槓・加槓は自分のターンなのでスキップは発生しない
         if (meld.Type != MeldType.AnKan && meld.Type != MeldType.KaKan && meld.Type != MeldType.Nuki)
         {
-            discardCountInTurn = 0;
+            context.DiscardCountInTurn = 0;
         }
     }
 
-    private void ParseReach(XElement element, MjlogSession session, ref int stepIndex, int turnNumber)
+    private static void ParseReach(XElement element, ParseContext context)
     {
+        if (context.CurrentSession == null) return;
+
         var whoAttr = element.Attribute("who")?.Value;
         var stepAttr = element.Attribute("step")?.Value;
 
@@ -471,13 +508,7 @@ public class MjlogXmlParser
         var playerId = int.Parse(whoAttr);
         var step = int.Parse(stepAttr ?? "1");
 
-        session.Steps.Add(new MjlogStep
-        {
-            StepIndex = stepIndex++,
-            TurnNumber = turnNumber,
-            PlayerId = playerId,
-            Action = new ReachAction { Step = step }
-        });
+        context.AddStep(playerId, new ReachAction { Step = step });
     }
 
     private AgariInfo ParseAgari(XElement element, int[] currentScores, int playerCount)
