@@ -1,9 +1,0 @@
-=== Training Hyperparameters Summary ===
-Embedding Dimension : 4
-Epochs              : 100
-Negative Samples    : 10
-Learning Rate       : 0.025
-Random Seed         : 697698991
-Created At          : 2025-12-27 08:17:24 UTC
-Updated At          : 2025-12-27 08:17:24 UTC
-========================================

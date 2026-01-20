@@ -1,18 +1,5 @@
 <Solution>
-    <Folder Name="/Cli/">
-        <Project Path="Cli/MjlogAnalyzer/MjlogAnalyzer.csproj" />
-        <Project Path="Cli/MjlogConverter/MjlogConverter.csproj" />
-        <Project Path="Cli/TileEmbedderCli/TileEmbedderCli.csproj" />
-    </Folder>
-    <Folder Name="/EagleEye/">
-        <Project Path="EagleEye/EagleEye/EagleEye.csproj" />
-    </Folder>
     <Folder Name="/Lib/">
-        <Project Path="Lib/MjlogA/MjlogA.csproj" />
-        <Project Path="Lib/MjlogJ/MjlogJ.csproj" />
-        <Project Path="Lib/MjlogReader/MjlogReader.csproj" />
-        <Project Path="Lib/MLModelCodec/MLModelCodec.csproj" />
-        <Project Path="Lib/MLModelUtility/MLModelUtility.csproj" />
-        <Project Path="Lib/TileEmbedder/TileEmbedder.csproj" />
+        <Project Path="src/MjlogReader/MjlogReader.csproj" />
     </Folder>
 </Solution>
