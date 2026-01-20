@@ -101,7 +101,10 @@ public class MjlogXmlParser
         }
     }
 
-    // 役名テーブル
+    /// <summary>
+    /// 天鳳の役IDから役名へ変換するためのテーブル
+    /// インデックスが役ID、値が役名に対応
+    /// </summary>
     private static readonly string[] YakuNames =
     [
         "門前清自摸和", "立直", "一発", "槍槓", "嶺上開花", // 0-4
@@ -117,7 +120,10 @@ public class MjlogXmlParser
         "ドラ", "裏ドラ", "赤ドラ" // 52-54
     ];
 
-    // 役満名テーブル
+    /// <summary>
+    /// 天鳳の役満IDから役満名へ変換するためのテーブル
+    /// インデックスが役満ID、値が役満名に対応
+    /// </summary>
     private static readonly string[] YakumanNames =
     [
         "天和", "地和", "大三元", "四暗刻", "四暗刻単騎", // 0-4
@@ -127,7 +133,10 @@ public class MjlogXmlParser
         "ドラ", "裏ドラ", "赤ドラ" // 20-22
     ];
 
-    // 段位名テーブル
+    /// <summary>
+    /// 天鳳の段位IDから段位名へ変換するためのテーブル
+    /// インデックスが段位ID、値が段位名に対応（新人=0 ～ 天鳳位=20）
+    /// </summary>
     private static readonly string[] DanNames =
     [
         "新人", "9級", "8級", "7級", "6級", "5級", "4級", "3級", "2級", "1級",
@@ -138,6 +147,9 @@ public class MjlogXmlParser
     /// <summary>
     /// XMLコンテンツを解析してMjlogDocumentを生成
     /// </summary>
+    /// <param name="xmlContent">解析対象の天鳳牌譜XMLコンテンツ</param>
+    /// <returns>解析結果を格納した <see cref="MjlogDocument"/></returns>
+    /// <exception cref="InvalidOperationException">XMLにルート要素がない場合</exception>
     public MjlogDocument Parse(string xmlContent)
     {
         var doc = XDocument.Parse(xmlContent);
@@ -156,6 +168,8 @@ public class MjlogXmlParser
     /// <summary>
     /// GOタグを解析してプレイヤー数を確定
     /// </summary>
+    /// <param name="gameElement">ゲーム全体を表すルートXML要素</param>
+    /// <returns>プレイヤー数（3人麻雀なら3、4人麻雀なら4）</returns>
     private int DeterminePlayerCount(XElement gameElement)
     {
         var goElement = gameElement.Elements().FirstOrDefault(e => e.Name.LocalName.Equals("GO", StringComparison.OrdinalIgnoreCase));
@@ -166,6 +180,15 @@ public class MjlogXmlParser
         return isThreePlayer ? 3 : 4;
     }
 
+    /// <summary>
+    /// ゲーム要素を解析してドキュメントに格納
+    /// </summary>
+    /// <param name="gameElement">ゲーム全体を表すルートXML要素</param>
+    /// <param name="document">解析結果を格納するドキュメント</param>
+    /// <remarks>
+    /// 各子要素（SHUFFLE, GO, UN, INIT, DORA, AGARI, RYUUKYOKU, N, REACH, ツモ/打牌）を
+    /// 順次解析し、対応するモデルに変換します。
+    /// </remarks>
     private void ParseGameElement(XElement gameElement, MjlogDocument document)
     {
         var context = new ParseContext(document.PlayerCount);
@@ -235,12 +258,23 @@ public class MjlogXmlParser
         }
     }
 
+    /// <summary>
+    /// SHUFFLE要素を解析してシャッフル情報を取得
+    /// </summary>
+    /// <param name="element">SHUFFLE XML要素</param>
+    /// <param name="header">情報を格納するヘッダー</param>
     private static void ParseShuffle(XElement element, MjlogHeader header)
     {
         header.ShuffleSeed = element.Attribute("seed")?.Value;
         header.Reference = element.Attribute("ref")?.Value;
     }
 
+    /// <summary>
+    /// INIT要素を解析して新しいセッション（局）を開始
+    /// </summary>
+    /// <param name="element">INIT XML要素</param>
+    /// <param name="document">セッションを追加するドキュメント</param>
+    /// <param name="context">解析コンテキスト</param>
     private void ParseSessionInit(XElement element, MjlogDocument document, ParseContext context)
     {
         var session = ParseInit(element, context.CurrentScores, context.PlayerCount);
@@ -248,6 +282,14 @@ public class MjlogXmlParser
         context.ResetForNewSession(session);
     }
 
+    /// <summary>
+    /// DORA要素を解析してドラ表示牌を追加
+    /// </summary>
+    /// <param name="element">DORA XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <remarks>
+    /// 槓が発生した際に新しいドラが追加される場合に呼び出されます。
+    /// </remarks>
     private static void ParseDora(XElement element, ParseContext context)
     {
         if (context.CurrentSession == null) return;
@@ -260,6 +302,15 @@ public class MjlogXmlParser
         context.AddStep(-1, new DoraAction { Tile = doraTile });
     }
 
+    /// <summary>
+    /// AGARI要素を解析して和了情報をステップに追加
+    /// </summary>
+    /// <param name="element">AGARI XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <remarks>
+    /// 和了情報を解析し、セッション結果として設定します。
+    /// ダブロン・トリプルロンの場合、複数回呼び出されます。
+    /// </remarks>
     private void ParseAgariStep(XElement element, ParseContext context)
     {
         if (context.CurrentSession == null) return;
@@ -273,6 +324,15 @@ public class MjlogXmlParser
         Array.Copy(context.CurrentScores, context.CurrentSession.Result.FinalScores, context.PlayerCount);
     }
 
+    /// <summary>
+    /// RYUUKYOKU要素を解析して流局情報をステップに追加
+    /// </summary>
+    /// <param name="element">RYUUKYOKU XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <remarks>
+    /// 流局の種類（通常流局、九種九牌、四風連打など）を判定し、
+    /// テンパイ者と点数移動を記録します。
+    /// </remarks>
     private void ParseRyuukyokuStep(XElement element, ParseContext context)
     {
         if (context.CurrentSession == null) return;
@@ -289,6 +349,17 @@ public class MjlogXmlParser
         Array.Copy(context.CurrentScores, context.CurrentSession.Result.FinalScores, context.PlayerCount);
     }
 
+    /// <summary>
+    /// 牌アクション（ツモ・打牌）の要素を解析
+    /// </summary>
+    /// <param name="name">要素名（T/U/V/W=ツモ、D/E/F/G=打牌）</param>
+    /// <param name="element">XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <remarks>
+    /// 要素名の先頭文字でプレイヤーIDとアクション種別を判定します。
+    /// T/U/V/W: プレイヤー0/1/2/3のツモ
+    /// D/E/F/G: プレイヤー0/1/2/3の打牌
+    /// </remarks>
     private static void ParseTileAction(string name, XElement element, ParseContext context)
     {
         if (context.CurrentSession == null || name.Length < 1) return;
@@ -313,6 +384,13 @@ public class MjlogXmlParser
         }
     }
 
+    /// <summary>
+    /// ツモアクションを解析
+    /// </summary>
+    /// <param name="name">要素名（例: T45 = プレイヤー0が牌ID45をツモ）</param>
+    /// <param name="element">XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <param name="firstChar">要素名の先頭文字（T/U/V/W）</param>
     private static void ParseDraw(string name, XElement element, ParseContext context, char firstChar)
     {
         // ツモ: T=0, U=1, V=2, W=3
@@ -326,6 +404,16 @@ public class MjlogXmlParser
         context.AddStep(playerId, new DrawAction { Tile = tile });
     }
 
+    /// <summary>
+    /// 打牌アクションを解析
+    /// </summary>
+    /// <param name="name">要素名（例: D45 = プレイヤー0が牌ID45を打牌）</param>
+    /// <param name="element">XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <param name="firstChar">要素名の先頭文字（D/E/F/G）</param>
+    /// <remarks>
+    /// 直前のツモ牌と同じ牌を打牌した場合、ツモ切りとして記録します。
+    /// </remarks>
     private static void ParseDiscard(string name, XElement element, ParseContext context, char firstChar)
     {
         // 打牌: D=0, E=1, F=2, G=3
@@ -359,6 +447,16 @@ public class MjlogXmlParser
         context.UpdateTurnAfterDiscard(playerId);
     }
 
+    /// <summary>
+    /// GO要素を解析してゲームオプション（ルール設定）を取得
+    /// </summary>
+    /// <param name="element">GO XML要素</param>
+    /// <param name="header">情報を格納するヘッダー</param>
+    /// <remarks>
+    /// type属性のビットフラグからルール設定を解析します。
+    /// bit1: 赤ドラなし, bit2: 喰いタンなし, bit3: 東南戦,
+    /// bit4: 三人麻雀, bit6: 速卓
+    /// </remarks>
     private void ParseGameOptions(XElement element, MjlogHeader header)
     {
         var type = int.Parse(element.Attribute("type")?.Value ?? "0");
@@ -377,6 +475,15 @@ public class MjlogXmlParser
         };
     }
 
+    /// <summary>
+    /// UN要素を解析してプレイヤー情報を取得
+    /// </summary>
+    /// <param name="element">UN XML要素</param>
+    /// <param name="header">情報を格納するヘッダー</param>
+    /// <remarks>
+    /// プレイヤー名（URLエンコード）、段位、レート、性別を解析します。
+    /// 対局中にプレイヤーが再接続した場合、UN要素が複数回出現する可能性があります。
+    /// </remarks>
     private void ParseUserNames(XElement element, MjlogHeader header)
     {
         for (var i = 0; i < header.PlayerCount; i++)
@@ -419,6 +526,17 @@ public class MjlogXmlParser
         }
     }
 
+    /// <summary>
+    /// INIT要素を解析して新しいセッション（局）オブジェクトを生成
+    /// </summary>
+    /// <param name="element">INIT XML要素</param>
+    /// <param name="currentScores">現在の得点配列（更新される）</param>
+    /// <param name="playerCount">プレイヤー数</param>
+    /// <returns>解析された <see cref="MjlogSession"/></returns>
+    /// <remarks>
+    /// seed属性から局番号、本場、供託、ドラ表示牌を解析します。
+    /// また、各プレイヤーの得点と配牌も取得します。
+    /// </remarks>
     private MjlogSession ParseInit(XElement element, int[] currentScores, int playerCount)
     {
         var session = new MjlogSession(playerCount);
@@ -473,6 +591,15 @@ public class MjlogXmlParser
         return session;
     }
 
+    /// <summary>
+    /// N要素を解析して副露（鳴き）情報をステップに追加
+    /// </summary>
+    /// <param name="element">N XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <remarks>
+    /// m属性のビットエンコードから副露の種類（チー/ポン/カンなど）と
+    /// 構成牌を解析します。鳴き後は巡目カウントをリセットします。
+    /// </remarks>
     private static void ParseMeld(XElement element, ParseContext context)
     {
         if (context.CurrentSession == null) return;
@@ -496,6 +623,14 @@ public class MjlogXmlParser
         }
     }
 
+    /// <summary>
+    /// REACH要素を解析してリーチ情報をステップに追加
+    /// </summary>
+    /// <param name="element">REACH XML要素</param>
+    /// <param name="context">解析コンテキスト</param>
+    /// <remarks>
+    /// step属性でリーチの段階を判定します（1=リーチ宣言、2=リーチ成立）。
+    /// </remarks>
     private static void ParseReach(XElement element, ParseContext context)
     {
         if (context.CurrentSession == null) return;
@@ -511,6 +646,23 @@ public class MjlogXmlParser
         context.AddStep(playerId, new ReachAction { Step = step });
     }
 
+    /// <summary>
+    /// AGARI要素を解析して和了情報オブジェクトを生成
+    /// </summary>
+    /// <param name="element">AGARI XML要素</param>
+    /// <param name="currentScores">現在の得点配列（更新される）</param>
+    /// <param name="playerCount">プレイヤー数</param>
+    /// <returns>解析された <see cref="AgariInfo"/></returns>
+    /// <remarks>
+    /// 以下の情報を解析します：
+    /// - 和了者(who)と放銃者(fromWho)
+    /// - 手牌(hai)と和了牌(machi)
+    /// - 副露(m)、ドラ表示牌(doraHai)、裏ドラ(doraHaiUra)
+    /// - 得点情報(ten)：符と点数
+    /// - 役(yaku)：役ID,飜数のペア
+    /// - 役満(yakuman)：役満IDのリスト
+    /// - 点数移動(sc)：各プレイヤーの点数変動
+    /// </remarks>
     private AgariInfo ParseAgari(XElement element, int[] currentScores, int playerCount)
     {
         var agari = new AgariInfo();
@@ -642,6 +794,20 @@ public class MjlogXmlParser
         return agari;
     }
 
+    /// <summary>
+    /// RYUUKYOKU要素を解析して流局情報オブジェクトを生成
+    /// </summary>
+    /// <param name="element">RYUUKYOKU XML要素</param>
+    /// <param name="currentScores">現在の得点配列（更新される）</param>
+    /// <param name="playerCount">プレイヤー数</param>
+    /// <returns>解析された <see cref="RyuukyokuInfo"/></returns>
+    /// <remarks>
+    /// 以下の情報を解析します：
+    /// - 流局種類(type)：yao9(九種九牌), kaze4(四風連打), kan4(四槓散了),
+    ///   reach4(四家立直), ron3(三家和了), nm(流し満貫), 通常流局
+    /// - テンパイ者(hai0-hai3)：属性が存在すればテンパイ
+    /// - 点数移動(sc)：各プレイヤーの点数変動
+    /// </remarks>
     private RyuukyokuInfo ParseRyuukyoku(XElement element, int[] currentScores, int playerCount)
     {
         var ryuukyoku = new RyuukyokuInfo();
