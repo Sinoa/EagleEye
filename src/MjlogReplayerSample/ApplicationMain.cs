@@ -232,7 +232,7 @@ public static class ApplicationMain
             var discardStr = string.Join(",", player.Discards.Select(d => d.Tile.DisplayName));
             var reachStr = player.IsReach ? " [リーチ]" : "";
             Console.WriteLine($"    P{i}: 手牌[{handStr}]{reachStr}");
-            Console.WriteLine($"          捨て牌[{discardStr}]");
+            Console.WriteLine($"        捨て牌[{discardStr}]");
         }
     }
 
