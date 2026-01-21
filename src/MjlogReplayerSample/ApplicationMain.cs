@@ -222,7 +222,8 @@ public static class ApplicationMain
     /// </summary>
     private static void DisplayStepSummary(GameState state, int stepIndex)
     {
-        Console.WriteLine($"  [ステップ {stepIndex,3}] 巡目 {state.TurnNumber,2}");
+        Console.Write($"  [ステップ {stepIndex,3}] 巡目 {state.TurnNumber,2}");
+        Console.WriteLine($"  == 詳細 ==> {(state.SourceStep != null ? state.SourceStep.ToString() : "(初期状態)")}");
 
         for (var i = 0; i < state.PlayerCount; i++)
         {

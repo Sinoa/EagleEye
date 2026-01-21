@@ -133,6 +133,13 @@ public abstract record GameState(
     public override string ToString()
     {
         var doraStr = string.Join("", DoraIndicators.Select(t => t.DisplayName));
-        return $"{RoundName} {Honba}本場 供託{Kyotaku} 巡目{TurnNumber} ドラ表示:[{doraStr}]";
+        var baseInfo = $"{RoundName} {Honba}本場 供託{Kyotaku} 巡目{TurnNumber} ドラ表示:[{doraStr}]";
+
+        if (SourceStep != null)
+        {
+            return $"{baseInfo} ← {SourceStep}";
+        }
+
+        return baseInfo;
     }
 }
