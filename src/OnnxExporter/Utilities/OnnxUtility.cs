@@ -24,6 +24,7 @@
 using System.Runtime.InteropServices;
 using Google.Protobuf;
 using Onnx;
+using TorchSharp;
 
 namespace OnnxExporter.Utilities;
 
@@ -306,6 +307,30 @@ public static class OnnxUtility
         };
     }
 
+    /// <summary>
+    /// TorchSharpのテンソルからテンソル型属性を作成します。
+    /// </summary>
+    /// <remarks>
+    /// 内部で<see cref="CreateTensor(string, torch.Tensor)"/>を使用して<see cref="TensorProto"/>に変換します。
+    /// サポートされているテンソル型はfloat32のみです。
+    /// </remarks>
+    /// <param name="name">属性名</param>
+    /// <param name="tensor">TorchSharpのテンソル値</param>
+    /// <returns>構成された<see cref="AttributeProto"/>インスタンス</returns>
+    /// <exception cref="NotSupportedException">テンソルのデータ型がfloat32以外の場合</exception>
+    /// <example>
+    /// <code>
+    /// // TorchSharpテンソルをConstantノードのvalue属性として使用
+    /// var tensor = torch.tensor(new float[] { 1.0f, 2.0f, 3.0f });
+    /// var valueAttr = OnnxUtility.CreateAttribute("value", tensor);
+    /// </code>
+    /// </example>
+    public static AttributeProto CreateAttribute(string name, torch.Tensor tensor)
+    {
+        var tensorProto = CreateTensor(name, tensor);
+        return CreateAttribute(name, tensorProto);
+    }
+
     #endregion
 
     #region AttributeProto - Array Values
@@ -409,6 +434,35 @@ public static class OnnxUtility
 
         attribute.Tensors.AddRange(values);
         return attribute;
+    }
+
+    /// <summary>
+    /// TorchSharpのテンソル配列からテンソル型配列属性を作成します。
+    /// </summary>
+    /// <remarks>
+    /// 各テンソルは内部で<see cref="CreateTensor(string, torch.Tensor)"/>を使用して<see cref="TensorProto"/>に変換されます。
+    /// テンソル名は「{属性名}_{インデックス}」の形式で自動生成されます。
+    /// サポートされているテンソル型はfloat32のみです。
+    /// </remarks>
+    /// <param name="name">属性名</param>
+    /// <param name="tensors">TorchSharpのテンソル値の配列</param>
+    /// <returns>構成された<see cref="AttributeProto"/>インスタンス</returns>
+    /// <exception cref="NotSupportedException">テンソルのデータ型がfloat32以外の場合</exception>
+    /// <example>
+    /// <code>
+    /// // 複数のTorchSharpテンソルを属性として設定
+    /// var tensors = new[]
+    /// {
+    ///     torch.tensor(new float[] { 1.0f, 2.0f }),
+    ///     torch.tensor(new float[] { 3.0f, 4.0f }),
+    /// };
+    /// var attr = OnnxUtility.CreateAttribute("tensors", tensors);
+    /// </code>
+    /// </example>
+    public static AttributeProto CreateAttribute(string name, torch.Tensor[] tensors)
+    {
+        var tensorProtos = tensors.Select((t, i) => CreateTensor($"{name}_{i}", t)).ToArray();
+        return CreateAttribute(name, tensorProtos);
     }
 
     #endregion
@@ -532,6 +586,41 @@ public static class OnnxUtility
     /// </example>
     public static TensorProto CreateTensor(string name, float[] data, params long[] dims)
         => CreateTensorProtoCore(name, data.AsSpan(), dims);
+
+    /// <summary>
+    /// TorchSharpのテンソルから<see cref="TensorProto"/>を作成します。
+    /// </summary>
+    /// <remarks>
+    /// <para>テンソルがCPU以外のデバイス（GPU等）に配置されている場合、自動的にCPUにコピーされます。</para>
+    /// <para>現在サポートされているデータ型はfloat32のみです。</para>
+    /// </remarks>
+    /// <param name="name">テンソル名</param>
+    /// <param name="tensor">変換するTorchSharpのテンソル</param>
+    /// <returns>構成された<see cref="TensorProto"/>インスタンス</returns>
+    /// <exception cref="NotSupportedException">テンソルのデータ型がfloat32以外の場合</exception>
+    /// <example>
+    /// <code>
+    /// // TorchSharpテンソルからTensorProtoを作成
+    /// var torchTensor = torch.randn(new long[] { 3, 4 });
+    /// var tensorProto = OnnxUtility.CreateTensor("weight", torchTensor);
+    /// 
+    /// // GPUテンソルも自動的にCPUにコピーされる
+    /// var gpuTensor = torch.randn(new long[] { 3, 4 }, device: torch.CUDA);
+    /// var tensorProtoFromGpu = OnnxUtility.CreateTensor("gpu_weight", gpuTensor);
+    /// </code>
+    /// </example>
+    public static TensorProto CreateTensor(string name, torch.Tensor tensor)
+    {
+        if (tensor.dtype != torch.float32)
+        {
+            throw new NotSupportedException("サポートしているテンソル型はfloat32のみです。");
+        }
+
+        var cpuTensor = tensor.device_type == DeviceType.CPU ? tensor : tensor.to(DeviceType.CPU);
+        var data = cpuTensor.data<float>().ToArray();
+        var dims = cpuTensor.shape.ToArray();
+        return CreateTensorProtoCore(name, data.AsSpan(), dims);
+    }
 
     #endregion
 
