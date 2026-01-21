@@ -34,5 +34,5 @@ public class AgariAction : MjlogAction
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
-    public override string ToString() => "Agari";
+    public override string ToString() => "和了";
 }

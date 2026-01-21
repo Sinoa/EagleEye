@@ -72,7 +72,17 @@ public class MeldInfo
     /// </summary>
     public override string ToString()
     {
+        var typeStr = Type switch
+        {
+            MeldType.Chi => "チー",
+            MeldType.Pon => "ポン",
+            MeldType.DaiMinKan => "大明槓",
+            MeldType.KaKan => "加槓",
+            MeldType.AnKan => "暗槓",
+            MeldType.Nuki => "北抜き",
+            _ => "不明な鳴き"
+        };
         var tilesStr = string.Join("", Tiles.Select(t => t.DisplayName));
-        return $"{Type}[{tilesStr}]";
+        return $"{typeStr}[{tilesStr}]";
     }
 }

@@ -37,5 +37,5 @@ public class DrawAction : MjlogAction
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
-    public override string ToString() => $"Draw({Tile?.DisplayName ?? "?"})";
+    public override string ToString() => $"ツモ({Tile?.DisplayName ?? "?"})";
 }

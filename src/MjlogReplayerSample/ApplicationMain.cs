@@ -228,9 +228,11 @@ public static class ApplicationMain
         for (var i = 0; i < state.PlayerCount; i++)
         {
             var player = state.GetPlayer(i);
-            var handStr = string.Join("", player.Hand.Select(t => t.DisplayName));
+            var handStr = string.Join(",", player.Hand.Select(t => t.DisplayName));
+            var discardStr = string.Join(",", player.Discards.Select(d => d.Tile.DisplayName));
             var reachStr = player.IsReach ? " [リーチ]" : "";
             Console.WriteLine($"    P{i}: 手牌[{handStr}]{reachStr}");
+            Console.WriteLine($"          捨て牌[{discardStr}]");
         }
     }
 

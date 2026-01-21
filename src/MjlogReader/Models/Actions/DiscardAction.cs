@@ -43,6 +43,6 @@ public class DiscardAction : MjlogAction
     public override string ToString()
     {
         var tsumogiriMark = IsTsumogiri ? "*" : "";
-        return $"Discard({Tile?.DisplayName ?? "?"}{tsumogiriMark})";
+        return $"打牌({Tile?.DisplayName ?? "?"}{tsumogiriMark})";
     }
 }

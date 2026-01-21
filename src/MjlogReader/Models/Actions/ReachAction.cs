@@ -40,5 +40,5 @@ public class ReachAction : MjlogAction
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
-    public override string ToString() => $"Reach(Step={Step})";
+    public override string ToString() => $"リーチ(Step={Step})";
 }

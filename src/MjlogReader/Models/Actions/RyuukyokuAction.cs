@@ -34,5 +34,5 @@ public class RyuukyokuAction : MjlogAction
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
-    public override string ToString() => "Ryuukyoku";
+    public override string ToString() => "流局";
 }

@@ -37,5 +37,5 @@ public class MeldAction : MjlogAction
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
-    public override string ToString() => $"Meld({Meld})";
+    public override string ToString() => $"鳴き({Meld})";
 }

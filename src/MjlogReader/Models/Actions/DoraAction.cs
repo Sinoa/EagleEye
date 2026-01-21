@@ -37,5 +37,5 @@ public class DoraAction : MjlogAction
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
-    public override string ToString() => $"Dora({Tile?.DisplayName ?? "?"})";
+    public override string ToString() => $"ドラ({Tile?.DisplayName ?? "?"})";
 }
