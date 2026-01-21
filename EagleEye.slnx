@@ -2,6 +2,7 @@
     <Folder Name="/Lib/">
         <Project Path="src/MjlogReader/MjlogReader.csproj" />
         <Project Path="src/MjlogReplayer/MjlogReplayer.csproj" />
+        <Project Path="src/OnnxExporter/OnnxExporter.csproj" />
     </Folder>
     <Folder Name="/Sample/">
         <Project Path="src/MjlogReaderSample/MjlogReaderSample.csproj" />
