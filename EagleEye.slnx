@@ -3,4 +3,7 @@
         <Project Path="src/MjlogReader/MjlogReader.csproj" />
         <Project Path="src/MjlogReplayer/MjlogReplayer.csproj" />
     </Folder>
+    <Folder Name="/Sample/">
+        <Project Path="src/MjlogReaderSample/MjlogReaderSample.csproj" />
+    </Folder>
 </Solution>
