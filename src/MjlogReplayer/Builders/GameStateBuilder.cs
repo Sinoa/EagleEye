@@ -39,6 +39,7 @@ public class GameStateBuilder
     private int _dealerId;
     private int _turnNumber = 1;
     private int _stepIndex;
+    private MjlogStep? _sourceStep;
     private readonly List<PlayerStateBuilder> _playerBuilders = [];
     private readonly List<Tile> _doraIndicators = [];
     private readonly List<List<Tile>> _nukiDoras = [];
@@ -144,6 +145,17 @@ public class GameStateBuilder
     }
 
     /// <summary>
+    /// 起因ステップを設定
+    /// </summary>
+    /// <param name="sourceStep">起因となるステップ</param>
+    /// <returns>ビルダーインスタンス</returns>
+    public GameStateBuilder WithSourceStep(MjlogStep? sourceStep)
+    {
+        _sourceStep = sourceStep;
+        return this;
+    }
+
+    /// <summary>
     /// ドラ表示牌を追加
     /// </summary>
     /// <param name="doraIndicator">ドラ表示牌</param>
@@ -222,7 +234,8 @@ public class GameStateBuilder
                 _turnNumber,
                 _stepIndex,
                 players,
-                _doraIndicators);
+                _doraIndicators,
+                _sourceStep);
         }
         else
         {
@@ -236,7 +249,8 @@ public class GameStateBuilder
                 _stepIndex,
                 players,
                 _doraIndicators,
-                _nukiDoras.Select(l => (IReadOnlyList<Tile>)l.ToList()).ToList());
+                _nukiDoras.Select(l => (IReadOnlyList<Tile>)l.ToList()).ToList(),
+                _sourceStep);
         }
     }
 }

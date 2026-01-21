@@ -171,6 +171,9 @@ public class SessionReplayer
                 break;
         }
 
+        // 起因ステップを設定
+        newState = newState.WithSourceStep(step);
+
         return newState;
     }
 

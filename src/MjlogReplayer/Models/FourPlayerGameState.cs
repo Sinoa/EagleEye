@@ -45,8 +45,9 @@ public record FourPlayerGameState : GameState
         int turnNumber,
         int stepIndex,
         IReadOnlyList<PlayerState> players,
-        IReadOnlyList<Tile> doraIndicators)
-        : base(roundWind, roundNumber, honba, kyotaku, dealerId, turnNumber, stepIndex, players, doraIndicators)
+        IReadOnlyList<Tile> doraIndicators,
+        MjlogStep? sourceStep)
+        : base(roundWind, roundNumber, honba, kyotaku, dealerId, turnNumber, stepIndex, players, doraIndicators, sourceStep)
     {
         if (players.Count != 4)
         {
@@ -105,7 +106,8 @@ public record FourPlayerGameState : GameState
             1, // 巡目は1から開始
             0, // ステップは0から開始
             players,
-            doraIndicators);
+            doraIndicators,
+            null); // 初期状態なので起因ステップはなし
     }
 
     /// <inheritdoc/>
@@ -145,5 +147,11 @@ public record FourPlayerGameState : GameState
     public override GameState WithKyotaku(int newKyotaku)
     {
         return this with { Kyotaku = newKyotaku };
+    }
+
+    /// <inheritdoc/>
+    public override GameState WithSourceStep(MjlogStep? step)
+    {
+        return this with { SourceStep = step };
     }
 }

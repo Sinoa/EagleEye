@@ -37,6 +37,7 @@ namespace Foxtamp.MjlogReplayer.Models;
 /// <param name="StepIndex">ステップインデックス（0から始まる）</param>
 /// <param name="Players">各プレイヤーの状態</param>
 /// <param name="DoraIndicators">ドラ表示牌</param>
+/// <param name="SourceStep">この状態になった起因となるステップ（初期状態の場合はnull）</param>
 public abstract record GameState(
     int RoundWind,
     int RoundNumber,
@@ -46,7 +47,8 @@ public abstract record GameState(
     int TurnNumber,
     int StepIndex,
     IReadOnlyList<PlayerState> Players,
-    IReadOnlyList<Tile> DoraIndicators)
+    IReadOnlyList<Tile> DoraIndicators,
+    MjlogStep? SourceStep)
 {
     /// <summary>
     /// プレイヤー人数
@@ -117,6 +119,13 @@ public abstract record GameState(
     /// <param name="newKyotaku">新しい供託数</param>
     /// <returns>更新されたGameState</returns>
     public abstract GameState WithKyotaku(int newKyotaku);
+
+    /// <summary>
+    /// 起因ステップを更新した新しいGameStateを作成
+    /// </summary>
+    /// <param name="step">起因となるステップ</param>
+    /// <returns>更新されたGameState</returns>
+    public abstract GameState WithSourceStep(MjlogStep? step);
 
     /// <summary>
     /// 文字列表現を取得

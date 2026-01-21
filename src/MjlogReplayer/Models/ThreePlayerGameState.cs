@@ -51,8 +51,9 @@ public record ThreePlayerGameState : GameState
         int stepIndex,
         IReadOnlyList<PlayerState> players,
         IReadOnlyList<Tile> doraIndicators,
-        IReadOnlyList<IReadOnlyList<Tile>> nukiDoras)
-        : base(roundWind, roundNumber, honba, kyotaku, dealerId, turnNumber, stepIndex, players, doraIndicators)
+        IReadOnlyList<IReadOnlyList<Tile>> nukiDoras,
+        MjlogStep? sourceStep)
+        : base(roundWind, roundNumber, honba, kyotaku, dealerId, turnNumber, stepIndex, players, doraIndicators, sourceStep)
     {
         if (players.Count != 3)
         {
@@ -127,7 +128,8 @@ public record ThreePlayerGameState : GameState
             0, // ステップは0から開始
             players,
             doraIndicators,
-            nukiDoras);
+            nukiDoras,
+            null); // 初期状態なので起因ステップはなし
     }
 
     /// <inheritdoc/>
@@ -167,6 +169,12 @@ public record ThreePlayerGameState : GameState
     public override GameState WithKyotaku(int newKyotaku)
     {
         return this with { Kyotaku = newKyotaku };
+    }
+
+    /// <inheritdoc/>
+    public override GameState WithSourceStep(MjlogStep? step)
+    {
+        return this with { SourceStep = step };
     }
 
     /// <summary>
