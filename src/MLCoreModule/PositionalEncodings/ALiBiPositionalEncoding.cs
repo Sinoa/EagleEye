@@ -36,10 +36,8 @@ namespace Foxtamp.MLCoreModule.PositionalEncodings;
 /// </remarks>
 public sealed class ALiBiPositionalEncoding : Module, IPositionalEncoding
 {
-    private readonly float _slope;
-    private Tensor? _biasCache;
-    private int _cachedQueryLength;
-    private int _cachedKeyLength;
+    private readonly int _maxLength;
+    private readonly Tensor _biasTable;
 
     /// <inheritdoc/>
     public PositionalEncodingType EncodingType => PositionalEncodingType.ScoreBias;
@@ -47,45 +45,54 @@ public sealed class ALiBiPositionalEncoding : Module, IPositionalEncoding
     /// <summary>
     /// ALiBiインスタンスを初期化します。
     /// </summary>
+    /// <param name="maxLength">サポートする最大シーケンス長</param>
     /// <param name="slope">バイアスの傾き（シングルヘッド用）。デフォルトは1.0</param>
+    /// <param name="device">テンソルを配置するデバイス（デフォルト: CPU）</param>
+    /// <param name="dtype">テンソルのデータ型（デフォルト: float32）</param>
     /// <remarks>
     /// マルチヘッドアテンションの場合、各ヘッドで異なるslopeを使用しますが、
     /// このシングルヘッド実装では単一のslopeを使用します。
     /// 一般的なマルチヘッドでは slope = 2^(-8/n) * 2^(-head_index) のような値を使用します。
     /// </remarks>
-    public ALiBiPositionalEncoding(float slope = 1.0f) : base(nameof(ALiBiPositionalEncoding))
+    public ALiBiPositionalEncoding(int maxLength = 2048, float slope = 1.0f, Device? device = null, ScalarType dtype = ScalarType.Float32)
+        : base(nameof(ALiBiPositionalEncoding))
     {
-        _slope = slope;
+        _maxLength = maxLength;
+        var targetDevice = device ?? CPU;
+
+        // 事前にバイアステーブルを生成 [maxLength, maxLength]
+        _biasTable = BuildBias(maxLength, maxLength, targetDevice, dtype, slope);
+
+        // バッファとして登録（persistent=trueで永続化）
+        register_buffer("alibi_bias", _biasTable, persistent: true);
     }
 
     /// <inheritdoc/>
+    /// <exception cref="NotSupportedException">ALiBiはScoreBiasタイプのため、ApplyToQueryKeyはサポートされていません。</exception>
     public (Tensor query, Tensor key) ApplyToQueryKey(Tensor query, Tensor key, int positionOffset = 0)
     {
         throw new NotSupportedException("ALiBiはScoreBiasタイプのため、ApplyToQueryKeyはサポートされていません。");
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentOutOfRangeException">queryLength または keyLength が最大長を超えました。</exception>
     public Tensor GetScoreBias(int queryLength, int keyLength, Device device, ScalarType dtype)
     {
-        if (_biasCache is not null
-            && _cachedQueryLength == queryLength
-            && _cachedKeyLength == keyLength
-            && _biasCache.device == device
-            && _biasCache.dtype == dtype)
+        if (queryLength > _maxLength || keyLength > _maxLength)
         {
-            return _biasCache;
+            throw new ArgumentOutOfRangeException($"要求されたシーケンス長（query: {queryLength}, key: {keyLength}）が最大長（{_maxLength}）を超えています。");
         }
 
-        _biasCache?.Dispose();
-        _biasCache = BuildBias(queryLength, keyLength, device, dtype);
-        _cachedQueryLength = queryLength;
-        _cachedKeyLength = keyLength;
+        // 事前生成したテーブルから必要な範囲をスライス
+        var bias = _biasTable[TensorIndex.Slice(0, queryLength), TensorIndex.Slice(0, keyLength)];
 
-        // バッファとして登録（persistent=trueで永続化）
-        register_buffer("bias", _biasCache, persistent: true);
-        RegisterComponents();
+        // デバイスまたはデータ型が異なる場合は変換
+        if (bias.device != device || bias.dtype != dtype)
+        {
+            bias = bias.to(dtype, device);
+        }
 
-        return _biasCache;
+        return bias;
     }
 
     /// <summary>
@@ -95,8 +102,9 @@ public sealed class ALiBiPositionalEncoding : Module, IPositionalEncoding
     /// <param name="keyLength">Keyのシーケンス長</param>
     /// <param name="device">デバイス</param>
     /// <param name="dtype">データ型</param>
+    /// <param name="slope">バイアスの傾き</param>
     /// <returns>バイアステンソル [queryLength, keyLength]</returns>
-    private Tensor BuildBias(int queryLength, int keyLength, Device device, ScalarType dtype)
+    private static Tensor BuildBias(int queryLength, int keyLength, Device device, ScalarType dtype, float slope = 1.0f)
     {
         // ALiBiは相対位置に基づくバイアスを計算
         // bias[i, j] = -slope * |i - j| (因果的マスクの場合は i - j >= 0 の範囲のみ)
@@ -108,19 +116,7 @@ public sealed class ALiBiPositionalEncoding : Module, IPositionalEncoding
         var relativePositions = queryPositions - keyPositions;
 
         // 負の傾きを適用（遠い位置ほどペナルティ）
-        var bias = -_slope * abs(relativePositions);
-
+        var bias = -slope * abs(relativePositions);
         return bias.to(dtype);
-    }
-
-    /// <summary>
-    /// キャッシュを解放します。
-    /// </summary>
-    public void ClearCache()
-    {
-        _biasCache?.Dispose();
-        _biasCache = null;
-        _cachedQueryLength = 0;
-        _cachedKeyLength = 0;
     }
 }

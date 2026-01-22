@@ -43,19 +43,22 @@ public sealed class CrossAttention : AttentionBase
     /// <param name="valueDimension">Valueの内部次元数（nullの場合はembeddingDimensionを使用）</param>
     /// <param name="dropoutProbability">アテンション重みのドロップアウト確率（0.0で無効化）</param>
     /// <param name="positionalEncoding">位置エンコーディング（nullで無効化）</param>
+    /// <param name="useBias">線形変換にバイアスを使用するかどうか</param>
     public CrossAttention(
         int embeddingDimension,
         int? queryDimension = null,
         int? valueDimension = null,
         float dropoutProbability = 0.0f,
-        IPositionalEncoding? positionalEncoding = null)
+        IPositionalEncoding? positionalEncoding = null,
+        bool useBias = false)
         : base(
             nameof(CrossAttention),
             embeddingDimension,
             queryDimension,
             valueDimension,
             dropoutProbability,
-            positionalEncoding)
+            positionalEncoding,
+            useBias)
     {
     }
 }

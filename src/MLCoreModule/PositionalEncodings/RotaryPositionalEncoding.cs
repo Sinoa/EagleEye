@@ -36,10 +36,9 @@ namespace Foxtamp.MLCoreModule.PositionalEncodings;
 /// </remarks>
 public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
 {
-    private readonly int _dimension;
-    private readonly float _baseFrequency;
-    private Tensor? _cosCache;
-    private Tensor? _sinCache;
+    private readonly int _maxSequenceLength;
+    private readonly Tensor _cosCache;
+    private readonly Tensor _sinCache;
 
     /// <inheritdoc/>
     public PositionalEncodingType EncodingType => PositionalEncodingType.QueryKeyTransform;
@@ -50,8 +49,15 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
     /// <param name="dimension">埋め込み次元数（偶数である必要があります）</param>
     /// <param name="maxSequenceLength">サポートする最大シーケンス長</param>
     /// <param name="baseFrequency">基底周波数（デフォルト: 10000.0）</param>
+    /// <param name="device">テンソルを配置するデバイス（デフォルト: CPU）</param>
+    /// <param name="dtype">テンソルのデータ型（デフォルト: float32）</param>
     /// <exception cref="ArgumentException">dimensionが偶数でない場合</exception>
-    public RotaryPositionalEncoding(int dimension, int maxSequenceLength = 2048, float baseFrequency = 10000.0f)
+    public RotaryPositionalEncoding(
+        int dimension,
+        int maxSequenceLength = 2048,
+        float baseFrequency = 10000.0f,
+        Device? device = null,
+        ScalarType dtype = ScalarType.Float32)
         : base(nameof(RotaryPositionalEncoding))
     {
         if (dimension % 2 != 0)
@@ -59,21 +65,54 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
             throw new ArgumentException("次元数は偶数である必要があります。", nameof(dimension));
         }
 
-        _dimension = dimension;
-        _baseFrequency = baseFrequency;
+        _maxSequenceLength = maxSequenceLength;
+        var targetDevice = device ?? CPU;
+
+        // 事前に最大長までのsin/cosキャッシュを生成
+        var halfDim = dimension / 2;
+
+        // 逆周波数の計算: 1 / (base^(2i/d)) for i in [0, d/2)
+        using var invFreqIndices = arange(0, halfDim, dtype: ScalarType.Float32, device: targetDevice);
+        using var invFreq = 1.0f / pow(baseFrequency, invFreqIndices * 2.0f / dimension);
+
+        // 位置インデックス
+        using var positions = arange(0, maxSequenceLength, dtype: ScalarType.Float32, device: targetDevice);
+
+        // 位置 × 逆周波数 [maxSequenceLength, halfDim]
+        using var freqs = outer(positions, invFreq);
+
+        // キャッシュを作成
+        _cosCache = cos(freqs).to(dtype);
+        _sinCache = sin(freqs).to(dtype);
+
+        // バッファとして登録（persistent=trueで永続化）
+        register_buffer("rope_cos", _cosCache, persistent: true);
+        register_buffer("rope_sin", _sinCache, persistent: true);
     }
 
     /// <inheritdoc/>
+    /// <exception cref="ArgumentOutOfRangeException">最大長を超えた位置が入力されています。</exception>
     public (Tensor query, Tensor key) ApplyToQueryKey(Tensor query, Tensor key, int positionOffset = 0)
     {
         var seqLen = (int)query.shape[1];
         var device = query.device;
         var dtype = query.dtype;
 
-        EnsureCacheBuilt(seqLen + positionOffset, device, dtype);
+        if (positionOffset + seqLen > _maxSequenceLength)
+        {
+            throw new ArgumentOutOfRangeException($"要求されたシーケンス範囲（offset: {positionOffset}, length: {seqLen}）が最大長（{_maxSequenceLength}）を超えています。");
+        }
 
-        var cos = _cosCache![TensorIndex.Slice(positionOffset, positionOffset + seqLen)];
-        var sin = _sinCache![TensorIndex.Slice(positionOffset, positionOffset + seqLen)];
+        // 事前生成したキャッシュから必要な範囲をスライス
+        var cos = _cosCache[TensorIndex.Slice(positionOffset, positionOffset + seqLen)];
+        var sin = _sinCache[TensorIndex.Slice(positionOffset, positionOffset + seqLen)];
+
+        // デバイスまたはデータ型が異なる場合は変換
+        if (cos.device != device || cos.dtype != dtype)
+        {
+            cos = cos.to(dtype, device);
+            sin = sin.to(dtype, device);
+        }
 
         var rotatedQuery = ApplyRotaryEmbedding(query, cos, sin);
         var rotatedKey = ApplyRotaryEmbedding(key, cos, sin);
@@ -82,6 +121,7 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
     }
 
     /// <inheritdoc/>
+    /// <exception cref="NotSupportedException">RoPEはQueryKeyTransformタイプのため、GetScoreBiasはサポートされていません。</exception>
     public Tensor GetScoreBias(int queryLength, int keyLength, Device device, ScalarType dtype)
     {
         throw new NotSupportedException("RoPEはQueryKeyTransformタイプのため、GetScoreBiasはサポートされていません。");
@@ -106,54 +146,5 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
         var rotatedX2 = x1 * sin + x2 * cos;
 
         return cat([rotatedX1, rotatedX2], dim: -1);
-    }
-
-    /// <summary>
-    /// sin/cosキャッシュを構築します。
-    /// </summary>
-    /// <param name="seqLen">必要なシーケンス長</param>
-    /// <param name="device">デバイス</param>
-    /// <param name="dtype">データ型</param>
-    private void EnsureCacheBuilt(int seqLen, Device device, ScalarType dtype)
-    {
-        if (_cosCache is not null && _sinCache is not null && _cosCache.shape[0] >= seqLen && _cosCache.device == device && _cosCache.dtype == dtype)
-        {
-            return;
-        }
-
-        var halfDim = _dimension / 2;
-
-        // 逆周波数の計算: 1 / (base^(2i/d)) for i in [0, d/2)
-        using var invFreqIndices = arange(0, halfDim, dtype: ScalarType.Float32, device: device);
-        var invFreq = 1.0f / pow(_baseFrequency, invFreqIndices * 2.0f / _dimension);
-
-        // 位置インデックス
-        using var positions = arange(0, seqLen, dtype: ScalarType.Float32, device: device);
-
-        // 位置 × 逆周波数 [seqLen, halfDim]
-        var freqs = outer(positions, invFreq);
-
-        // キャッシュを作成
-        _cosCache?.Dispose();
-        _sinCache?.Dispose();
-
-        _cosCache = cos(freqs).to(dtype);
-        _sinCache = sin(freqs).to(dtype);
-
-        // バッファとして登録（persistent=trueで永続化）
-        register_buffer("cos", _cosCache, persistent: true);
-        register_buffer("sin", _sinCache, persistent: true);
-        RegisterComponents();
-    }
-
-    /// <summary>
-    /// キャッシュを解放します。
-    /// </summary>
-    public void ClearCache()
-    {
-        _cosCache?.Dispose();
-        _sinCache?.Dispose();
-        _cosCache = null;
-        _sinCache = null;
     }
 }

@@ -154,8 +154,6 @@ public abstract class AttentionBase : Module<Tensor, Tensor, Tensor, Tensor?, in
         var attentionOutput = _attention.forward(query, key, value, mask, scoreBias);
 
         // 出力投影
-        var output = _outputProjection.forward(attentionOutput);
-
-        return output;
+        return _outputProjection.forward(attentionOutput);
     }
 }

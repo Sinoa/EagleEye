@@ -56,7 +56,7 @@ public sealed class ScaledDotProductAttention : Module
         if (dropoutProbability > 0.0f)
         {
             _dropout = Dropout(dropoutProbability);
-            RegisterComponents();
+            register_module("dropout", _dropout);
         }
     }
 
