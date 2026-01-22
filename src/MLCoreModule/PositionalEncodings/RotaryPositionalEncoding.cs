@@ -94,7 +94,7 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
     /// <exception cref="ArgumentOutOfRangeException">最大長を超えた位置が入力されています。</exception>
     public (Tensor query, Tensor key) ApplyToQueryKey(Tensor query, Tensor key, int positionOffset = 0)
     {
-        var seqLen = (int)query.shape[1];
+        var seqLen = (int)query.shape[^2];
         var device = query.device;
         var dtype = query.dtype;
 
@@ -140,15 +140,14 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
     /// <returns>回転適用後のテンソル</returns>
     private static Tensor ApplyRotaryEmbedding(Tensor x, Tensor cos, Tensor sin)
     {
-        var halfDim = x.shape[2] / 2;
+        var halfDim = x.shape[^1] / 2;
 
-        var x1 = x[TensorIndex.Colon, TensorIndex.Colon, TensorIndex.Slice(0, halfDim)];
-        var x2 = x[TensorIndex.Colon, TensorIndex.Colon, TensorIndex.Slice(halfDim)];
+        using var x1 = x.Dimensions == 3 ? x[TensorIndex.Colon, TensorIndex.Colon, TensorIndex.Slice(0, halfDim)] : x[TensorIndex.Colon, TensorIndex.Slice(0, halfDim)];
+        using var x2 = x.Dimensions == 3 ? x[TensorIndex.Colon, TensorIndex.Colon, TensorIndex.Slice(halfDim)] : x[TensorIndex.Colon, TensorIndex.Slice(halfDim)];
 
         // 回転変換: [x1, x2] -> [x1*cos - x2*sin, x1*sin + x2*cos]
-        var rotatedX1 = x1 * cos - x2 * sin;
-        var rotatedX2 = x1 * sin + x2 * cos;
-
+        using var rotatedX1 = x1 * cos - x2 * sin;
+        using var rotatedX2 = x1 * sin + x2 * cos;
         return cat([rotatedX1, rotatedX2], dim: -1);
     }
 }

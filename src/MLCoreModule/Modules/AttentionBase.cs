@@ -140,8 +140,8 @@ public abstract class AttentionBase : Module<Tensor, Tensor, Tensor, Tensor?, in
 
                 case PositionalEncodingType.ScoreBias:
                     // ALiBi: スコアバイアスを取得
-                    var queryLen = (int)query.shape[1];
-                    var keyLen = (int)key.shape[1];
+                    var queryLen = (int)query.shape[^2];
+                    var keyLen = (int)key.shape[^2];
                     scoreBias = _positionalEncoding.GetScoreBias(queryLen, keyLen, query.device, query.dtype);
                     break;
 
@@ -151,7 +151,7 @@ public abstract class AttentionBase : Module<Tensor, Tensor, Tensor, Tensor?, in
         }
 
         // Scaled Dot-Product Attention
-        var attentionOutput = _attention.forward(query, key, value, mask, scoreBias);
+        using var attentionOutput = _attention.forward(query, key, value, mask, scoreBias);
 
         // 出力投影
         return _outputProjection.forward(attentionOutput);
