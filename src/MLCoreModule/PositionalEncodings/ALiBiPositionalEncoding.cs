@@ -22,6 +22,7 @@
 // distribution.
 
 using static TorchSharp.torch;
+using static TorchSharp.torch.nn;
 
 namespace Foxtamp.MLCoreModule.PositionalEncodings;
 
@@ -33,7 +34,7 @@ namespace Foxtamp.MLCoreModule.PositionalEncodings;
 /// 参考論文: "Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation"
 /// https://arxiv.org/abs/2108.12409
 /// </remarks>
-public sealed class ALiBiPositionalEncoding : IPositionalEncoding
+public sealed class ALiBiPositionalEncoding : Module, IPositionalEncoding
 {
     private readonly float _slope;
     private Tensor? _biasCache;
@@ -52,7 +53,7 @@ public sealed class ALiBiPositionalEncoding : IPositionalEncoding
     /// このシングルヘッド実装では単一のslopeを使用します。
     /// 一般的なマルチヘッドでは slope = 2^(-8/n) * 2^(-head_index) のような値を使用します。
     /// </remarks>
-    public ALiBiPositionalEncoding(float slope = 1.0f)
+    public ALiBiPositionalEncoding(float slope = 1.0f) : base(nameof(ALiBiPositionalEncoding))
     {
         _slope = slope;
     }
@@ -79,6 +80,10 @@ public sealed class ALiBiPositionalEncoding : IPositionalEncoding
         _biasCache = BuildBias(queryLength, keyLength, device, dtype);
         _cachedQueryLength = queryLength;
         _cachedKeyLength = keyLength;
+
+        // バッファとして登録（persistent=trueで永続化）
+        register_buffer("bias", _biasCache, persistent: true);
+        RegisterComponents();
 
         return _biasCache;
     }

@@ -22,6 +22,7 @@
 // distribution.
 
 using static TorchSharp.torch;
+using static TorchSharp.torch.nn;
 
 namespace Foxtamp.MLCoreModule.PositionalEncodings;
 
@@ -33,7 +34,7 @@ namespace Foxtamp.MLCoreModule.PositionalEncodings;
 /// 参考論文: "RoFormer: Enhanced Transformer with Rotary Position Embedding"
 /// https://arxiv.org/abs/2104.09864
 /// </remarks>
-public sealed class RotaryPositionalEncoding : IPositionalEncoding
+public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
 {
     private readonly int _dimension;
     private readonly float _baseFrequency;
@@ -51,6 +52,7 @@ public sealed class RotaryPositionalEncoding : IPositionalEncoding
     /// <param name="baseFrequency">基底周波数（デフォルト: 10000.0）</param>
     /// <exception cref="ArgumentException">dimensionが偶数でない場合</exception>
     public RotaryPositionalEncoding(int dimension, int maxSequenceLength = 2048, float baseFrequency = 10000.0f)
+        : base(nameof(RotaryPositionalEncoding))
     {
         if (dimension % 2 != 0)
         {
@@ -137,6 +139,11 @@ public sealed class RotaryPositionalEncoding : IPositionalEncoding
 
         _cosCache = cos(freqs).to(dtype);
         _sinCache = sin(freqs).to(dtype);
+
+        // バッファとして登録（persistent=trueで永続化）
+        register_buffer("cos", _cosCache, persistent: true);
+        register_buffer("sin", _sinCache, persistent: true);
+        RegisterComponents();
     }
 
     /// <summary>

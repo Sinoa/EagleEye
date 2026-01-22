@@ -70,6 +70,7 @@ public abstract class AttentionBase : Module<Tensor, Tensor, Tensor, Tensor?, in
     /// <summary>
     /// 位置エンコーディング（オプション）
     /// </summary>
+    [ComponentName(Name = "positional_encoding")]
     private readonly IPositionalEncoding? _positionalEncoding;
 
     /// <summary>
