@@ -113,10 +113,11 @@ public sealed class ALiBiPositionalEncoding : Module, IPositionalEncoding
         using var keyPositions = arange(keyLength, dtype: ScalarType.Float32, device: device).unsqueeze(0);
 
         // 相対距離を計算
-        var relativePositions = queryPositions - keyPositions;
+        using var relativePositions = queryPositions - keyPositions;
 
         // 負の傾きを適用（遠い位置ほどペナルティ）
-        var bias = -slope * abs(relativePositions);
+        using var absPositions = abs(relativePositions);
+        using var bias = -slope * absPositions;
         return bias.to(dtype);
     }
 }

@@ -110,8 +110,12 @@ public sealed class RotaryPositionalEncoding : Module, IPositionalEncoding
         // デバイスまたはデータ型が異なる場合は変換
         if (cos.device != device || cos.dtype != dtype)
         {
-            cos = cos.to(dtype, device);
-            sin = sin.to(dtype, device);
+            var newCos = cos.to(dtype, device);
+            var newSin = sin.to(dtype, device);
+            cos.Dispose();
+            sin.Dispose();
+            cos = newCos;
+            sin = newSin;
         }
 
         var rotatedQuery = ApplyRotaryEmbedding(query, cos, sin);
