@@ -35,6 +35,12 @@ namespace Foxtamp.MLCoreModule.Modules;
 /// </remarks>
 public sealed class ScaledDotProductAttention : Module
 {
+    /// <summary>
+    /// マスク位置に適用する負の大きな値。
+    /// 数値安定性のため、NegativeInfinityではなく-1e9を使用。
+    /// </summary>
+    private const float MaskValue = -1e9f;
+
     private readonly Dropout? _dropout;
     private readonly float _scale;
 
@@ -82,14 +88,14 @@ public sealed class ScaledDotProductAttention : Module
         // マスクを適用
         if (mask is not null)
         {
-            // boolマスクの場合、Trueの位置に-infを設定
+            // boolマスクの場合、Trueの位置に大きな負の値を設定
             if (mask.dtype == ScalarType.Bool)
             {
-                scores = scores.masked_fill(mask, float.NegativeInfinity);
+                scores = scores.masked_fill(mask, MaskValue);
             }
             else
             {
-                // floatマスクの場合は直接加算（-infが含まれている想定）
+                // floatマスクの場合は直接加算（大きな負の値が含まれている想定）
                 scores += mask;
             }
         }
