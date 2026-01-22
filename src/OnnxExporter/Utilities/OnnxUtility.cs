@@ -403,7 +403,7 @@ public static class OnnxUtility
             Type = AttributeProto.Types.AttributeType.Strings,
         };
 
-        attribute.Strings.AddRange(values.Select(x => ByteString.CopyFromUtf8(x)));
+        attribute.Strings.AddRange(values.Select(ByteString.CopyFromUtf8));
         return attribute;
     }
 
