@@ -21,7 +21,6 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using TorchSharp;
 using static TorchSharp.torch;
 
 namespace Foxtamp.MLCoreModule.PositionalEncodings;
@@ -104,7 +103,7 @@ public sealed class RotaryPositionalEncoding : IPositionalEncoding
         var rotatedX1 = x1 * cos - x2 * sin;
         var rotatedX2 = x1 * sin + x2 * cos;
 
-        return torch.cat([rotatedX1, rotatedX2], dim: -1);
+        return cat([rotatedX1, rotatedX2], dim: -1);
     }
 
     /// <summary>
@@ -123,21 +122,21 @@ public sealed class RotaryPositionalEncoding : IPositionalEncoding
         var halfDim = _dimension / 2;
 
         // 逆周波数の計算: 1 / (base^(2i/d)) for i in [0, d/2)
-        using var invFreqIndices = torch.arange(0, halfDim, dtype: ScalarType.Float32, device: device);
-        var invFreq = 1.0f / torch.pow(_baseFrequency, invFreqIndices * 2.0f / _dimension);
+        using var invFreqIndices = arange(0, halfDim, dtype: ScalarType.Float32, device: device);
+        var invFreq = 1.0f / pow(_baseFrequency, invFreqIndices * 2.0f / _dimension);
 
         // 位置インデックス
-        using var positions = torch.arange(0, seqLen, dtype: ScalarType.Float32, device: device);
+        using var positions = arange(0, seqLen, dtype: ScalarType.Float32, device: device);
 
         // 位置 × 逆周波数 [seqLen, halfDim]
-        var freqs = torch.outer(positions, invFreq);
+        var freqs = outer(positions, invFreq);
 
         // キャッシュを作成
         _cosCache?.Dispose();
         _sinCache?.Dispose();
 
-        _cosCache = torch.cos(freqs).to(dtype);
-        _sinCache = torch.sin(freqs).to(dtype);
+        _cosCache = cos(freqs).to(dtype);
+        _sinCache = sin(freqs).to(dtype);
     }
 
     /// <summary>

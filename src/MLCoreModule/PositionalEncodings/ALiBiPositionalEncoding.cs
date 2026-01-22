@@ -21,7 +21,6 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using TorchSharp;
 using static TorchSharp.torch;
 
 namespace Foxtamp.MLCoreModule.PositionalEncodings;
@@ -97,15 +96,14 @@ public sealed class ALiBiPositionalEncoding : IPositionalEncoding
         // ALiBiは相対位置に基づくバイアスを計算
         // bias[i, j] = -slope * |i - j| (因果的マスクの場合は i - j >= 0 の範囲のみ)
         // ここでは非因果的（双方向）のバイアスを計算
-
-        using var queryPositions = torch.arange(queryLength, dtype: ScalarType.Float32, device: device).unsqueeze(1);
-        using var keyPositions = torch.arange(keyLength, dtype: ScalarType.Float32, device: device).unsqueeze(0);
+        using var queryPositions = arange(queryLength, dtype: ScalarType.Float32, device: device).unsqueeze(1);
+        using var keyPositions = arange(keyLength, dtype: ScalarType.Float32, device: device).unsqueeze(0);
 
         // 相対距離を計算
         var relativePositions = queryPositions - keyPositions;
 
         // 負の傾きを適用（遠い位置ほどペナルティ）
-        var bias = -_slope * torch.abs(relativePositions);
+        var bias = -_slope * abs(relativePositions);
 
         return bias.to(dtype);
     }
