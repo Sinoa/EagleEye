@@ -21,6 +21,8 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
+// ReSharper disable OptionalParameterHierarchyMismatch
+
 using Foxtamp.MLCoreModule.PositionalEncodings;
 using TorchSharp.Modules;
 using TorchSharp.Utils;
@@ -33,7 +35,7 @@ namespace Foxtamp.MLCoreModule.Modules;
 /// アテンションモジュールの基底クラス。
 /// Query/Key/Value投影、位置エンコーディング、ScaledDotProductAttentionの共通処理を提供します。
 /// </summary>
-public abstract class AttentionBase : Module<Tensor, Tensor>
+public abstract class AttentionBase : Module<Tensor, Tensor, Tensor, Tensor?, int, Tensor>
 {
     /// <summary>
     /// Query投影用の線形層
@@ -92,7 +94,7 @@ public abstract class AttentionBase : Module<Tensor, Tensor>
         var qkDim = queryDimension ?? embeddingDimension;
         var vDim = valueDimension ?? embeddingDimension;
 
-        // バイアスなしの線形投影層を作成
+        // 線形投影層を作成
         _queryProjection = Linear(embeddingDimension, qkDim, hasBias: useBias);
         _keyProjection = Linear(embeddingDimension, qkDim, hasBias: useBias);
         _valueProjection = Linear(embeddingDimension, vDim, hasBias: useBias);
@@ -112,20 +114,20 @@ public abstract class AttentionBase : Module<Tensor, Tensor>
     /// Query/Key/Valueテンソルを投影し、位置エンコーディングを適用してアテンション出力を計算します。
     /// </summary>
     /// <param name="queryInput">Query生成元の入力テンソル [batch, queryLen, embeddingDim]</param>
-    /// <param name="keyValueInput">Key/Value生成元の入力テンソル [batch, keyLen, embeddingDim]</param>
+    /// <param name="keyInput">Key生成元の入力テンソル [batch, keyLen, embeddingDim]</param>
+    /// <param name="valueInput">Value生成元の入力テンソル [batch, keyLen, embeddingDim]</param>
     /// <param name="mask">アテンションマスク（オプション）</param>
     /// <param name="positionOffset">位置オフセット（RoPE使用時のキャッシュ対応用）</param>
     /// <returns>アテンション出力 [batch, queryLen, embeddingDim]</returns>
-    protected Tensor ComputeAttention(Tensor queryInput, Tensor keyValueInput, Tensor? mask = null, int positionOffset = 0)
+    public override Tensor forward(Tensor queryInput, Tensor keyInput, Tensor valueInput, Tensor? mask = null, int positionOffset = 0)
     {
         // 線形投影
         var query = _queryProjection.forward(queryInput);
-        var key = _keyProjection.forward(keyValueInput);
-        var value = _valueProjection.forward(keyValueInput);
+        var key = _keyProjection.forward(keyInput);
+        var value = _valueProjection.forward(valueInput);
 
         // 位置エンコーディングの適用
         Tensor? scoreBias = null;
-
         if (_positionalEncoding is not null)
         {
             switch (_positionalEncoding.EncodingType)
@@ -141,6 +143,9 @@ public abstract class AttentionBase : Module<Tensor, Tensor>
                     var keyLen = (int)key.shape[1];
                     scoreBias = _positionalEncoding.GetScoreBias(queryLen, keyLen, query.device, query.dtype);
                     break;
+
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 

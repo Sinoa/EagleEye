@@ -67,15 +67,10 @@ public sealed class SelfAttention : AttentionBase
     /// Trueの位置がマスクされます。</param>
     /// <param name="positionOffset">位置オフセット（RoPE使用時のキャッシュ対応用）</param>
     /// <returns>アテンション出力 [batch, seqLen, embeddingDim]</returns>
-    public Tensor Forward(Tensor input, Tensor? mask = null, int positionOffset = 0)
+    // ReSharper disable once InconsistentNaming
+    public Tensor forward(Tensor input, Tensor? mask = null, int positionOffset = 0)
     {
         // セルフアテンション: Query/Key/Valueすべて同一入力から生成
-        return ComputeAttention(input, input, mask, positionOffset);
-    }
-
-    /// <inheritdoc/>
-    public override Tensor forward(Tensor input)
-    {
-        return Forward(input);
+        return base.forward(input, input, input, mask, positionOffset);
     }
 }

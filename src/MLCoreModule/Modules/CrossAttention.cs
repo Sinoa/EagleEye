@@ -22,7 +22,6 @@
 // distribution.
 
 using Foxtamp.MLCoreModule.PositionalEncodings;
-using static TorchSharp.torch;
 
 namespace Foxtamp.MLCoreModule.Modules;
 
@@ -58,26 +57,5 @@ public sealed class CrossAttention : AttentionBase
             dropoutProbability,
             positionalEncoding)
     {
-    }
-
-    /// <summary>
-    /// クロスアテンションを計算します。
-    /// </summary>
-    /// <param name="query">Query生成元の入力テンソル [batch, queryLen, embeddingDim]</param>
-    /// <param name="context">Key/Value生成元のコンテキストテンソル [batch, contextLen, embeddingDim]</param>
-    /// <param name="mask">アテンションマスク [queryLen, contextLen] または [batch, queryLen, contextLen]（オプション）。
-    /// Trueの位置がマスクされます。</param>
-    /// <param name="positionOffset">位置オフセット（RoPE使用時のキャッシュ対応用）</param>
-    /// <returns>アテンション出力 [batch, queryLen, embeddingDim]</returns>
-    public Tensor Forward(Tensor query, Tensor context, Tensor? mask = null, int positionOffset = 0)
-    {
-        // クロスアテンション: QueryとKey/Valueは異なる入力から生成
-        return ComputeAttention(query, context, mask, positionOffset);
-    }
-
-    /// <inheritdoc/>
-    public override Tensor forward(Tensor input)
-    {
-        throw new NotSupportedException("CrossAttentionはforward(Tensor)をサポートしていません。" + "Forward(Tensor query, Tensor context, ...)を使用してください。");
     }
 }

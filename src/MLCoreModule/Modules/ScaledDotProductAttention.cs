@@ -21,7 +21,6 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-using TorchSharp;
 using TorchSharp.Modules;
 using static TorchSharp.torch;
 using static TorchSharp.torch.nn;
@@ -65,18 +64,19 @@ public sealed class ScaledDotProductAttention : Module
     /// Trueの位置がマスクされます（-infが加算されます）。</param>
     /// <param name="scoreBias">スコアバイアス [queryLen, keyLen]（オプション）。ALiBi等で使用。</param>
     /// <returns>アテンション出力 [batch, queryLen, valueDim]</returns>
+    // ReSharper disable once InconsistentNaming
     public Tensor forward(Tensor query, Tensor key, Tensor value, Tensor? mask = null, Tensor? scoreBias = null)
     {
         // スコア計算: QK^T / √d_k
         // query: [batch, queryLen, dim]
         // key: [batch, keyLen, dim]
         // scores: [batch, queryLen, keyLen]
-        var scores = torch.matmul(query, key.transpose(-2, -1)) * _scale;
+        var scores = matmul(query, key.transpose(-2, -1)) * _scale;
 
         // スコアバイアスを加算（ALiBi等）
         if (scoreBias is not null)
         {
-            scores = scores + scoreBias;
+            scores += scoreBias;
         }
 
         // マスクを適用
@@ -90,7 +90,7 @@ public sealed class ScaledDotProductAttention : Module
             else
             {
                 // floatマスクの場合は直接加算（-infが含まれている想定）
-                scores = scores + mask;
+                scores += mask;
             }
         }
 
@@ -107,8 +107,6 @@ public sealed class ScaledDotProductAttention : Module
         // attentionWeights: [batch, queryLen, keyLen]
         // value: [batch, keyLen, valueDim]
         // output: [batch, queryLen, valueDim]
-        var output = torch.matmul(attentionWeights, value);
-
-        return output;
+        return matmul(attentionWeights, value);
     }
 }
