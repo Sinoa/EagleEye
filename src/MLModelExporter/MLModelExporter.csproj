@@ -4,7 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>Foxtamp.OnnxExporter</RootNamespace>
+        <RootNamespace>Foxtamp.MLModelExporter</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

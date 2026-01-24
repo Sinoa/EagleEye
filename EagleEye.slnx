@@ -2,10 +2,10 @@
     <Folder Name="/Lib/">
         <Project Path="src/MjlogReader/MjlogReader.csproj" />
         <Project Path="src/MjlogReplayer/MjlogReplayer.csproj" />
-        <Project Path="src/OnnxExporter/OnnxExporter.csproj" />
     </Folder>
     <Folder Name="/ML/">
         <Project Path="src/MLCoreModule/MLCoreModule.csproj" />
+        <Project Path="src/MLModelExporter/MLModelExporter.csproj" />
     </Folder>
     <Folder Name="/Sample/">
         <Project Path="src/MjlogReaderSample/MjlogReaderSample.csproj" />
