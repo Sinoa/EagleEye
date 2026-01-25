@@ -25,7 +25,7 @@
 
 using TorchSharp;
 
-namespace Foxtamp.MLModelExporter.Models.Abstract;
+namespace Foxtamp.MLModelCodec.Models.Abstract;
 
 /// <summary>
 /// ONNX属性値として許容される型を示すマーカーインターフェースです。

@@ -26,7 +26,7 @@ using Google.Protobuf;
 using Onnx;
 using TorchSharp;
 
-namespace Foxtamp.OnnxExporter.Utilities;
+namespace Foxtamp.MLModelCodec.Utilities;
 
 /// <summary>
 /// ONNXモデルの構築に必要なProtocol Bufferオブジェクトを生成するユーティリティクラスです。

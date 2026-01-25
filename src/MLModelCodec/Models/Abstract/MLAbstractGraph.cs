@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace Foxtamp.MLModelExporter.Models.Abstract;
+namespace Foxtamp.MLModelCodec.Models.Abstract;
 
 /// <summary>
 /// ONNX計算グラフ構造を表現するクラスです。

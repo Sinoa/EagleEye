@@ -5,7 +5,7 @@
     </Folder>
     <Folder Name="/ML/">
         <Project Path="src/MLCoreModule/MLCoreModule.csproj" />
-        <Project Path="src/MLModelExporter/MLModelExporter.csproj" />
+        <Project Path="src/MLModelCodec/MLModelCodec.csproj" />
     </Folder>
     <Folder Name="/Sample/">
         <Project Path="src/MjlogReaderSample/MjlogReaderSample.csproj" />

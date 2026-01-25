@@ -23,7 +23,7 @@
 
 using TorchSharp;
 
-namespace Foxtamp.MLModelExporter.Models.Abstract;
+namespace Foxtamp.MLModelCodec.Models.Abstract;
 
 /// <summary>
 /// TorchSharpテンソルデータを保持する抽象テンソル構造を表現するクラスです。

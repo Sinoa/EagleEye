@@ -21,7 +21,7 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
-namespace Foxtamp.MLModelExporter.Models.Abstract;
+namespace Foxtamp.MLModelCodec.Models.Abstract;
 
 /// <summary>
 /// テンソルの型情報と形状を表現する値情報クラスです。
