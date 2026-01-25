@@ -52,7 +52,7 @@ public sealed class MLAbstractModel
     /// <remarks>
     /// 整数値で表現されるモデルバージョンです。
     /// </remarks>
-    public int Version { get; }
+    public long Version { get; }
 
     /// <summary>
     /// モデルの生成ツール名を取得します。
@@ -103,7 +103,7 @@ public sealed class MLAbstractModel
     public MLAbstractModel(
         string domain,
         string author,
-        int version,
+        long version,
         string producerName,
         string producerVersion,
         string document,
