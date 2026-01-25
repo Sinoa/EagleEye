@@ -77,6 +77,14 @@ public sealed class MLAbstractModel
     public string Document { get; }
 
     /// <summary>
+    /// モデルのメタデータを取得します。
+    /// </summary>
+    /// <remarks>
+    /// <para>キーと値のペアで表現される追加情報です。</para>
+    /// </remarks>
+    public Dictionary<string, string> Metadata { get; }
+
+    /// <summary>
     /// 計算グラフ構造を取得します。
     /// </summary>
     public MLAbstractGraph Graph { get; }
@@ -90,6 +98,7 @@ public sealed class MLAbstractModel
     /// <param name="producerName">モデルの生成ツール名</param>
     /// <param name="producerVersion">モデルの生成ツールバージョン（セマンティックバージョン形式）</param>
     /// <param name="document">モデルのドキュメントデータ</param>
+    /// <param name="metadata">モデルのメタデータ</param>
     /// <param name="graph">計算グラフ構造</param>
     public MLAbstractModel(
         string domain,
@@ -98,6 +107,7 @@ public sealed class MLAbstractModel
         string producerName,
         string producerVersion,
         string document,
+        Dictionary<string, string> metadata,
         MLAbstractGraph graph)
     {
         Domain = domain;
@@ -106,6 +116,7 @@ public sealed class MLAbstractModel
         ProducerName = producerName;
         ProducerVersion = producerVersion;
         Document = document;
+        Metadata = metadata;
         Graph = graph;
     }
 }

@@ -49,6 +49,7 @@ public static class OnnxUtility
     /// <param name="producerName">モデルを生成したツールやライブラリの名前</param>
     /// <param name="producerVersion">プロデューサーのバージョン文字列</param>
     /// <param name="graph">モデルの計算グラフ</param>
+    /// <param name="metadata">モデルのメタデータ（任意）</param>
     /// <param name="irVersion">ONNX IRバージョン（デフォルト: 9）</param>
     /// <param name="opsetVersion">使用するOperator Setのバージョン（デフォルト: 24）</param>
     /// <returns>構成された<see cref="ModelProto"/>インスタンス</returns>
@@ -58,9 +59,15 @@ public static class OnnxUtility
     /// var model = OnnxUtility.CreateModel("MyTool", "1.0.0", graph);
     /// </code>
     /// </example>
-    public static ModelProto CreateModel(string producerName, string producerVersion, GraphProto graph, long irVersion = 9, long opsetVersion = 24)
+    public static ModelProto CreateModel(
+        string producerName,
+        string producerVersion,
+        GraphProto graph,
+        Dictionary<string, string>? metadata = null,
+        long irVersion = 9,
+        long opsetVersion = 24)
     {
-        return new ModelProto
+        var modelProto = new ModelProto
         {
             IrVersion = irVersion,
             ProducerName = producerName,
@@ -75,6 +82,20 @@ public static class OnnxUtility
             },
             Graph = graph,
         };
+
+        if (metadata != null)
+        {
+            foreach (var kvp in metadata)
+            {
+                modelProto.MetadataProps.Add(new StringStringEntryProto
+                {
+                    Key = kvp.Key,
+                    Value = kvp.Value,
+                });
+            }
+        }
+        
+        return modelProto;
     }
 
     /// <summary>
