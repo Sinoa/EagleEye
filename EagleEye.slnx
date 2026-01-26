@@ -10,5 +10,6 @@
     <Folder Name="/Sample/">
         <Project Path="src/MjlogReaderSample/MjlogReaderSample.csproj" />
         <Project Path="src/MjlogReplayerSample/MjlogReplayerSample.csproj" />
+        <Project Path="src/MLSimpleSample/MLSimpleSample.csproj" />
     </Folder>
 </Solution>
