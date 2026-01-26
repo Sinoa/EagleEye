@@ -346,8 +346,14 @@ public (Tensor query, Tensor key) ApplyToQueryKey(
 
 ---
 
+## 関連ドキュメント
+
+- [MLModelCodec README](../MLModelCodec/README.md) - ONNXエンコーディングライブラリ
+
+---
+
 ## ライセンス
 
 zlib License
 
-Copyright (c) 2026 Sinoa
+Copyright (c) 2025-2026 Sinoa

@@ -39,11 +39,24 @@
 | プロジェクト | 種別 | 説明 | 状態 |
 |-------------|------|------|:----:|
 | [MjlogReader](./src/MjlogReader/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ✅ 実装済 |
+| [MjlogReplayer](./src/MjlogReplayer/README.md) | ライブラリ | 牌譜から試合状態を再現 | ✅ 実装済 |
+| [MLCoreModule](./src/MLCoreModule/README.md) | ライブラリ | 機械学習コアモジュール（アテンション機構・位置エンコーディング） | ✅ 実装済 |
+| [MLModelCodec](./src/MLModelCodec/README.md) | ライブラリ | MLモデルのONNXエンコーディング | ✅ 実装済 |
 | EagleEye | ライブラリ | 何切るAI推論エンジン本体 | 🚧 計画中 |
+
+### サンプルアプリケーション
+
+| プロジェクト | 説明 |
+|-------------|------|
+| [MjlogReaderSample](./src/MjlogReaderSample/README.md) | MjlogReaderの使用例 |
+| [MjlogReplayerSample](./src/MjlogReplayerSample/README.md) | MjlogReplayerの使用例 |
 
 ### 各プロジェクトの役割
 
 - **MjlogReader**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換するライブラリ
+- **MjlogReplayer**: MjlogReaderで読み込んだ牌譜データから、各ステップ時点の試合状態をイミュータブルに構築するライブラリ
+- **MLCoreModule**: TorchSharpをベースとしたアテンション機構と位置エンコーディングの実装を提供するライブラリ
+- **MLModelCodec**: TorchSharpモデルをONNX形式にエンコードするためのライブラリ
 
 ---
 
@@ -142,6 +155,9 @@ foreach (var session in document.Sessions)
 ### v1.0 初期リリースに向けて
 
 - [x] MjlogReader ライブラリ実装
+- [x] MjlogReplayer ライブラリ実装
+- [x] MLCoreModule ライブラリ実装
+- [x] MLModelCodec ライブラリ実装
 - [ ] EagleEye 推論エンジンコア実装
 - [ ] 訓練用データセット生成パイプライン
 - [ ] 基本的な訓練済みモデルの公開
@@ -170,12 +186,10 @@ foreach (var session in document.Sessions)
 
 ## 依存ライブラリ
 
-現在のプロジェクトは外部ライブラリへの依存はありません。将来的に以下のライブラリの使用を予定しています：
-
 | ライブラリ | ライセンス | 用途 | 状態 |
 |----------|-----------|------|:----:|
-| [TorchSharp](https://github.com/dotnet/TorchSharp) | BSD 3-Clause | 機械学習フレームワーク | 📋 予定 |
-| [ONNX](https://github.com/onnx/onnx) | Apache 2.0 | モデルフォーマット定義 | 📋 予定 |
+| [TorchSharp](https://github.com/dotnet/TorchSharp) | BSD 3-Clause | 機械学習フレームワーク | ✅ 使用中 |
+| [Google.Protobuf](https://github.com/protocolbuffers/protobuf) | BSD 3-Clause | ONNX Protocol Buffers | ✅ 使用中 |
 
 各ライブラリの詳細なライセンス条項については、[LICENSE.md](./LICENSE.md) をご確認ください。
 

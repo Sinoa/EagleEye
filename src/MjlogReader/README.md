@@ -378,6 +378,13 @@ RyuukyokuInfo
 
 ---
 
+## 関連ドキュメント
+
+- [MjlogReplayer README](../MjlogReplayer/README.md) - 牌譜から試合状態を再現するライブラリ
+- [MjlogReaderSample README](../MjlogReaderSample/README.md) - サンプルアプリケーション
+
+---
+
 ## ライセンス
 
 zlib License - Copyright (c) 2025-2026 Sinoa

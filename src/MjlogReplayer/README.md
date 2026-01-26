@@ -267,6 +267,13 @@ foreach (var session in replayer.Sessions)
 
 ---
 
+## 関連ドキュメント
+
+- [MjlogReader README](../MjlogReader/README.md) - 牌譜読み込みライブラリ
+- [MjlogReplayerSample README](../MjlogReplayerSample/README.md) - サンプルアプリケーション
+
+---
+
 ## ライセンス
 
-zlib License - Copyright (c) 2026 Sinoa
+zlib License - Copyright (c) 2025-2026 Sinoa
