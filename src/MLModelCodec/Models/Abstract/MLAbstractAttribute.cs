@@ -159,6 +159,54 @@ public abstract class MLAbstractAttribute
     }
 
     /// <summary>
+    /// (string, float)タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, float value) tuple) => new MLAbstractAttribute<MLAttrFloat>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, long)タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, long value) tuple) => new MLAbstractAttribute<MLAttrLong>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, string)タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, string value) tuple) => new MLAbstractAttribute<MLAttrString>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, torch.Tensor)タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, torch.Tensor value) tuple) => new MLAbstractAttribute<MLAttrTensor>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, float[])タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値配列のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, float[] value) tuple) => new MLAbstractAttribute<MLAttrFloats>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, long[])タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値配列のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, long[] value) tuple) => new MLAbstractAttribute<MLAttrLongs>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, string[])タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値配列のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, string[] value) tuple) => new MLAbstractAttribute<MLAttrStrings>(tuple.name, tuple.value);
+
+    /// <summary>
+    /// (string, torch.Tensor[])タプルから<see cref="MLAbstractAttribute"/>への暗黙的変換演算子です。
+    /// </summary>
+    /// <param name="tuple">属性名と属性値配列のタプル</param>
+    public static implicit operator MLAbstractAttribute((string name, torch.Tensor[] value) tuple) => new MLAbstractAttribute<MLAttrTensors>(tuple.name, tuple.value);
+
+    /// <summary>
     /// 属性値をobject型として取得します。
     /// </summary>
     /// <returns>属性値</returns>
