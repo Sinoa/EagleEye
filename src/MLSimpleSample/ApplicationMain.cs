@@ -34,23 +34,38 @@ var model = new LogicGateModel();
 var loss = MSELoss();
 var optimizer = Adam(model.parameters(), lr: 0.01);
 var epochs = 10000;
+var prevLoss = 0.0f;
 
 using (torch.enable_grad())
 {
     for (int i = 0; i < epochs; ++i)
     {
+        float totalLoss = 0.0f;
+
         foreach (var data in loader)
         {
             optimizer.zero_grad();
 
-            var inputBatch = data["input"];
-            var outputBatch = data["output"];
+            using var inputBatch = data["input"];
+            using var outputBatch = data["output"];
 
-            var prediction = model.forward(inputBatch);
-            var batchLoss = loss.forward(prediction, outputBatch);
+            using var prediction = model.forward(inputBatch);
+            using var batchLoss = loss.forward(prediction, outputBatch);
             batchLoss.backward();
 
             optimizer.step();
+            totalLoss += batchLoss.item<float>();
+        }
+
+        if (i % 1000 == 0 || i == epochs - 1)
+        {
+            if (prevLoss == 0.0f)
+            {
+                prevLoss = totalLoss;
+            }
+
+            Console.WriteLine($"エポック: {i + 1,5}/{epochs,5} 損失: {totalLoss / loader.Count,15:N12} 前回比: {(totalLoss - prevLoss) / prevLoss,10:P4}");
+            prevLoss = totalLoss;
         }
     }
 }
