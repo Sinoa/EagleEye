@@ -21,6 +21,8 @@
 // 3. This notice may not be removed or altered from any source
 // distribution.
 
+using Foxtamp.MLModelCodec.Encoders;
+using Foxtamp.MLModelCodec.Models.Abstract;
 using Foxtamp.MLSimpleSample;
 using TorchSharp.Modules;
 using static TorchSharp.torch.nn;
@@ -110,3 +112,36 @@ for (int i = 0; i < result.shape[0]; ++i)
     var predictedLoss = MathF.Abs(expectedValue - predictedValue);
     Console.WriteLine($"オペレータ: {opText}, 入力: [{inputX}, {inputY}], 期待値: {expectedValue:N4}, 予測値: {predictedValue:N4}, 誤差: {predictedLoss:N6}");
 }
+
+Console.WriteLine("==================== エクスポート開始 ====================");
+
+// ReSharper disable HeapView.ObjectAllocation
+var modelInputInfos = new[] { new MLAbstractValueInfo("X", -1, 6) };
+var modelOutputInfos = new[] { new MLAbstractValueInfo("Y", -1, 1) };
+var modelInitializers = model.state_dict().Select(x => new MLAbstractTensor(x.Key, x.Value)).ToArray();
+var modelNodes = new MLAbstractNode[]
+{
+    // MLP_hidden1
+    new("linear1", "MatMul", ["X", "mlp.fc1.weight"], ["linear1_out"]),
+    new("add1", "Add", ["linear1_out", "mlp.fc1.bias"], ["add1_out"]),
+    new("silu1", "Swish", ["add1_out"], ["silu1_out"]),
+    // MLP_hidden2
+    new("linear2", "MatMul", ["silu1_out", "mlp.fc2.weight"], ["linear2_out"]),
+    new("add2", "Add", ["linear2_out", "mlp.fc2.bias"], ["add2_out"]),
+    new("silu2", "Swish", ["add2_out"], ["silu2_out"]),
+    // MLP_hidden3
+    new("linear3", "MatMul", ["silu2_out", "mlp.fc3.weight"], ["linear3_out"]),
+    new("add3", "Add", ["linear3_out", "mlp.fc3.bias"], ["add3_out"]),
+    new("silu3", "Swish", ["add3_out"], ["silu3_out"]),
+    // MLP_output
+    new("linear4", "MatMul", ["silu3_out", "mlp.fc4.weight"], ["linear4_out"]),
+    new("add4", "Add", ["linear4_out", "mlp.fc4.bias"], ["add4_out"]),
+    new("sigmoid", "Sigmoid", ["add4_out"], ["Y"]),
+};
+var modelGraph = new MLAbstractGraph("model.graph", modelInputInfos, modelOutputInfos, modelInitializers, modelNodes);
+var abstractModel = new MLAbstractModel("jp.foxtamp.logicgate", "Sinoa", 1, "Sample", "1.0.0", "", new Dictionary<string, string>(), modelGraph);
+
+var encoder = new MLModelEncoder();
+encoder.Export(abstractModel, "logic_gate_model.onnx");
+Console.WriteLine("完了");
+// ReSharper restore HeapView.ObjectAllocation

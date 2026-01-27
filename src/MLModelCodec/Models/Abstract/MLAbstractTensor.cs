@@ -54,4 +54,10 @@ public sealed class MLAbstractTensor
         Name = name;
         Tensor = tensor;
     }
+
+    /// <summary>
+    /// 抽象テンソルオブジェクトの文字列表現を取得します。
+    /// </summary>
+    /// <returns>テンソル名とテンソルデータを含む文字列形式の表現。</returns>
+    public override string ToString() => $"{Name}: {Tensor}";
 }

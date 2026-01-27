@@ -67,4 +67,13 @@ public sealed class MLAbstractValueInfo
         ValueType = valueType;
         ShapeDims = shapeDims;
     }
+
+    /// <summary>
+    /// <c>typeof(float)</c>型の<see cref="MLAbstractValueInfo"/>クラスの新しいインスタンスを初期化します。
+    /// </summary>
+    /// <param name="name">値の名前</param>
+    /// <param name="shapeDims">テンソルの形状（動的次元は-1）</param>
+    public MLAbstractValueInfo(string name, params long[] shapeDims) : this(name, typeof(float), shapeDims)
+    {
+    }
 }
