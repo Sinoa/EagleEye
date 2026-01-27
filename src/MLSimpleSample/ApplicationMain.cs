@@ -35,38 +35,49 @@ var epochs = 2000;
 var firstLoss = 0.0f;
 var prevLoss = 0.0f;
 
-Console.WriteLine("==================== 訓練開始 ====================");
-model.train();
-for (int i = 0; i < epochs; ++i)
+var modelFileName = "logic_gate_model.pt";
+if (File.Exists(modelFileName))
 {
-    float totalLoss = 0.0f;
-
-    foreach (var data in loader)
+    Console.WriteLine("==================== モデル読み込み ====================");
+    model.load(modelFileName);
+}
+else
+{
+    Console.WriteLine("==================== 訓練開始 ====================");
+    model.train();
+    for (int i = 0; i < epochs; ++i)
     {
-        optimizer.zero_grad();
+        float totalLoss = 0.0f;
 
-        using var inputBatch = data["input"];
-        using var outputBatch = data["output"];
-
-        using var prediction = model.forward(inputBatch);
-        using var batchLoss = loss.forward(prediction, outputBatch);
-        batchLoss.backward();
-
-        optimizer.step();
-        totalLoss += batchLoss.item<float>();
-    }
-
-    if (i % 100 == 0 || i == epochs - 1)
-    {
-        if (i == 0)
+        foreach (var data in loader)
         {
-            prevLoss = totalLoss;
-            firstLoss = totalLoss;
+            optimizer.zero_grad();
+
+            using var inputBatch = data["input"];
+            using var outputBatch = data["output"];
+
+            using var prediction = model.forward(inputBatch);
+            using var batchLoss = loss.forward(prediction, outputBatch);
+            batchLoss.backward();
+
+            optimizer.step();
+            totalLoss += batchLoss.item<float>();
         }
 
-        Console.WriteLine($"エポック: {i + 1,5}/{epochs,5} 損失: {totalLoss / loader.Count,15:N12} 前回比: {(totalLoss - prevLoss) / prevLoss,10:P4} 初回比: {(totalLoss - firstLoss) / firstLoss,10:P4}");
-        prevLoss = totalLoss;
+        if (i % 100 == 0 || i == epochs - 1)
+        {
+            if (i == 0)
+            {
+                prevLoss = totalLoss;
+                firstLoss = totalLoss;
+            }
+
+            Console.WriteLine($"エポック: {i + 1,5}/{epochs,5} 損失: {totalLoss / loader.Count,15:N12} 前回比: {(totalLoss - prevLoss) / prevLoss,10:P4} 初回比: {(totalLoss - firstLoss) / firstLoss,10:P4}");
+            prevLoss = totalLoss;
+        }
     }
+
+    model.save(modelFileName);
 }
 
 Console.WriteLine("==================== 推論開始 ====================");
