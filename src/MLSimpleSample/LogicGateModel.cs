@@ -68,8 +68,8 @@ public sealed class LogicGateModel : Module<Tensor, Tensor>
 /// </summary>
 public class LogicDataset : Dataset
 {
-    private static readonly Tensor Input;
-    private static readonly Tensor Output;
+    public static readonly Tensor Input;
+    public static readonly Tensor Output;
 
     static LogicDataset()
     {

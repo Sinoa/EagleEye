@@ -22,50 +22,80 @@
 // distribution.
 
 using Foxtamp.MLSimpleSample;
-using TorchSharp;
 using TorchSharp.Modules;
 using static TorchSharp.torch.nn;
 using static TorchSharp.torch.optim;
 
-var dataset = new LogicDataset();
-var loader = new DataLoader(dataset, 1);
-
-var model = new LogicGateModel();
-var loss = MSELoss();
-var optimizer = Adam(model.parameters(), lr: 0.01);
-var epochs = 10000;
+using var dataset = new LogicDataset();
+using var loader = new DataLoader(dataset, 1);
+using var model = new LogicGateModel();
+using var loss = MSELoss();
+using var optimizer = Adam(model.parameters(), lr: 0.01);
+var epochs = 2000;
+var firstLoss = 0.0f;
 var prevLoss = 0.0f;
 
-using (torch.enable_grad())
+Console.WriteLine("==================== 訓練開始 ====================");
+model.train();
+for (int i = 0; i < epochs; ++i)
 {
-    for (int i = 0; i < epochs; ++i)
+    float totalLoss = 0.0f;
+
+    foreach (var data in loader)
     {
-        float totalLoss = 0.0f;
+        optimizer.zero_grad();
 
-        foreach (var data in loader)
-        {
-            optimizer.zero_grad();
+        using var inputBatch = data["input"];
+        using var outputBatch = data["output"];
 
-            using var inputBatch = data["input"];
-            using var outputBatch = data["output"];
+        using var prediction = model.forward(inputBatch);
+        using var batchLoss = loss.forward(prediction, outputBatch);
+        batchLoss.backward();
 
-            using var prediction = model.forward(inputBatch);
-            using var batchLoss = loss.forward(prediction, outputBatch);
-            batchLoss.backward();
-
-            optimizer.step();
-            totalLoss += batchLoss.item<float>();
-        }
-
-        if (i % 1000 == 0 || i == epochs - 1)
-        {
-            if (prevLoss == 0.0f)
-            {
-                prevLoss = totalLoss;
-            }
-
-            Console.WriteLine($"エポック: {i + 1,5}/{epochs,5} 損失: {totalLoss / loader.Count,15:N12} 前回比: {(totalLoss - prevLoss) / prevLoss,10:P4}");
-            prevLoss = totalLoss;
-        }
+        optimizer.step();
+        totalLoss += batchLoss.item<float>();
     }
+
+    if (i % 100 == 0 || i == epochs - 1)
+    {
+        if (i == 0)
+        {
+            prevLoss = totalLoss;
+            firstLoss = totalLoss;
+        }
+
+        Console.WriteLine($"エポック: {i + 1,5}/{epochs,5} 損失: {totalLoss / loader.Count,15:N12} 前回比: {(totalLoss - prevLoss) / prevLoss,10:P4} 初回比: {(totalLoss - firstLoss) / firstLoss,10:P4}");
+        prevLoss = totalLoss;
+    }
+}
+
+Console.WriteLine("==================== 推論開始 ====================");
+model.eval();
+using var result = model.forward(LogicDataset.Input);
+for (int i = 0; i < result.shape[0]; ++i)
+{
+    var opText = "";
+    if (LogicDataset.Input[i, 2].item<float>() > 0.9f)
+    {
+        opText = "And";
+    }
+    else if (LogicDataset.Input[i, 3].item<float>() > 0.9f)
+    {
+        opText = "Or";
+    }
+    else if (LogicDataset.Input[i, 4].item<float>() > 0.9f)
+    {
+        opText = "Not";
+    }
+    else if (LogicDataset.Input[i, 5].item<float>() > 0.9f)
+    {
+        opText = "Xor";
+    }
+
+    var inputX = LogicDataset.Input[i, 0].item<float>();
+    var inputY = LogicDataset.Input[i, 1].item<float>();
+    var expectedValue = LogicDataset.Output[i, 0].item<float>();
+    var predictedValue = result[i, 0].item<float>();
+    var predictedLoss = MathF.Abs(expectedValue - predictedValue);
+    Console.WriteLine($"オペレータ: {opText}, 入力: [{inputX}, {inputY}], 期待値: {expectedValue:N4}, 予測値: {predictedValue:N4}, 誤差: {predictedLoss:N6}");
 }
