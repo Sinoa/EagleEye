@@ -33,7 +33,7 @@ using var loader = new DataLoader(dataset, 1);
 using var model = new LogicGateModel();
 using var loss = MSELoss();
 using var optimizer = Adam(model.parameters(), lr: 0.01);
-var epochs = 2000;
+var epochs = 10000;
 var firstLoss = 0.0f;
 var prevLoss = 0.0f;
 
@@ -66,7 +66,7 @@ else
             totalLoss += batchLoss.item<float>();
         }
 
-        if (i % 100 == 0 || i == epochs - 1)
+        if (i % 1000 == 0 || i == epochs - 1)
         {
             if (i == 0)
             {
@@ -122,21 +122,25 @@ var modelInitializers = model.state_dict().Select(x => new MLAbstractTensor(x.Ke
 var modelNodes = new MLAbstractNode[]
 {
     // MLP_hidden1
-    new("linear1", "MatMul", ["mlp.fc1.weight", "X"], ["linear1_out"]),
-    new("add1", "Add", ["linear1_out", "mlp.fc1.bias"], ["add1_out"]),
-    new("silu1", "Swish", ["add1_out"], ["silu1_out"]),
+    // new("linear1", "MatMul", ["mlp.fc1.weight", "X"], ["linear1_out"]),
+    // new("add1", "Add", ["linear1_out", "mlp.fc1.bias"], ["add1_out"]),
+    new("gemm1", "Gemm", ["mlp.fc1.weight", "X", "mlp.fc1.bias"], ["gemm1_out"]),
+    new("silu1", "Swish", ["gemm1_out"], ["silu1_out"]),
     // MLP_hidden2
-    new("linear2", "MatMul", ["mlp.fc2.weight", "silu1_out"], ["linear2_out"]),
-    new("add2", "Add", ["linear2_out", "mlp.fc2.bias"], ["add2_out"]),
-    new("silu2", "Swish", ["add2_out"], ["silu2_out"]),
+    // new("linear2", "MatMul", ["mlp.fc2.weight", "silu1_out"], ["linear2_out"]),
+    // new("add2", "Add", ["linear2_out", "mlp.fc2.bias"], ["add2_out"]),
+    new("gemm2", "Gemm", ["mlp.fc2.weight", "silu1_out", "mlp.fc2.bias"], ["gemm2_out"]),
+    new("silu2", "Swish", ["gemm2_out"], ["silu2_out"]),
     // MLP_hidden3
-    new("linear3", "MatMul", ["mlp.fc3.weight", "silu2_out"], ["linear3_out"]),
-    new("add3", "Add", ["linear3_out", "mlp.fc3.bias"], ["add3_out"]),
-    new("silu3", "Swish", ["add3_out"], ["silu3_out"]),
+    // new("linear3", "MatMul", ["mlp.fc3.weight", "silu2_out"], ["linear3_out"]),
+    // new("add3", "Add", ["linear3_out", "mlp.fc3.bias"], ["add3_out"]),
+    new("gemm3", "Gemm", ["mlp.fc3.weight", "silu2_out", "mlp.fc3.bias"], ["gemm3_out"]),
+    new("silu3", "Swish", ["gemm3_out"], ["silu3_out"]),
     // MLP_output
-    new("linear4", "MatMul", ["mlp.fc4.weight", "silu3_out"], ["linear4_out"]),
-    new("add4", "Add", ["linear4_out", "mlp.fc4.bias"], ["add4_out"]),
-    new("sigmoid", "Sigmoid", ["add4_out"], ["Y"]),
+    // new("linear4", "MatMul", ["mlp.fc4.weight", "silu3_out"], ["linear4_out"]),
+    // new("add4", "Add", ["linear4_out", "mlp.fc4.bias"], ["add4_out"]),
+    new("gemm4", "Gemm", ["mlp.fc4.weight", "silu3_out", "mlp.fc4.bias"], ["gemm4_out"]),
+    new("sigmoid", "Sigmoid", ["gemm4_out"], ["Y"]),
 };
 var modelGraph = new MLAbstractGraph("model.graph", modelInputInfos, modelOutputInfos, modelInitializers, modelNodes);
 var abstractModel = new MLAbstractModel("jp.foxtamp.logicgate", "Sinoa", 1, "Sample", "1.0.0", "", new Dictionary<string, string>(), modelGraph);
