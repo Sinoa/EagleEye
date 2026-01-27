@@ -116,8 +116,8 @@ for (int i = 0; i < result.shape[0]; ++i)
 Console.WriteLine("==================== エクスポート開始 ====================");
 
 // ReSharper disable HeapView.ObjectAllocation
-var modelInputInfos = new[] { new MLAbstractValueInfo("X", -1, 6) };
-var modelOutputInfos = new[] { new MLAbstractValueInfo("Y", -1, 1) };
+var modelInputInfos = new[] { new MLAbstractValueInfo("X", 6) };
+var modelOutputInfos = new[] { new MLAbstractValueInfo("Y", 1) };
 var modelInitializers = model.state_dict().Select(x => new MLAbstractTensor(x.Key, x.Value)).ToArray();
 var modelNodes = new MLAbstractNode[]
 {
