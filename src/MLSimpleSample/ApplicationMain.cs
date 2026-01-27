@@ -122,19 +122,19 @@ var modelInitializers = model.state_dict().Select(x => new MLAbstractTensor(x.Ke
 var modelNodes = new MLAbstractNode[]
 {
     // MLP_hidden1
-    new("linear1", "MatMul", ["X", "mlp.fc1.weight"], ["linear1_out"]),
+    new("linear1", "MatMul", ["mlp.fc1.weight", "X"], ["linear1_out"]),
     new("add1", "Add", ["linear1_out", "mlp.fc1.bias"], ["add1_out"]),
     new("silu1", "Swish", ["add1_out"], ["silu1_out"]),
     // MLP_hidden2
-    new("linear2", "MatMul", ["silu1_out", "mlp.fc2.weight"], ["linear2_out"]),
+    new("linear2", "MatMul", ["mlp.fc2.weight", "silu1_out"], ["linear2_out"]),
     new("add2", "Add", ["linear2_out", "mlp.fc2.bias"], ["add2_out"]),
     new("silu2", "Swish", ["add2_out"], ["silu2_out"]),
     // MLP_hidden3
-    new("linear3", "MatMul", ["silu2_out", "mlp.fc3.weight"], ["linear3_out"]),
+    new("linear3", "MatMul", ["mlp.fc3.weight", "silu2_out"], ["linear3_out"]),
     new("add3", "Add", ["linear3_out", "mlp.fc3.bias"], ["add3_out"]),
     new("silu3", "Swish", ["add3_out"], ["silu3_out"]),
     // MLP_output
-    new("linear4", "MatMul", ["silu3_out", "mlp.fc4.weight"], ["linear4_out"]),
+    new("linear4", "MatMul", ["mlp.fc4.weight", "silu3_out"], ["linear4_out"]),
     new("add4", "Add", ["linear4_out", "mlp.fc4.bias"], ["add4_out"]),
     new("sigmoid", "Sigmoid", ["add4_out"], ["Y"]),
 };
