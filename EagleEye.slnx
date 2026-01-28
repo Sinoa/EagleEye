@@ -1,4 +1,7 @@
 <Solution>
+    <Folder Name="/Exp/">
+        <Project Path="src/MLOnnxExportExp/MLOnnxExportExp.csproj" />
+    </Folder>
     <Folder Name="/Lib/">
         <Project Path="src/MjlogReader/MjlogReader.csproj" />
         <Project Path="src/MjlogReplayer/MjlogReplayer.csproj" />
@@ -10,6 +13,5 @@
     <Folder Name="/Sample/">
         <Project Path="src/MjlogReaderSample/MjlogReaderSample.csproj" />
         <Project Path="src/MjlogReplayerSample/MjlogReplayerSample.csproj" />
-        <Project Path="src/MLSimpleSample/MLSimpleSample.csproj" />
     </Folder>
 </Solution>

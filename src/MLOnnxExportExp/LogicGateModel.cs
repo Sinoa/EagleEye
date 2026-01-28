@@ -27,7 +27,7 @@ using static TorchSharp.torch;
 using static TorchSharp.torch.nn;
 using static TorchSharp.torch.utils.data;
 
-namespace Foxtamp.MLSimpleSample;
+namespace Foxtamp.MLOnnxExportExp;
 
 /// <summary>
 /// 論理ゲートを表現する推論モデル
