@@ -1,6 +1,7 @@
 <Solution>
     <Folder Name="/Exp/">
         <Project Path="src/MLOnnxExportExp/MLOnnxExportExp.csproj" />
+        <Project Path="src/MLOnnxRuntimeExp/MLOnnxRuntimeExp.csproj" />
     </Folder>
     <Folder Name="/Lib/">
         <Project Path="src/MjlogReader/MjlogReader.csproj" />

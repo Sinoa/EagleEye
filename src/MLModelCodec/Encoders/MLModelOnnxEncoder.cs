@@ -58,6 +58,7 @@ public sealed partial class MLModelEncoder
     /// <see cref="MLAbstractModel"/>を<see cref="ModelProto"/>にエンコードします。
     /// </summary>
     /// <param name="model">エンコードするモデル</param>
+    /// <param name="opsetVersion">ONNXオペセットのバージョン（デフォルトは24）</param>
     /// <returns>変換された<see cref="ModelProto"/>インスタンス</returns>
     /// <exception cref="ArgumentNullException"><paramref name="model"/>がnullの場合</exception>
     /// <example>
@@ -66,7 +67,7 @@ public sealed partial class MLModelEncoder
     /// var modelProto = encoder.Encode(abstractModel);
     /// </code>
     /// </example>
-    public ModelProto Encode(MLAbstractModel model)
+    public ModelProto Encode(MLAbstractModel model, int opsetVersion = 24)
     {
         ArgumentNullException.ThrowIfNull(model);
 
@@ -83,7 +84,8 @@ public sealed partial class MLModelEncoder
             model.ProducerName,
             model.ProducerVersion,
             graphProto,
-            metadata);
+            metadata,
+            opsetVersion: opsetVersion);
 
         modelProto.ModelVersion = model.Version;
         modelProto.DocString = sanitizedDocument;
@@ -97,6 +99,7 @@ public sealed partial class MLModelEncoder
     /// </summary>
     /// <param name="model">エクスポートするモデル</param>
     /// <param name="stream">出力先ストリーム</param>
+    /// <param name="opsetVersion">ONNXオペセットのバージョン（デフォルトは24）</param>
     /// <exception cref="ArgumentNullException"><paramref name="model"/>または<paramref name="stream"/>がnullの場合</exception>
     /// <example>
     /// <code>
@@ -105,12 +108,12 @@ public sealed partial class MLModelEncoder
     /// encoder.Export(abstractModel, stream);
     /// </code>
     /// </example>
-    public void Export(MLAbstractModel model, Stream stream)
+    public void Export(MLAbstractModel model, Stream stream, int opsetVersion = 24)
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentNullException.ThrowIfNull(stream);
 
-        var modelProto = Encode(model);
+        var modelProto = Encode(model, opsetVersion);
         modelProto.WriteTo(stream);
     }
 
@@ -119,6 +122,7 @@ public sealed partial class MLModelEncoder
     /// </summary>
     /// <param name="model">エクスポートするモデル</param>
     /// <param name="filePath">出力先ファイルパス</param>
+    /// <param name="opsetVersion">ONNXオペセットのバージョン（デフォルトは24）</param>
     /// <exception cref="ArgumentNullException"><paramref name="model"/>または<paramref name="filePath"/>がnullの場合</exception>
     /// <exception cref="ArgumentException"><paramref name="filePath"/>が空文字列の場合</exception>
     /// <example>
@@ -127,13 +131,13 @@ public sealed partial class MLModelEncoder
     /// encoder.Export(abstractModel, "model.onnx");
     /// </code>
     /// </example>
-    public void Export(MLAbstractModel model, string filePath)
+    public void Export(MLAbstractModel model, string filePath, int opsetVersion = 24)
     {
         ArgumentNullException.ThrowIfNull(model);
         ArgumentException.ThrowIfNullOrEmpty(filePath);
 
         using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-        Export(model, fileStream);
+        Export(model, fileStream, opsetVersion);
     }
 
     #endregion

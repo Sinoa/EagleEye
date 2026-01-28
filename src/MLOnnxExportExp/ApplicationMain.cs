@@ -146,6 +146,6 @@ var modelGraph = new MLAbstractGraph("model.graph", modelInputInfos, modelOutput
 var abstractModel = new MLAbstractModel("jp.foxtamp.logicgate", "Sinoa", 1, "Sample", "1.0.0", "", new Dictionary<string, string>(), modelGraph);
 
 var encoder = new MLModelEncoder();
-encoder.Export(abstractModel, "logic_gate_model.onnx");
+encoder.Export(abstractModel, "logic_gate_model.onnx", opsetVersion: 23);
 Console.WriteLine("完了");
 // ReSharper restore HeapView.ObjectAllocation
