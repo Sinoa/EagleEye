@@ -45,11 +45,11 @@ public sealed class LogicGateModel : Module<Tensor, Tensor>
     {
         _mlp = Sequential(
             (name: "fc1", submodule: Linear(InputSize, HiddenSize)),
-            (name: "silu1", submodule: SiLU()),
+            (name: "mish1", submodule: Mish()),
             (name: "fc2", submodule: Linear(HiddenSize, HiddenSize)),
-            (name: "silu2", submodule: SiLU()),
+            (name: "mish2", submodule: Mish()),
             (name: "fc3", submodule: Linear(HiddenSize, HiddenSize)),
-            (name: "silu3", submodule: SiLU()),
+            (name: "mish3", submodule: Mish()),
             (name: "fc4", submodule: Linear(HiddenSize, OutputSize)),
             (name: "sigmoid1", submodule: Sigmoid())
         );

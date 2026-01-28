@@ -116,7 +116,7 @@ public sealed class LogicGateModelRuntime : IDisposable
 
     private float RunSession(float[] inputData)
     {
-        var inputTensor = new DenseTensor<float>(inputData, new[] { 1, inputData.Length });
+        var inputTensor = new DenseTensor<float>(inputData, new[] { inputData.Length });
         var inputs = new[] { NamedOnnxValue.CreateFromTensor("X", inputTensor) };
 
         using var result = _session.Run(inputs);

@@ -13,7 +13,7 @@
 
     <ItemGroup>
       <None Update="Assets\logic_gate_model.onnx">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
 
