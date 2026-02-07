@@ -33,6 +33,7 @@ namespace Foxtamp.MjlogReplayer.Models;
 /// <param name="Discards">捨て牌</param>
 /// <param name="Melds">副露（鳴き）</param>
 /// <param name="IsReach">リーチ状態かどうか</param>
+/// <param name="ReachTurnNumber">リーチ宣言時の巡目（未リーチの場合はnull）</param>
 /// <param name="Score">現在の得点</param>
 public record PlayerState(
     int PlayerId,
@@ -40,6 +41,7 @@ public record PlayerState(
     IReadOnlyList<DiscardedTile> Discards,
     IReadOnlyList<MeldInfo> Melds,
     bool IsReach,
+    int? ReachTurnNumber,
     int Score)
 {
     /// <summary>
@@ -57,6 +59,7 @@ public record PlayerState(
             [],
             [],
             false,
+            null,
             initialScore);
     }
 
@@ -90,10 +93,11 @@ public record PlayerState(
     /// <summary>
     /// リーチ状態に変更
     /// </summary>
+    /// <param name="turnNumber">リーチ宣言時の巡目</param>
     /// <returns>更新されたプレイヤー状態</returns>
-    public PlayerState DeclareReach()
+    public PlayerState DeclareReach(int turnNumber)
     {
-        return this with { IsReach = true };
+        return this with { IsReach = true, ReachTurnNumber = turnNumber };
     }
 
     /// <summary>
@@ -203,7 +207,7 @@ public record PlayerState(
     {
         var handStr = string.Join("", Hand.Select(t => t.DisplayName));
         var meldStr = Melds.Count > 0 ? $" 副露:{string.Join(",", Melds)}" : "";
-        var reachStr = IsReach ? " [リーチ]" : "";
+        var reachStr = IsReach ? $" [リーチ(巡目{ReachTurnNumber})]" : "";
         return $"P{PlayerId}: {handStr}{meldStr}{reachStr} ({Score}点)";
     }
 }

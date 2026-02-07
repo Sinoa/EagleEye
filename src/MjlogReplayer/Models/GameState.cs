@@ -37,6 +37,7 @@ namespace Foxtamp.MjlogReplayer.Models;
 /// <param name="StepIndex">ステップインデックス（0から始まる）</param>
 /// <param name="Players">各プレイヤーの状態</param>
 /// <param name="DoraIndicators">ドラ表示牌</param>
+/// <param name="RemainingTileCount">残り山牌数（ツモ可能な牌の残数）</param>
 /// <param name="SourceStep">この状態になった起因となるステップ（初期状態の場合はnull）</param>
 public abstract record GameState(
     int RoundWind,
@@ -48,6 +49,7 @@ public abstract record GameState(
     int StepIndex,
     IReadOnlyList<PlayerState> Players,
     IReadOnlyList<Tile> DoraIndicators,
+    int RemainingTileCount,
     MjlogStep? SourceStep)
 {
     /// <summary>
@@ -114,6 +116,13 @@ public abstract record GameState(
     public abstract GameState AddDoraIndicator(Tile doraIndicator);
 
     /// <summary>
+    /// 残り山牌数を更新した新しいGameStateを作成
+    /// </summary>
+    /// <param name="newRemainingTileCount">新しい残り山牌数</param>
+    /// <returns>更新されたGameState</returns>
+    public abstract GameState WithRemainingTileCount(int newRemainingTileCount);
+
+    /// <summary>
     /// 供託を更新した新しいGameStateを作成
     /// </summary>
     /// <param name="newKyotaku">新しい供託数</param>
@@ -133,7 +142,7 @@ public abstract record GameState(
     public override string ToString()
     {
         var doraStr = string.Join("", DoraIndicators.Select(t => t.DisplayName));
-        var baseInfo = $"{RoundName} {Honba}本場 供託{Kyotaku} 巡目{TurnNumber} ドラ表示:[{doraStr}]";
+        var baseInfo = $"{RoundName} {Honba}本場 供託{Kyotaku} 巡目{TurnNumber} 残り{RemainingTileCount}枚 ドラ表示:[{doraStr}]";
 
         if (SourceStep != null)
         {

@@ -189,7 +189,8 @@ public class SessionReplayer
 
         var player = state.GetPlayer(playerId);
         var newPlayer = player.AddTileToHand(draw.Tile);
-        return state.WithPlayer(playerId, newPlayer);
+        var newState = state.WithPlayer(playerId, newPlayer);
+        return newState.WithRemainingTileCount(state.RemainingTileCount - 1);
     }
 
     /// <summary>
@@ -218,6 +219,7 @@ public class SessionReplayer
         }
 
         var meld = meldAction.Meld;
+        meld.TurnNumber = state.TurnNumber;
         var player = state.GetPlayer(playerId);
         var newState = state;
 
@@ -272,7 +274,7 @@ public class SessionReplayer
             // リーチ宣言
             isReachDeclared = true;
             var player = state.GetPlayer(playerId);
-            var newPlayer = player.DeclareReach();
+            var newPlayer = player.DeclareReach(state.TurnNumber);
             return state.WithPlayer(playerId, newPlayer);
         }
         else if (reach.Step == 2)

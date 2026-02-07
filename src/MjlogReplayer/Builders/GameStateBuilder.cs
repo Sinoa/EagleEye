@@ -42,6 +42,7 @@ public class GameStateBuilder
     private MjlogStep? _sourceStep;
     private readonly List<PlayerStateBuilder> _playerBuilders = [];
     private readonly List<Tile> _doraIndicators = [];
+    private int? _remainingTileCount;
     private readonly List<List<Tile>> _nukiDoras = [];
 
     /// <summary>
@@ -156,6 +157,17 @@ public class GameStateBuilder
     }
 
     /// <summary>
+    /// 残り山牌数を設定
+    /// </summary>
+    /// <param name="remainingTileCount">残り山牌数</param>
+    /// <returns>ビルダーインスタンス</returns>
+    public GameStateBuilder WithRemainingTileCount(int remainingTileCount)
+    {
+        _remainingTileCount = remainingTileCount;
+        return this;
+    }
+
+    /// <summary>
     /// ドラ表示牌を追加
     /// </summary>
     /// <param name="doraIndicator">ドラ表示牌</param>
@@ -235,6 +247,7 @@ public class GameStateBuilder
                 _stepIndex,
                 players,
                 _doraIndicators,
+                _remainingTileCount ?? 70,
                 _sourceStep);
         }
         else
@@ -249,6 +262,7 @@ public class GameStateBuilder
                 _stepIndex,
                 players,
                 _doraIndicators,
+                _remainingTileCount ?? 55,
                 _nukiDoras.Select(l => (IReadOnlyList<Tile>)l.ToList()).ToList(),
                 _sourceStep);
         }
@@ -265,6 +279,7 @@ public class PlayerStateBuilder
     private readonly List<DiscardedTile> _discards = [];
     private readonly List<MeldInfo> _melds = [];
     private bool _isReach;
+    private int? _reachTurnNumber;
     private int _score = 25000;
 
     /// <summary>
@@ -371,6 +386,17 @@ public class PlayerStateBuilder
     }
 
     /// <summary>
+    /// リーチ巡目を設定
+    /// </summary>
+    /// <param name="turnNumber">リーチ宣言時の巡目</param>
+    /// <returns>ビルダーインスタンス</returns>
+    public PlayerStateBuilder WithReachTurnNumber(int? turnNumber)
+    {
+        _reachTurnNumber = turnNumber;
+        return this;
+    }
+
+    /// <summary>
     /// 得点を設定
     /// </summary>
     /// <param name="score">得点</param>
@@ -393,6 +419,7 @@ public class PlayerStateBuilder
             _discards.ToList(),
             _melds.ToList(),
             _isReach,
+            _reachTurnNumber,
             _score);
     }
 }

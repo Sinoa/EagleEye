@@ -51,9 +51,10 @@ public record ThreePlayerGameState : GameState
         int stepIndex,
         IReadOnlyList<PlayerState> players,
         IReadOnlyList<Tile> doraIndicators,
+        int remainingTileCount,
         IReadOnlyList<IReadOnlyList<Tile>> nukiDoras,
         MjlogStep? sourceStep)
-        : base(roundWind, roundNumber, honba, kyotaku, dealerId, turnNumber, stepIndex, players, doraIndicators, sourceStep)
+        : base(roundWind, roundNumber, honba, kyotaku, dealerId, turnNumber, stepIndex, players, doraIndicators, remainingTileCount, sourceStep)
     {
         if (players.Count != 3)
         {
@@ -118,6 +119,8 @@ public record ThreePlayerGameState : GameState
             new List<Tile>()
         };
 
+        const int initialRemainingTiles = 55; // 108 - 14(王牌) - 39(配牌13×3)
+
         return new ThreePlayerGameState(
             roundWind,
             roundNumber,
@@ -128,6 +131,7 @@ public record ThreePlayerGameState : GameState
             0, // ステップは0から開始
             players,
             doraIndicators,
+            initialRemainingTiles,
             nukiDoras,
             null); // 初期状態なので起因ステップはなし
     }
@@ -163,6 +167,12 @@ public record ThreePlayerGameState : GameState
     {
         var newDoraIndicators = DoraIndicators.Append(doraIndicator).ToList();
         return this with { DoraIndicators = newDoraIndicators };
+    }
+
+    /// <inheritdoc/>
+    public override GameState WithRemainingTileCount(int newRemainingTileCount)
+    {
+        return this with { RemainingTileCount = newRemainingTileCount };
     }
 
     /// <inheritdoc/>

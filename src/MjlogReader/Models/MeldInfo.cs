@@ -67,6 +67,9 @@ public class MeldInfo
     /// <summary>元の鳴きコード（デバッグ用）</summary>
     public int OriginalCode { get; set; }
 
+    /// <summary>鳴きが発生した巡目（リプレイ時に設定、パース時はnull）</summary>
+    public int? TurnNumber { get; set; }
+
     /// <summary>
     /// 文字列表現を取得
     /// </summary>
@@ -83,6 +86,7 @@ public class MeldInfo
             _ => "不明な鳴き"
         };
         var tilesStr = string.Join("", Tiles.Select(t => t.DisplayName));
-        return $"{typeStr}[{tilesStr}]";
+        var turnStr = TurnNumber.HasValue ? $" 巡目{TurnNumber}" : "";
+        return $"{typeStr}[{tilesStr}]{turnStr}";
     }
 }
