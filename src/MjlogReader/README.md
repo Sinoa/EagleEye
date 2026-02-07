@@ -289,7 +289,8 @@ MeldInfo
 ├── Tiles: List<Tile>     // 構成牌のリスト
 ├── CalledTile: Tile?     // 鳴いた牌（他家から取得した牌）
 ├── FromPlayer: int       // 鳴き元プレイヤー（相対位置: 1=下家, 2=対面, 3=上家）
-└── OriginalCode: int     // 元の鳴きコード（デバッグ用）
+├── OriginalCode: int     // 元の鳴きコード（デバッグ用）
+└── TurnNumber: int?      // 鳴きが発生した巡目（リプレイ時に設定、パース時はnull）
 ```
 
 #### MeldType

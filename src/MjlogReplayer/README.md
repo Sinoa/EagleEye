@@ -57,15 +57,17 @@ using Foxtamp.MjlogReplayer.Builders;
 using Foxtamp.MjlogReplayer.Models;
 
 // 4人麻雀の状態を構築
-var state = GameStateBuilder.Create(playerCount: 4)
+var builder = GameStateBuilder.Create(playerCount: 4)
     .WithRoundNumber(0)  // 東1局
     .WithHonba(0)
     .WithDealerId(0)
-    .WithTurnNumber(5)
-    .Player(0)
-        .WithHand(tiles)
-        .WithScore(25000)
-    .Build();
+    .WithTurnNumber(5);
+
+builder.Player(0)
+    .WithHand(tiles)
+    .WithScore(25000);
+
+var state = builder.Build();
 ```
 
 ---
@@ -128,7 +130,7 @@ GameState state = replayer[stepIndex];
 外部入力からGameStateを構築するビルダー
 
 ```csharp
-var state = GameStateBuilder.Create(playerCount: 4)
+var builder = GameStateBuilder.Create(playerCount: 4)
     .WithRoundWind(0)
     .WithRoundNumber(0)
     .WithHonba(0)
@@ -136,14 +138,18 @@ var state = GameStateBuilder.Create(playerCount: 4)
     .WithDealerId(0)
     .WithTurnNumber(1)
     .WithStepIndex(0)
-    .AddDoraIndicator(tile)
-    .Player(0)
-        .WithHand(tiles)
-        .WithDiscards(discards)
-        .WithMelds(melds)
-        .WithReach(false)
-        .WithScore(25000)
-    .Build();
+    .WithRemainingTileCount(70)
+    .AddDoraIndicator(tile);
+
+builder.Player(0)
+    .WithHand(tiles)
+    .WithDiscards(discards)
+    .WithMelds(melds)
+    .WithReach(false)
+    .WithReachTurnNumber(null)
+    .WithScore(25000);
+
+var state = builder.Build();
 ```
 
 ---
@@ -164,6 +170,8 @@ GameState (abstract record)
 ├── StepIndex: int                    // ステップインデックス
 ├── Players: IReadOnlyList<PlayerState>  // 各プレイヤーの状態
 ├── DoraIndicators: IReadOnlyList<Tile>  // ドラ表示牌
+├── RemainingTileCount: int           // 残り山牌数（ツモ可能な牌の残数）
+├── SourceStep: MjlogStep?            // この状態になった起因となるステップ（初期状態の場合はnull）
 └── PlayerCount: int                  // プレイヤー人数 ※抽象プロパティ
 ```
 
@@ -189,6 +197,7 @@ PlayerState (record)
 ├── Discards: IReadOnlyList<DiscardedTile>  // 捨て牌
 ├── Melds: IReadOnlyList<MeldInfo>          // 副露（鳴き）
 ├── IsReach: bool                           // リーチ状態
+├── ReachTurnNumber: int?                   // リーチ宣言時の巡目（未リーチの場合はnull）
 └── Score: int                              // 現在の得点
 ```
 

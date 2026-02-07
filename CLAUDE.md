@@ -103,5 +103,5 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 
 ### MLModelCodec
 - `MLAbstractModel/Graph/Node/Tensor/ValueInfo/Attribute` による抽象モデル表現レイヤー
-- `MLModelOnnxEncoder` がTorchSharpモデルをONNX ModelProtoに変換
+- `MLModelEncoder` がTorchSharpモデルをONNX ModelProtoに変換
 - `Generated/Onnx.cs` は `onnx.proto3` からの自動生成コード（手動編集しないこと）
