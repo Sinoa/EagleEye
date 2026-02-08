@@ -118,6 +118,15 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 - `MLModelEncoder` がTorchSharpモデルをONNX ModelProtoに変換
 - `Generated/Onnx.cs` は `onnx.proto3` からの自動生成コード（手動編集しないこと）
 
+## カスタムコマンド
+
+プロジェクト固有のワークフローが `/` コマンドとして利用可能:
+- `/new-project` - 規約準拠の新プロジェクトをスキャフォールド
+- `/review-architecture` - ARCHITECTURE.mdに基づくコードレビュー
+- `/data-leak-check` - DataPipeline向けデータリーク防止チェック
+- `/phase-status` - 開発フェーズの進行状況確認
+- `/onnx-check` - Unity ONNX互換性チェック
+
 ## ML設計原則
 
 ### 前処理と学習の分離
