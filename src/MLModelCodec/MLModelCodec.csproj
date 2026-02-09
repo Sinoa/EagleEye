@@ -7,8 +7,14 @@
         <RootNamespace>Foxtamp.MLModelCodec</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup>
-      <PackageReference Include="TorchSharp-cpu" Version="0.105.2" />
+    <!-- Mac arm64 の場合のみ 0.105.1 -->
+    <ItemGroup Condition="$([System.OperatingSystem]::IsMacOS())">
+        <PackageReference Include="TorchSharp-cpu" Version="0.105.1" />
+    </ItemGroup>
+
+    <!-- それ以外は 0.105.2 -->
+    <ItemGroup Condition="!$([System.OperatingSystem]::IsMacOS())">
+        <PackageReference Include="TorchSharp-cpu" Version="0.105.2" />
     </ItemGroup>
 
 </Project>
