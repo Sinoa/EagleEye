@@ -30,7 +30,7 @@
 | 情報 | 次元 | 処理 |
 |------|------|------|
 | 手牌 | 2〜14枚 × 8次元 | 牌埋め込み(4) + インスタンスID埋め込み(2) + 赤ドラフラグ(1) + ツモフラグ(1) |
-| 捨て牌 | 0〜25枚 × 4系列 | 牌埋め込み(4) + RoPE位置エンコーディング |
+| 捨て牌 | 0〜25枚 × 4系列 | 牌埋め込み(4) + ALiBi位置バイアス |
 | 副露 | 0〜4組 × 4プレイヤー | 構成牌集約 + 種別 + 鳴き元 + 順序 + 巡目 = 18次元 |
 | 場況 | 約78〜90次元 | 点数・巡目・場風・自風・ドラ・リーチ等 |
 | アクションマスク | 各種 | 有効アクションのフラグ |
@@ -39,7 +39,7 @@
 
 ```
 手牌 → Self-Attention（位置エンコーディングなし）→ CLS出力
-捨て牌×4 → Self-Attention + RoPE → CLS出力
+捨て牌×4 → Self-Attention + ALiBi → CLS出力
 副露×4 → MeldEncoder(Linear→SiLU) → 平均プーリング
 場況 → MLP(2層) → 場況特徴ベクトル
 ```
@@ -164,7 +164,19 @@ for (int i = 0; i < sortedHand.Count; i++)
 | 対象 | 方式 | 理由 |
 |------|------|------|
 | 手牌 | なし | 集合（順序に意味なし） |
-| 捨て牌 | RoPE | 巡目（相対位置）が重要 |
+| 捨て牌 | ALiBi | 巡目（距離）が重要、ONNXフレンドリー |
+
+**ALiBi CLS位置設計（決定済み）**: CLSトークンの距離テーブルは0埋め。CLS行・列のバイアスを
+すべて0とし、CLSの注意配分を純粋にコンテンツベース（QK内積）で決定する。
+牌トークン間の距離 `|i-j|` は通常通り保持。
+
+**ALiBiバイアステーブル（決定済み）**: シーケンス最大長（CLS+捨て牌最大25=26）で事前計算し、
+`register_buffer`でモデルパラメータとして保持。ONNXではInitializerとしてグラフに埋め込み。
+
+**捨て牌Attentionヘッド数（決定済み）**: 初期実装はシングルヘッドで運用。
+シーケンスが短く（最大26）、巡目情報が場況特徴量から別経路で供給されるため、
+単一スロープでも十分にカバー可能と判断。性能不足時にマルチヘッド化を検討する段階的方針。
+スロープ初期値は `m = 0.0625` とし、ハイパーパラメータとして調整可能。
 
 ### 集約手法
 
@@ -367,6 +379,9 @@ masked_logits = logits + (-1e9f) * (1 - mask)
 Unity ONNX RuntimeにAttention演算子がないため、基本演算子に分解:
 MatMul, Transpose, Mul(スケーリング), Softmax, Reshape, Add
 
+ALiBiバイアス行列は事前計算済みの定数テンソルとしてONNX Initializerに含まれる。
+実行時の追加計算は不要（Addオペレータのみ）。
+
 ### 重み行列形状（シーケンス長非依存）
 
 ```
@@ -566,7 +581,7 @@ Phase 4: 自己対戦による強化（オプション）
 
 ### 共通化（Core）
 
-TransformerBlock, RoPE, MaskedAttention, LayerNorm, MeldEncoder, BCE損失, ONNXエクスポート
+TransformerBlock, ALiBi, MaskedAttention, LayerNorm, MeldEncoder, BCE損失, ONNXエクスポート
 
 ### 分離（Variant固有）
 
@@ -580,7 +595,7 @@ TransformerBlock, RoPE, MaskedAttention, LayerNorm, MeldEncoder, BCE損失, ONNX
   "tileVocabSize": 34, "tileEmbeddingDim": 4,
   "instanceIdCount": 4, "instanceIdEmbDim": 2,
   "playerCount": 4, "hasChi": true, "hasKitaNuki": false,
-  "attentionDim": 64, "attentionHeads": 4,
+  "attentionDim": 64, "attentionHeads": 1,
   "attentionLayers": 2, "feedForwardDim": 256,
   "maxHandTiles": 14, "maxDiscardTiles": 25, "maxMelds": 4
 }
@@ -686,5 +701,6 @@ MjlogReaderの出力から各ステップのGameStateをイミュータブルに
 | 12 | TorchSharp埋め込み実装・register_buffer |
 | 13 | Web ONNX Runtime対応・活性化関数選択 |
 | 14 | Phase 0設計最終化（牌ID体系・ActionType・赤ドラ・チー方式A） |
+| 15 | 位置エンコーディング変更（RoPE→ALiBi、ONNXグラフ軽量化） |
 
 過去の設計議論で扱われた主要トピックの一覧。
