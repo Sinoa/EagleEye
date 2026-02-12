@@ -66,7 +66,7 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 
 ### 主要な依存関係
 
-- **TorchSharp-cpu 0.105.2** - MLCoreModule, MLModelCodecで使用するテンソル演算フレームワーク
+- **TorchSharp-cpu 0.105.2**（macOSのみ0.105.1） - MLCoreModule, MLModelCodecで使用するテンソル演算フレームワーク
 - **Google.Protobuf 3.21.9** - TorchSharpの推移的依存、MLModelCodecのONNXプロトコルバッファ（Generated/Onnx.csは自動生成コード）で使用
 - **System.CommandLine 2.0.0-beta4** - サンプルアプリのCLI引数パース
 - **Microsoft.ML.OnnxRuntime 1.23.2** - 実験用ONNX推論ランタイム
@@ -115,7 +115,7 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 
 ### MLModelCodec
 - `MLAbstractModel/Graph/Node/Tensor/ValueInfo/Attribute` による抽象モデル表現レイヤー
-- `MLModelEncoder` がTorchSharpモデルをONNX ModelProtoに変換
+- `MLModelOnnxEncoder` がTorchSharpモデルをONNX ModelProtoに変換
 - `Generated/Onnx.cs` は `onnx.proto3` からの自動生成コード（手動編集しないこと）
 
 ## カスタムコマンド
