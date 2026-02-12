@@ -320,19 +320,23 @@ int GetCurrentRank(int selfPoints, int[] allPoints)
   └── ツモ/ロン/槓/九種九牌/スルー: 手牌ロジットは無視
 ```
 
-### ActionType列挙型（11ビット）
+### GameActionType列挙型（12ビット）
+
+既存の `Foxtamp.MjlogReader.Models.Actions.ActionType`（パース用7種）との名前衝突を避けるため `GameActionType` と命名。実装: `Foxtamp.MjlogReplayer.Rules.GameActionType`
 
 ```csharp
 [Flags]
-public enum ActionType
+public enum GameActionType
 {
     None=0, Discard=1<<0, Riichi=1<<1, Tsumo=1<<2, Ron=1<<3,
     Pon=1<<4, Chi=1<<5, AnKan=1<<6, KaKan=1<<7,
-    DaiMinKan=1<<8, KyuushuKyuuhai=1<<9, Skip=1<<10,
+    DaiMinKan=1<<8, KyuushuKyuuhai=1<<9, Skip=1<<10, Nuki=1<<11,
 }
 ```
 
-- Riichi: 打牌を内包するアトミックアクション（Riichi有効時はDiscardは立たない）
+- Discard: ツモ番では常に有効。Riichi可能時も並立（プレイヤーがリーチ宣言するかは選択可能）
+- Riichi: Discard条件に加え、門前・聴牌可能・点数≥1000・山≥4枚の場合に追加で有効
+- Nuki: 三麻専用（手牌に北牌がある場合に有効）
 - Skip: 鳴き見送り、ロン見逃し、行動不可をすべて同値として扱う
 
 ### アクション種別と手牌ロジットの関係
@@ -366,8 +370,8 @@ masked_logits = logits + (-1e9f) * (1 - mask)
 
 ### アクション空間
 
-**ツモ番**: Discard, Riichi, Tsumo, AnKan, KaKan, KyuushuKyuuhai
-**他家打牌後**: Skip, Pon, Chi（上家のみ）, DaiMinKan, Ron
+**ツモ番**: Discard, Riichi, Tsumo, AnKan, KaKan, KyuushuKyuuhai, Nuki（三麻のみ）
+**他家打牌後**: Skip, Pon, Chi（四麻・上家のみ）, DaiMinKan, Ron
 
 ---
 
@@ -643,6 +647,21 @@ MjlogReaderの出力から各ステップのGameStateをイミュータブルに
 **巡目計算**: 全プレイヤー打牌完了→次巡。鳴き発生時に打牌カウントリセット。
 
 **GameStateBuilder**: 外部入力からGameStateを構築可能（テスト用途にも有用）。
+
+### ユーティリティ・ルール判定
+
+**DoraCalculator** (`Foxtamp.MjlogReader.Utilities`):
+- `GetDoraTileTypeId(indicator, isThreePlayer)` — ドラ表示牌→ドラ牌TileTypeId算出
+- `IsDora(tile, doraIndicators, isThreePlayer)` — 牌がドラかどうか判定
+- `GetDoraFlags(tiles, doraIndicators, isThreePlayer)` — ドラフラグ配列生成
+- 三麻対応: 萬子は1m↔9mサイクル（2m-8m不在）
+
+**合法手判定エンジン** (`Foxtamp.MjlogReplayer.Rules`):
+- `AgariChecker` — 和了判定（通常形再帰分解・七対子・国士無双）
+- `TenpaiChecker` — 聴牌判定・待ち牌TileTypeIdリスト算出
+- `FuritenChecker` — 永続振聴判定（一巡振聴・同巡振聴は将来追加）
+- `ValidActionGenerator` — ツモ番/打牌後の合法アクション生成（GameActionTypeフラグ返却）
+- `GameActionType` — 12ビットFlags enum（§7参照）
 
 ### DataPipelineへの接続時の確認事項
 

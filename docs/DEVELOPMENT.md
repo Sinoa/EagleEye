@@ -46,7 +46,7 @@ Phase 8: 強化学習（オプション）
 | 入力ベクトル（捨て牌） | 牌埋め込み(4) + 赤ドラフラグ(1) + ドラフラグ(1) = 6次元 | ✅ |
 | ドラ表現 | 牌ごとのドラフラグ方式。場況はドラ表示牌枚数スカラー1次元 | ✅ |
 | リーチ状態表現 | 他家リーチ（既存）+ 自分リーチフラグ（場況に1次元追加） | ✅ |
-| アクション種別enum | 11種のFlags enum（Discard〜Skip） | ✅ |
+| アクション種別enum | 12種のFlags enum（Discard〜Nuki）、GameActionType として実装 | ✅ |
 | マスク表現 | データセットはenum値配列、学習時にマルチホット変換 | ✅ |
 | チーパターン処理 | 粗粒度マスク（1ビット）+ 手牌ロジットTop2に委任 | ✅ |
 | 副露順序保証 | Meldsリストの配列順 = 時系列順（確認済み） | ✅ |
@@ -57,11 +57,11 @@ Phase 8: 強化学習（オプション）
 
 ## 3. Phase 0 残タスク
 
+- [x] ドラフラグ付与（`DoraCalculator` 三麻対応済み）
+- [x] 有効アクションマスク生成（`ValidActionGenerator` + `AgariChecker` / `TenpaiChecker` / `FuritenChecker`、北抜き含む）
 - [ ] GameState → GameStateSnapshot 変換ロジック
 - [ ] インスタンスID付与（手牌ソート + 同一牌カウント）
-- [ ] 赤ドラフラグ付与（OriginalId判定 → bool配列）
-- [ ] ドラフラグ付与（ドラ表示牌 → ドラ牌算出 → 手牌・捨て牌にbool配列）
-- [ ] 有効アクションマスク生成（ルールベース合法手判定、ActionType enum配列）
+- [ ] 赤ドラフラグ付与（`Tile.IsRedDora` 既存プロパティで取得可能）
 - [ ] JSONL出力（シリアライズ + ファイル分割）
 - [ ] 視点変換（絶対位置 → 相対位置）
 - [ ] データリーク防止テスト
@@ -284,7 +284,7 @@ models/
 | 課題 | 内容 | 状況 |
 |------|------|------|
 | 3人麻雀用牌埋め込み | Skip-gram事前学習 | ⏳ 未着手 |
-| 北抜きアクション実装 | 3人麻雀固有処理 | ⏳ 未着手 |
+| ~~北抜きアクション実装~~ | ~~3人麻雀固有処理~~ | ✅ 実装済み（GameActionType.Nuki + ValidActionGenerator） |
 | データ圧縮形式の検討 | gzip, MessagePack等 | ⏳ 未着手 |
 | 強化学習パイプライン | 自己対戦 + Eloベース評価 | ⏳ 未着手 |
 | 価値関数ネットワーク | 状態価値推定モデル | ⏳ 未着手 |
@@ -324,6 +324,10 @@ models/
 | ドラ表現方式 | 牌ごとのドラフラグ方式を採用。場況ドラマスク34次元は削除、ドラ表示牌枚数スカラー1次元に置換 | ARCHITECTURE §6 |
 | 捨て牌の赤ドラ・ドラフラグ | 捨て牌入力に赤ドラフラグ(1)+ドラフラグ(1)を追加（4→6次元） | ARCHITECTURE §7 |
 | リーチ状態の表現 | 他家リーチ（既存）+ 自分リーチフラグ1次元を場況に追加 | ARCHITECTURE §6 |
+| ドラ算出ユーティリティ | `DoraCalculator` 実装（三麻萬子サイクル対応） | `MjlogReader/Utilities/` |
+| 合法手判定エンジン | `AgariChecker` / `TenpaiChecker` / `FuritenChecker` / `ValidActionGenerator` 実装 | `MjlogReplayer/Rules/` |
+| GameActionType | 12ビットFlags enum（Nuki追加）、Discard/Riichi並立方式 | ARCHITECTURE §7 |
+| 北抜きアクション | `GameActionType.Nuki` + `ValidActionGenerator` で三麻対応 | `MjlogReplayer/Rules/` |
 
 ---
 
