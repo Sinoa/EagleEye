@@ -155,7 +155,10 @@ public static class ValidActionGenerator
     /// <param name="discardedTile">捨てられた牌</param>
     /// <returns>合法アクションのフラグ合成</returns>
     public static GameActionType GetValidActionsOnDiscard(
-        GameState state, int respondingPlayerId, int discardPlayerId, Tile discardedTile)
+        GameState state,
+        int respondingPlayerId,
+        int discardPlayerId,
+        Tile discardedTile)
     {
         var player = state.GetPlayer(respondingPlayerId);
         var hand = player.Hand;
