@@ -1,4 +1,4 @@
-﻿// zlib License
+// zlib License
 // 
 // Copyright (c) 2026 Sinoa
 // 
