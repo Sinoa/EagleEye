@@ -12,16 +12,18 @@
 
 > **⚠️ 注意**: 本プロジェクトは現在大規模なリファクタリング中です。一部のコンポーネントは再設計・再実装中のため、利用できない場合があります。
 
+> **⚠️ 天鳳ログ関連の実装は非推奨（削除予定）**: 天鳳の牌譜は機械学習用途で使用できなくなったため、天鳳ログ関連の実装（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）は今後のロードマップでメンテナンスされず、将来的に削除される予定です。既知の問題は [KNOWN_ISSUES.md](./docs/KNOWN_ISSUES.md) を参照してください。
+
 ### 誰のためのプロジェクト？
 
 - 🎮 **ゲーム開発者** - 麻雀ゲームへのAI組み込みが容易に
-- 🔬 **研究者・開発者** - 天鳳牌譜の解析・独自の学習・解析が可能
+- 🔬 **研究者・開発者** - 天鳳牌譜の解析・独自の学習・解析が可能（天鳳牌譜の解析機能は削除予定）
 - 🀄 **麻雀プレイヤー** - AIによる打牌選択の参考に
 
 ## 特徴
 
 - 🧠 **何切る特化AI** - 麻雀の「何切る」問題に特化した推論エンジン「EagleEye」を開発（予定）
-- 🀄 **天鳳牌譜対応** - 天鳳の牌譜ファイル（mjlog/XML）を読み込み、学習データとして活用
+- 🀄 **天鳳牌譜対応** - 天鳳の牌譜ファイル（mjlog/XML）を読み込み、学習データとして活用（⚠️ メンテナンス対象外・削除予定。学習データは独自ログ形式に置き換え予定）
 - 📦 **モジュラー設計** - 各機能を独立したライブラリとして提供し、必要な部分のみ利用可能
 
 ---
@@ -38,8 +40,8 @@
 
 | プロジェクト | 種別 | 説明 | 状態 |
 |-------------|------|------|:----:|
-| [MjlogReader](./src/MjlogReader/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ✅ 実装済 |
-| [MjlogReplayer](./src/MjlogReplayer/README.md) | ライブラリ | 牌譜から試合状態を再現 | ✅ 実装済 |
+| [MjlogReader](./src/MjlogReader/README.md) | ライブラリ | 天鳳牌譜パーサー（mjlog/XML対応） | ⚠️ 削除予定 |
+| [MjlogReplayer](./src/MjlogReplayer/README.md) | ライブラリ | 牌譜から試合状態を再現 | ⚠️ 削除予定 |
 | [MLCoreModule](./src/MLCoreModule/README.md) | ライブラリ | 機械学習コアモジュール（アテンション機構・位置エンコーディング） | ✅ 実装済 |
 | [MLModelCodec](./src/MLModelCodec/README.md) | ライブラリ | MLモデルのONNXエンコーディング | ✅ 実装済 |
 | EagleEye | ライブラリ | 何切るAI推論エンジン本体 | 🚧 計画中 |
@@ -48,13 +50,13 @@
 
 | プロジェクト | 説明 |
 |-------------|------|
-| [MjlogReaderSample](./src/MjlogReaderSample/README.md) | MjlogReaderの使用例 |
-| [MjlogReplayerSample](./src/MjlogReplayerSample/README.md) | MjlogReplayerの使用例 |
+| [MjlogReaderSample](./src/MjlogReaderSample/README.md) | MjlogReaderの使用例（⚠️ 削除予定） |
+| [MjlogReplayerSample](./src/MjlogReplayerSample/README.md) | MjlogReplayerの使用例（⚠️ 削除予定） |
 
 ### 各プロジェクトの役割
 
-- **MjlogReader**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換するライブラリ
-- **MjlogReplayer**: MjlogReaderで読み込んだ牌譜データから、各ステップ時点の試合状態をイミュータブルに構築するライブラリ
+- **MjlogReader**: 天鳳の牌譜ファイル（mjlog形式）を読み込み、構造化されたC#オブジェクトに変換するライブラリ（⚠️ メンテナンス対象外・削除予定）
+- **MjlogReplayer**: MjlogReaderで読み込んだ牌譜データから、各ステップ時点の試合状態をイミュータブルに構築するライブラリ（⚠️ メンテナンス対象外・削除予定）
 - **MLCoreModule**: TorchSharpをベースとしたアテンション機構と位置エンコーディングの実装を提供するライブラリ
 - **MLModelCodec**: TorchSharpモデルをONNX形式にエンコードするためのライブラリ
 
@@ -79,6 +81,8 @@ dotnet build -c Release
 ```
 
 ### 牌譜の読み込み（MjlogReader）
+
+> **⚠️ 非推奨（削除予定）**: MjlogReader は天鳳ログ関連の実装のため、今後のロードマップでメンテナンスされず、将来的に削除される予定です。
 
 ```csharp
 using Foxtamp.MjlogReader;
@@ -143,6 +147,8 @@ foreach (var session in document.Sessions)
 
 ### 牌譜フォーマット（MjlogReader）
 
+> **⚠️ 非推奨（削除予定）**: 天鳳の牌譜は機械学習用途で使用できなくなったため、mjlog 形式への対応は今後のロードマップでメンテナンスされず、MjlogReader とともに将来的に削除される予定です。今後は独自ログ形式への対応に置き換わります（形式は策定中）。
+
 | フォーマット | 読込 | 備考 |
 |------------|:----:|------|
 | mjlog (GZip) | ✅ | 天鳳標準形式 |
@@ -154,10 +160,12 @@ foreach (var session in document.Sessions)
 
 ### v1.0 初期リリースに向けて
 
-- [x] MjlogReader ライブラリ実装
-- [x] MjlogReplayer ライブラリ実装
+- [x] MjlogReader ライブラリ実装（⚠️ メンテナンス対象外・削除予定）
+- [x] MjlogReplayer ライブラリ実装（⚠️ メンテナンス対象外・削除予定）
 - [x] MLCoreModule ライブラリ実装
 - [x] MLModelCodec ライブラリ実装
+- [ ] 天鳳ログ関連実装の削除（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）
+- [ ] 独自ログ形式の策定（天鳳牌譜の代替）
 - [ ] EagleEye 推論エンジンコア実装
 - [ ] 訓練用データセット生成パイプライン
 - [ ] 基本的な訓練済みモデルの公開
@@ -175,7 +183,7 @@ foreach (var session in document.Sessions)
 本プロジェクトは現在開発中であり、初期リリース後に以下のような貢献を歓迎し順次受け付ける予定です：
 
 - 🔧 **AIモデルのチューニング・改善提案** - より精度の高い打牌選択のためのアーキテクチャ改善
-- 📊 **学習用データセットの提供** - 天鳳プレイヤーの牌譜データ、アノテーション付きデータ等（将来的に何切るの単独データ入力も検討）
+- 📊 **学習用データセットの提供** - 天鳳プレイヤーの牌譜データ、アノテーション付きデータ等（将来的に何切るの単独データ入力も検討）※天鳳の牌譜は機械学習用途で使用できなくなったため、今後は独自ログ形式のデータに置き換わる予定です
 - 🐛 **バグ報告・修正** - Issue / Pull Request でお知らせください
 - 📝 **ドキュメント改善** - 使用例の追加、翻訳等
 - 💡 **機能要望** - 新しいアイデアや改善案をお聞かせください

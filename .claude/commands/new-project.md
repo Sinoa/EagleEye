@@ -49,7 +49,7 @@
 - **Lib**: 依存なし（コアライブラリ）
 - **ML**: `TorchSharp-cpu`, `MLCoreModule` への参照
 - **Sample/Exp/Cli**: `System.CommandLine`, 関連Libプロジェクトへの参照
-- **DataPipeline固有**: `MjlogReader`, `MjlogReplayer` への参照
+- **DataPipeline固有**: `MjlogReader`, `MjlogReplayer` への参照（⚠️ 天鳳ログ関連のため、メンテナンス対象外・削除予定）
 
 ユーザーの確認を得てから `<ProjectReference>` や `<PackageReference>` を追加する。
 

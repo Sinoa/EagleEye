@@ -1,5 +1,7 @@
 # MjlogReplayer ライブラリ
 
+> **⚠️ 非推奨（削除予定）**: 天鳳の牌譜は機械学習用途で使用できなくなったため、天鳳ログ関連の実装（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）は今後のロードマップでメンテナンスされず、将来的に削除される予定です。本ライブラリに含まれる GameState・Rules（合法手判定）も削除対象です。既知の問題は [KNOWN_ISSUES.md](../../docs/KNOWN_ISSUES.md) を参照してください。
+
 麻雀の試合場況を再現するための .NET ライブラリです。MjlogReaderで読み込んだ牌譜データを基に、各ステップ時点の試合状態（GameState）をイミュータブルに構築します。
 
 ## 目次

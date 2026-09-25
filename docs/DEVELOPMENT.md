@@ -3,7 +3,7 @@
 本ドキュメントは、開発フェーズ、進行管理、技術スタック、プロジェクト構成、および未解決課題をまとめたものです。
 
 設計決定事項は `ARCHITECTURE.md` を参照してください。
-既知の不具合（天鳳ログ関連）は `KNOWN_ISSUES.md` を参照してください。
+既知の不具合（天鳳ログ関連）は `KNOWN_ISSUES.md` を参照してください（天鳳ログ関連の実装はメンテナンス対象外・削除予定）。
 設計の詳細な議論・根拠は Claude.ai プロジェクトの `MODEL_DESIGN_NOTES.md` / `DATA_PIPELINE.md` に記載。
 
 ---
@@ -36,7 +36,7 @@ Phase 7: 3人麻雀対応（オプション）
 Phase 8: 強化学習（オプション）
 ```
 
-> **注記（2026-09-25）:** 天鳳の牌譜は現在、機械学習用途では使用できない。Phase 0 の入力（mjlog → JSONL）は自前ログ形式の策定待ちとする。それまで MjlogReader / MjlogReplayer の既知の問題（`KNOWN_ISSUES.md`）は修正を保留する。
+> **注記（2026-09-25）:** 天鳳の牌譜は現在、機械学習用途では使用できない。そのため天鳳ログ関連の実装（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）は今後のロードマップでメンテナンスされず、将来削除される予定。既知の問題（`KNOWN_ISSUES.md`）も修正しない。学習データは天鳳牌譜に代わって独自ログを使用する（形式は策定中）。データパイプライン（ログ → JSONL）や `Data/raw/` などの構成は残り、入力が独自ログ形式のデータに置き換わる。
 
 ---
 
@@ -59,6 +59,8 @@ Phase 8: 強化学習（オプション）
 ---
 
 ## 3. Phase 0 残タスク
+
+> ※ 本節で参照している既存実装（`DoraCalculator` / `ValidActionGenerator` / `Tile` / `PlayerState` / `GameState` / `MeldInfo` 等）は天鳳ログ関連のプロジェクト（MjlogReader / MjlogReplayer）に含まれ、メンテナンス対象外・削除予定。
 
 - [x] ドラフラグ付与（`DoraCalculator` 三麻対応済み）
 - [x] 有効アクションマスク生成（`ValidActionGenerator` + `AgariChecker` / `TenpaiChecker` / `FuritenChecker`、北抜き含む）
@@ -83,7 +85,7 @@ Phase 8: 強化学習（オプション）
 
 ```
 Phase 0: データパイプライン構築
-├── mjlog → JSONL前処理ツール実装
+├── ログ → JSONL前処理ツール実装（入力は天鳳mjlogから独自ログ形式に置き換え予定）
 ├── 場況復元ロジックの実装・検証
 ├── データリーク防止の単体テスト
 ├── サンプルデータでの動作確認
@@ -142,7 +144,7 @@ Phase 8: 強化学習による改善（オプション）
 | 学習 | C# + TorchSharp |
 | 推論（Unity） | Unity + ONNX Runtime |
 | 推論（Web） | ONNX Runtime Web（OpSet 22、Chrome等） |
-| データ前処理 | C#（mjlog解析ツール） |
+| データ前処理 | C#（ログ解析ツール。入力は天鳳mjlogから独自ログ形式に置き換え予定） |
 | 中間データ形式 | JSONL（gzip圧縮オプション） |
 | キャラ管理 | JSON定義 + LRUキャッシュ |
 | 活性化関数 | SiLU（Unity: Swish演算子、Web: Sigmoid+Mulに分解） |
@@ -170,7 +172,7 @@ EagleEye/
 │       └── MahjongVariant.cs
 │
 ├── EagleEye.DataPipeline/            # データパイプライン
-│   ├── MjlogParser.cs                # mjlog解析
+│   ├── MjlogParser.cs                # ログ解析（天鳳mjlog用から独自ログ形式用に置き換え予定）
 │   ├── GameStateReconstructor.cs     # 場況復元
 │   ├── SnapshotSerializer.cs         # JSONL出力
 │   ├── FeatureExtractor.cs           # 視点変換・特徴抽出
@@ -215,7 +217,7 @@ EagleEye/
 │   └── OnnxInference.cs
 │
 └── Data/
-    ├── raw/                          # mjlogファイル
+    ├── raw/                          # 学習元ログ（天鳳mjlogから独自ログ形式のデータに置き換え予定）
     ├── processed/                    # JSONL中間形式
     │   ├── train/
     │   ├── valid/
@@ -264,8 +266,8 @@ models/
 
 | 課題 | 内容 | 状況 |
 |------|------|------|
-| 自前ログ形式の策定 | 天鳳牌譜に代わる学習用ログ形式の設計 | ⏳ 未着手 |
-| 天鳳ログ関連の既知の問題 | `KNOWN_ISSUES.md` 参照。自前ログ形式の策定まで修正保留 | ⏸ 保留 |
+| 独自ログ形式の策定 | 天鳳牌譜に代わる学習用ログ形式の設計 | ⏳ 未着手 |
+| 天鳳ログ関連実装の削除 | MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample はメンテナンス対象外。既知の問題（`KNOWN_ISSUES.md`）は修正せず、将来削除する | ⏳ 未着手 |
 | ONNXエクスポート検証 | Unity + Web動作確認（SiLUの自動分解可否含む） | ⏳ 未着手 |
 | ベースモデルの具体的アーキテクチャ確定 | 層数、次元数の決定 | ⏳ 未着手 |
 | スタイル分類の指標と閾値設計 | 自動分類システム | ⏳ 未着手 |
@@ -279,7 +281,7 @@ models/
 | プレイヤー間関係 | Cross-Attentionの検討 | ⏳ 未着手 |
 | 計算コスト検証 | 推論レイテンシ確認 | ⏳ 未着手 |
 | サンプル不均衡対策 | 和了・リーチの低頻度問題 | ⏳ 未着手 |
-| 前処理パイプライン実装 | mjlog → JSONL変換ツール | ⏳ 未着手 |
+| 前処理パイプライン実装 | ログ → JSONL変換ツール（入力は天鳳mjlogから独自ログ形式に置き換え予定） | ⏳ 未着手 |
 | 学習対象フィルタリング戦略 | 段位・結果によるサンプル選択 | ⏳ 未着手 |
 | 打ち筋分類器実装 | 攻撃率・リーチ率等の指標計算 | ⏳ 未着手 |
 | 結果ベースフィルタリング実装 | 良い判断の自動抽出 | ⏳ 未着手 |
@@ -329,10 +331,10 @@ models/
 | ドラ表現方式 | 牌ごとのドラフラグ方式を採用。場況ドラマスク34次元は削除、ドラ表示牌枚数スカラー1次元に置換 | ARCHITECTURE §6 |
 | 捨て牌の赤ドラ・ドラフラグ | 捨て牌入力に赤ドラフラグ(1)+ドラフラグ(1)を追加（4→6次元） | ARCHITECTURE §7 |
 | リーチ状態の表現 | 他家リーチ（既存）+ 自分リーチフラグ1次元を場況に追加 | ARCHITECTURE §6 |
-| ドラ算出ユーティリティ | `DoraCalculator` 実装（三麻萬子サイクル対応） | `MjlogReader/Utilities/` |
-| 合法手判定エンジン | `AgariChecker` / `TenpaiChecker` / `FuritenChecker` / `ValidActionGenerator` 実装 | `MjlogReplayer/Rules/` |
+| ドラ算出ユーティリティ | `DoraCalculator` 実装（三麻萬子サイクル対応） | `MjlogReader/Utilities/`（削除予定） |
+| 合法手判定エンジン | `AgariChecker` / `TenpaiChecker` / `FuritenChecker` / `ValidActionGenerator` 実装 | `MjlogReplayer/Rules/`（削除予定） |
 | GameActionType | 12ビットFlags enum（Nuki追加）、Discard/Riichi並立方式 | ARCHITECTURE §7 |
-| 北抜きアクション | `GameActionType.Nuki` + `ValidActionGenerator` で三麻対応 | `MjlogReplayer/Rules/` |
+| 北抜きアクション | `GameActionType.Nuki` + `ValidActionGenerator` で三麻対応 | `MjlogReplayer/Rules/`（削除予定） |
 
 ---
 

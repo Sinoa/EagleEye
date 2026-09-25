@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 EagleEyeは、麻雀の完全なゲームアクション（打牌・鳴き・リーチ・和了・槓）を行えるAI推論エンジンを中核とした.NETプロジェクト。天鳳牌譜の解析、試合状態の再現、機械学習モデルの構築・ONNX形式へのエクスポートを行うモジュラー設計のライブラリ群で構成される。数百体のキャラクターをLoRAで個性化し、Unity6上で動作させることを最終目標とする。
 
+> **⚠️ 天鳳ログ関連の実装は非推奨（削除予定）**: 天鳳の牌譜は機械学習用途で使用できなくなったため、天鳳ログ関連の実装（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）は今後のロードマップでメンテナンスされず、将来削除される予定。既知の問題は `docs/KNOWN_ISSUES.md` に記録のみ行い、修正はしない。
+
 ## ビルド・実行コマンド
 
 ```bash
@@ -15,10 +17,10 @@ dotnet build
 # リリースビルド
 dotnet build -c Release
 
-# 個別プロジェクトのビルド
+# 個別プロジェクトのビルド（MjlogReader は削除予定）
 dotnet build src/MjlogReader/MjlogReader.csproj
 
-# サンプルアプリの実行
+# サンプルアプリの実行（天鳳ログ関連のため削除予定）
 dotnet run --project src/MjlogReaderSample -- path/to/file.mjlog
 dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 15
 ```
@@ -34,12 +36,12 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 ソリューションファイルは `EagleEye.slnx`（モダンXML形式）。プロジェクトは4つのフォルダに分類される:
 
 - **Lib/** - コアライブラリ
-  - `MjlogReader` - 天鳳牌譜パーサー（mjlog/XML、GZip自動判定）
-  - `MjlogReplayer` - 牌譜から任意時点の試合状態をイミュータブルに再現
+  - `MjlogReader` - 天鳳牌譜パーサー（mjlog/XML、GZip自動判定）【メンテナンス対象外・削除予定】
+  - `MjlogReplayer` - 牌譜から任意時点の試合状態をイミュータブルに再現【メンテナンス対象外・削除予定】
 - **ML/** - 機械学習ライブラリ
   - `MLCoreModule` - アテンション機構（Self/Cross）・位置エンコーディング（RoPE/ALiBi）
   - `MLModelCodec` - TorchSharpモデル→ONNX形式へのエンコード
-- **Sample/** - サンプルアプリケーション（MjlogReaderSample, MjlogReplayerSample）
+- **Sample/** - サンプルアプリケーション（MjlogReaderSample, MjlogReplayerSample）【メンテナンス対象外・削除予定】
 - **Exp/** - 実験用アプリケーション（MLOnnxExportExp, MLOnnxRuntimeExp）
 
 ### 今後追加予定のプロジェクト
@@ -54,13 +56,15 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 
 データフロー: `.mjlog` → MjlogReader（パース） → MjlogReplayer（状態再現） → DataPipeline（前処理・JSONL出力） → Trainer（学習） → MLModelCodec（ONNXエクスポート）
 
+※ `.mjlog` → MjlogReader → MjlogReplayer の区間は天鳳ログ関連の実装のため、今後のロードマップでメンテナンスされず、将来削除される予定。この区間は独自ログ形式の読み込み・状態再現に置き換わり、DataPipeline 以降の流れはそのまま使う（独自ログ形式は策定中）。
+
 詳細な設計決定事項は `docs/ARCHITECTURE.md` を参照。新機能の実装やML関連の変更を行う前に、`docs/ARCHITECTURE.md` の該当セクションを必ず確認すること。
 
 ### 名前空間規約
 
 すべてのプロジェクトは `Foxtamp.` プレフィックスのルート名前空間を使用:
-- `Foxtamp.MjlogReader`
-- `Foxtamp.MjlogReplayer`
+- `Foxtamp.MjlogReader`（削除予定）
+- `Foxtamp.MjlogReplayer`（削除予定）
 - `Foxtamp.MLCoreModule`
 - `Foxtamp.MLModelCodec`
 
@@ -98,11 +102,13 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
 ## 主要コンポーネントの設計ポイント
 
 ### MjlogReader
+- ⚠️ 天鳳ログ関連のため、メンテナンス対象外・削除予定
 - エントリポイント: `MjlogDocumentReader`（同期/非同期のLoad、XMLのParse）
 - アクションは `Models/Actions/` 配下に型別に定義（DrawAction, DiscardAction, MeldAction, ReachAction等）
 - 結果は `Models/Results/` 配下（Agari, Ryuukyoku）
 
 ### MjlogReplayer
+- ⚠️ 天鳳ログ関連のため、メンテナンス対象外・削除予定（GameState・Rules を含む）
 - `DocumentReplayer` がインデックスベースで任意時点のGameStateにアクセス
 - `GameStateBuilder` で外部からの状態構築が可能
 - GameStateはイミュータブルなスナップショット
@@ -136,6 +142,8 @@ dotnet run --project src/MjlogReplayerSample -- path/to/file.mjlog -s 0 --step 1
     → EagleEye.DataPipeline → JSONL（生値で保存）
         → 学習時: 牌ID→埋め込み, 点数→正規化, カテゴリ→ワンホット, テンソル化
 ```
+
+※ 牌譜（mjlog）→ MjlogReader → MjlogReplayer の区間は天鳳ログ関連の実装のため削除予定。入力は天鳳牌譜から独自ログ形式のデータに置き換わり、前処理と学習の分離方針は変わらない（独自ログ形式は策定中）。
 
 - 牌IDは整数のまま保存（埋め込みベクトルへの変換は学習時）
 - 点数は生値で保存（正規化パラメータの実験的調整を可能に）

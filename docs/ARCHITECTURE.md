@@ -4,6 +4,9 @@
 
 **関連ドキュメント**:
 - `DEVELOPMENT.md` — 開発計画・タスク管理・未解決課題
+- `KNOWN_ISSUES.md` — 天鳳ログ関連実装の既知の問題
+
+> **⚠️ 天鳳ログ関連の実装は非推奨（削除予定）**: 天鳳の牌譜は機械学習用途で使用できなくなったため、天鳳ログ関連の実装（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）は今後のロードマップでメンテナンスされず、将来削除される予定。本書のうち §7（GameActionType の実装箇所）、§10（全体フロー）、§13（既存実装）の記述が該当する。
 
 ---
 
@@ -324,6 +327,8 @@ int GetCurrentRank(int selfPoints, int[] allPoints)
 
 既存の `Foxtamp.MjlogReader.Models.Actions.ActionType`（パース用7種）との名前衝突を避けるため `GameActionType` と命名。実装: `Foxtamp.MjlogReplayer.Rules.GameActionType`
 
+※ 実装を含む MjlogReplayer は天鳳ログ関連のため、メンテナンス対象外・削除予定（§13参照）。
+
 ```csharp
 [Flags]
 public enum GameActionType
@@ -485,6 +490,8 @@ mjlog → MjlogReader → MjlogReplayer → GameState
         → 学習時: テンソル化（埋め込み参照、正規化、ワンホット）
 ```
 
+> **⚠️ 注記:** mjlog → MjlogReader → MjlogReplayer の区間は天鳳ログ関連の実装のため、今後のロードマップでメンテナンスされず、将来削除される予定。この区間は独自ログ形式の読み込み・状態再現に置き換わり、DataPipeline 以降の流れ（JSONL 中間形式、学習時のテンソル化）はそのまま使う（独自ログ形式は策定中）。
+
 ### 中間データ形式（JSONL 1行）
 
 ```json
@@ -616,6 +623,8 @@ TransformerBlock, ALiBi, MaskedAttention, LayerNorm, MeldEncoder, BCE損失, ONN
 ---
 
 ## 13. 既存実装（MjlogReader / MjlogReplayer）
+
+> **⚠️ 非推奨（削除予定）:** 天鳳の牌譜は機械学習用途で使用できなくなったため、本節の実装（MjlogReader / MjlogReplayer、およびそれらに含まれる DoraCalculator・GameState・Rules）は今後のロードマップでメンテナンスされず、将来削除される予定。既知の問題は `KNOWN_ISSUES.md` に記録のみ行い、修正はしない。
 
 ### MjlogReader
 

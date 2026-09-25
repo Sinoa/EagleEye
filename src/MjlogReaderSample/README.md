@@ -1,5 +1,7 @@
 # MjlogReaderSample
 
+> **⚠️ 非推奨（削除予定）**: 天鳳の牌譜は機械学習用途で使用できなくなったため、天鳳ログ関連の実装（MjlogReader / MjlogReplayer / MjlogReaderSample / MjlogReplayerSample）は今後のロードマップでメンテナンスされず、将来的に削除される予定です。既知の問題は [KNOWN_ISSUES.md](../../docs/KNOWN_ISSUES.md) を参照してください。
+
 MjlogReader ライブラリの使用方法を示すサンプルアプリケーションです。天鳳牌譜（mjlog）を読み込み、コンソールに対局情報を表示します。
 
 ## 概要
